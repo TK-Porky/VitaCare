@@ -1,0 +1,10 @@
+{
+  "extends": "@vitacare/config/tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@vitacare/shared-types": ["../shared-types/src/index.ts"]
+    }
+  },
+  "include": ["src"]
+}

@@ -1,0 +1,24 @@
+{
+  "name": "vitacare",
+  "version": "0.0.1",
+  "description": "Application mobile et web de suivi de traitement et prises de rendez-vous intelligent avec des professionnels de santé",
+  "private": "true",
+  "main": "index.js",
+  "scripts": {
+    "dev:mobile": "cd apps/mobile && npm run start",
+    "dev:web": "pnpm --filter web dev",
+    "dev:api": "pnpm --filter api dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "type-check": "turbo run type-check"
+  },
+  "keywords": [],
+  "author": "TK",
+  "license": "ISC",
+  "packageManager": "pnpm@10.31.0",
+  "devDependencies": {
+    "eslint": "^10.1.0",
+    "turbo": "^2.9.3",
+    "typescript": "^6.0.2"
+  }
+}
