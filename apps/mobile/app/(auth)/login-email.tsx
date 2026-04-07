@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { User } from 'lucide-react-native';
-import { TopBar, TextInput, PasswordInput, PrimaryButton, HelperText, CheckboxField } from '../../src/components';
+import { TopBar, CustomInput, PasswordInput, PrimaryButton, HelperText, CheckboxField, EmailInput } from '../../src/components';
 import { colors, fontFamily, fontSize } from '../../src/themes';
 
 export default function LoginEmailScreen() {
@@ -71,17 +71,12 @@ export default function LoginEmailScreen() {
         </View>
 
         <View style={styles.form}>
-          <TextInput
+          <EmailInput
             value={email}
             onChangeText={(text) => {
               setEmail(text);
               if (error) setError('');
             }}
-            placeholder="donovanpalermo@domain.com"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoComplete="email"
-            leftIcon={<User size={16} color={colors.inkMuted} />}
           />
 
           <PasswordInput
@@ -155,14 +150,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: fontFamily.bold,
-    fontSize: fontSize['2xl'],
+    fontSize: fontSize.xl,
     color: colors.ink,
   },
   subtitle: {
+    fontSize: fontSize.md,
     fontFamily: fontFamily.regular,
-    fontSize: fontSize.sm,
-    color: colors.inkLight,
-    lineHeight: 18,
+    color: colors.inkMuted,
+    lineHeight: 20,
   },
   form: {
     gap: 20,

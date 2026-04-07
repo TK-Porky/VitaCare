@@ -1,22 +1,22 @@
 import { useState } from 'react';
 import {
   View,
-  TextInput as RNTextInput,
+  TextInput,
   Text,
   StyleSheet,
-  type TextInputProps as RNTextInputProps,
+  type TextInputProps,
 } from 'react-native';
 import { colors } from '../../themes';
 import { fontFamily, fontSize } from '../../themes';
 
-type Props = RNTextInputProps & {
+type Props = TextInputProps & {
   label?: string;
   error?: string;
   hint?: string;
   leftIcon?: React.ReactNode;
 };
 
-export function TextInput({
+export function CustomInput({
   label,
   error,
   hint,
@@ -37,7 +37,7 @@ export function TextInput({
       ]}>
         {leftIcon && <View style={styles.iconLeft}>{leftIcon}</View>}
 
-        <RNTextInput
+        <TextInput
           style={[styles.input, leftIcon ? styles.inputWithIcon : null, style]}
           placeholderTextColor={colors.inkMuted}
           onFocus={() => setFocused(true)}

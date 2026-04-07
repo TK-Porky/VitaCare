@@ -43,11 +43,12 @@ export function StepHeader({
 const styles = StyleSheet.create({
   wrapper: {
     gap: 8,
-    paddingHorizontal: 16,
+    paddingHorizontal: 0,
     paddingBottom: 8,
     backgroundColor: colors.white,
   },
   row: {
+    paddingHorizontal: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',

@@ -1,0 +1,268 @@
+import { useState } from "react";
+import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
+import { MoreHorizontal } from "lucide-react-native";
+import { colors, fontFamily, fontSize } from "../../../src/themes";
+
+export type ClinicCardData = {
+  id: string;
+  doctorName: string;
+  specialty: string;
+  price: string;
+  clinicName: string;
+  description: string;
+  hours: string;
+  days: string;
+  location: string;
+  imageUri?: string;
+  imageFallbackColor?: string;
+};
+
+function DoctorRow({
+  name,
+  specialty,
+  price,
+  onMore,
+}: {
+  name: string;
+  specialty: string;
+  price: string;
+  onMore?: () => void;
+}) {
+  return (
+    <View style={styles.doctorRow}>
+      <View style={styles.avatar}>
+        <Text style={styles.avatarInitial}>{name[4]}</Text>
+      </View>
+      <View style={styles.doctorInfo}>
+        <Text style={styles.doctorName}>{name}</Text>
+        <View style={styles.doctorMeta}>
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{specialty}</Text>
+          </View>
+          <Text style={styles.price}> • {price}</Text>
+        </View>
+      </View>
+      <TouchableOpacity onPress={onMore} activeOpacity={0.7} style={styles.moreBtn}>
+        <MoreHorizontal size={18} color={colors.inkLight} />
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+function ClinicImage({ uri, fallbackColor = "#C8B8A2" }: { uri?: string; fallbackColor?: string }) {
+  if (uri) {
+    return <Image source={{ uri }} style={styles.image} resizeMode="cover" />;
+  }
+  return <View style={[styles.image, { backgroundColor: fallbackColor }]} />;
+}
+
+function ClinicInfo({
+  clinicName,
+  description,
+  hours,
+  days,
+  location,
+  onReserve,
+}: {
+  clinicName: string;
+  description: string;
+  hours: string;
+  days: string;
+  location: string;
+  onReserve?: () => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <View style={styles.infoContainer}>
+      <View style={styles.titleRow}>
+        <Text style={styles.clinicName}>{clinicName}</Text>
+        <TouchableOpacity style={styles.reserveBtn} onPress={onReserve} activeOpacity={0.85}>
+          <Text style={styles.reserveText}>Réserver</Text>
+        </TouchableOpacity>
+      </View>
+
+      <Text style={styles.description}>
+        {description}
+        {!expanded && (
+          <Text style={styles.moreLink} onPress={() => setExpanded(true)}>
+            {" ...plus"}
+          </Text>
+        )}
+      </Text>
+
+      <View style={styles.hoursRow}>
+        <Text style={styles.infoText}>{hours}</Text>
+        <Text style={styles.dot}> • </Text>
+        <Text style={styles.infoText}>
+          Ouvert de <Text style={styles.infoBold}>{days}</Text>
+        </Text>
+      </View>
+
+      <Text style={styles.location}>{location}</Text>
+    </View>
+  );
+}
+
+export function ClinicCard({
+  data,
+  onReserve,
+  onMore,
+}: {
+  data: ClinicCardData;
+  onReserve?: () => void;
+  onMore?: () => void;
+}) {
+  return (
+    <View style={styles.card}>
+      <DoctorRow
+        name={data.doctorName}
+        specialty={data.specialty}
+        price={data.price}
+        onMore={onMore}
+      />
+      <ClinicImage uri={data.imageUri} fallbackColor={data.imageFallbackColor} />
+      <ClinicInfo
+        clinicName={data.clinicName}
+        description={data.description}
+        hours={data.hours}
+        days={data.days}
+        location={data.location}
+        onReserve={onReserve}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+
+  // DoctorRow
+  doctorRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 10,
+  },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#D0C4B8",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarInitial: {
+    fontSize: fontSize.lg,
+    fontFamily: fontFamily.bold,
+    color: colors.white,
+  },
+  doctorInfo: {
+    flex: 1,
+    gap: 3,
+  },
+  doctorName: {
+    fontSize: fontSize.md,
+    fontFamily: fontFamily.semiBold,
+    color: colors.ink,
+  },
+  doctorMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  badge: {
+    backgroundColor: "#F3E5F5",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 20,
+  },
+  badgeText: {
+    fontSize: fontSize.xs,
+    fontFamily: fontFamily.semiBold,
+    color: "#9C27B0",
+  },
+  price: {
+    fontSize: fontSize.sm,
+    fontFamily: fontFamily.regular,
+    color: colors.inkLight,
+  },
+  moreBtn: {
+    padding: 4,
+  },
+
+  // ClinicImage
+  image: {
+    width: "100%",
+    height: 200,
+  },
+
+  // ClinicInfo
+  infoContainer: {
+    padding: 14,
+    gap: 8,
+  },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  clinicName: {
+    fontSize: fontSize.xl,
+    fontFamily: fontFamily.bold,
+    color: colors.ink,
+    flex: 1,
+  },
+  reserveBtn: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  reserveText: {
+    color: colors.white,
+    fontSize: fontSize.sm,
+    fontFamily: fontFamily.semiBold,
+  },
+  description: {
+    fontSize: fontSize.sm,
+    fontFamily: fontFamily.regular,
+    color: colors.inkMuted,
+    lineHeight: 20,
+  },
+  moreLink: {
+    color: colors.primary,
+    fontFamily: fontFamily.medium,
+  },
+  hoursRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+  },
+  infoText: {
+    fontSize: fontSize.sm,
+    fontFamily: fontFamily.regular,
+    color: colors.inkMuted,
+  },
+  infoBold: {
+    fontFamily: fontFamily.bold,
+    color: colors.ink,
+  },
+  dot: {
+    color: colors.inkLight,
+  },
+  location: {
+    fontSize: fontSize.xs,
+    fontFamily: fontFamily.regular,
+    color: colors.inkLight,
+  },
+});

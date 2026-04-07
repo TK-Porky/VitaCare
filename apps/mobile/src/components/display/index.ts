@@ -9,3 +9,6 @@ export { SearchBar } from './SearchBar'
 // Maps Components
 export { MapMarker } from './MapMarker'
 export { MapProviderCard } from './MapProviderCard'
+
+// Explore Components
+export { ClinicCard, ClinicCardData } from './ClinicCard'

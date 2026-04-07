@@ -1,6 +1,13 @@
 export { OTPInput } from './OTPInput'
-export { PhoneInput } from './PhoneInput'
-export { TextInput } from './TextInput'
+export { CustomInput } from './CustomInput'
+
+// Export Form Components
 export { CheckboxField } from './CheckboxField'
-export { PasswordInput } from './PasswordInput'
 export { SelectOption } from './SelectOption'
+
+// Export Base Inputs Components
+export { NameInput } from './NameInput'
+export { EmailInput } from './EmailInput'
+export { SearchInput } from './SearchInput'
+export { PhoneInput } from './PhoneInput'
+export { PasswordInput } from './PasswordInput'
