@@ -14,7 +14,7 @@ type BoardProps = {
   onMap: () => void;
 };
 
-export function BoardTabView({ onMap }: BoardProps) {
+export default function DashboardScreen({ onMap }: BoardProps) {
   return (
     <View style={styles.root}>
       <StatusBar

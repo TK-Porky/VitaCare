@@ -12,6 +12,7 @@ module.exports = function (api) {
           icons: ['mynaui:mobile', 'mynaui:mail', 'mynaui:phone'],
         },
       ],
+      'react-native-reanimated/plugin',
     ],
   };
 };

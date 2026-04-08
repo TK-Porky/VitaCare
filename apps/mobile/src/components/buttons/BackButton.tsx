@@ -1,7 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../../src/themes';
+import { colors } from '../../themes';
 
 type Props = {
   onPress?: () => void;

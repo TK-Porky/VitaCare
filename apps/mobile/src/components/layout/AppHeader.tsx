@@ -1,6 +1,14 @@
-import { View, Text, TouchableOpacity, StyleSheet, StatusBar } from 'react-native';
-import { Search, Map } from 'lucide-react-native';
-import { colors, fontFamily, fontSize } from '../../themes';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  StatusBar,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { Search } from "lucide-react-native";
+import { PrimaryButton } from "../../../src/components";
+import { colors, fontFamily, fontSize } from "../../themes";
 
 type Props = {
   onSearch?: () => void;
@@ -13,19 +21,28 @@ export function AppHeader({ onSearch, onMap }: Props) {
   return (
     <View style={[styles.container, { paddingTop: statusBarHeight + 8 }]}>
       <View style={styles.logo}>
-        <Text style={styles.logoIcon}>🤲</Text>
+        <Ionicons name="heart-outline" size={24} color={colors.ink} />
         <Text style={styles.logoText}>VitaCare</Text>
       </View>
 
       <View style={styles.actions}>
-        <TouchableOpacity onPress={onSearch} activeOpacity={0.7} style={styles.searchButton}>
+        <TouchableOpacity
+          onPress={onSearch}
+          activeOpacity={0.7}
+          style={styles.searchButton}
+        >
           <Search size={20} color={colors.ink} />
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={onMap} activeOpacity={0.7} style={styles.mapButton}>
-          <Map size={16} color={colors.white} />
-          <Text style={styles.mapText}>Carte</Text>
-        </TouchableOpacity>
+        {onMap && (
+          <PrimaryButton
+            label="Carte"
+            onPress={onMap}
+            icon={<Ionicons name="map" size={16} color={colors.white} />}
+            style={styles.mapButton}
+            size="sm"
+          />
+        )}
       </View>
     </View>
   );
@@ -33,17 +50,17 @@ export function AppHeader({ onSearch, onMap }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingBottom: 12,
     backgroundColor: colors.white,
   },
   logo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2,
   },
   logoIcon: {
     fontSize: 24,
@@ -54,21 +71,16 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   actions: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
   },
   searchButton: {
     padding: 4,
   },
   mapButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: colors.primaryDark,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 999,
+    width: 100,
+    gap: 1,
   },
   mapText: {
     fontFamily: fontFamily.semiBold,

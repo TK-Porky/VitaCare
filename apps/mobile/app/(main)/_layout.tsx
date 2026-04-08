@@ -20,7 +20,6 @@ export default function MainLayout() {
           name="home/map"
           options={{
             presentation: "modal",
-            animation: "slide_from_bottom",
           }}
         />
         <Stack.Screen

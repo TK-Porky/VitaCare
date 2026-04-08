@@ -2,6 +2,7 @@ import { useState } from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
 import { MoreHorizontal } from "lucide-react-native";
 import { colors, fontFamily, fontSize } from "../../../src/themes";
+import { PrimaryButton } from "../buttons";
 
 export type ClinicCardData = {
   id: string;
@@ -77,9 +78,11 @@ function ClinicInfo({
     <View style={styles.infoContainer}>
       <View style={styles.titleRow}>
         <Text style={styles.clinicName}>{clinicName}</Text>
-        <TouchableOpacity style={styles.reserveBtn} onPress={onReserve} activeOpacity={0.85}>
-          <Text style={styles.reserveText}>Réserver</Text>
-        </TouchableOpacity>
+        <PrimaryButton
+          label="Réserver"
+          size="sm"
+          onPress={onReserve}
+        />
       </View>
 
       <Text style={styles.description}>
@@ -92,7 +95,9 @@ function ClinicInfo({
       </Text>
 
       <View style={styles.hoursRow}>
-        <Text style={styles.infoText}>{hours}</Text>
+        <Text style={styles.infoText}>
+        <Text style={styles.infoBold}>{hours}</Text>
+        </Text>
         <Text style={styles.dot}> • </Text>
         <Text style={styles.infoText}>
           Ouvert de <Text style={styles.infoBold}>{days}</Text>
@@ -136,21 +141,18 @@ export function ClinicCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.white,
     borderRadius: 16,
     overflow: "hidden",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.07,
     shadowRadius: 8,
-    elevation: 3,
   },
 
   // DoctorRow
   doctorRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 14,
     paddingVertical: 12,
     gap: 10,
   },
@@ -208,7 +210,7 @@ const styles = StyleSheet.create({
 
   // ClinicInfo
   infoContainer: {
-    padding: 14,
+    paddingVertical: 14,
     gap: 8,
   },
   titleRow: {
@@ -234,7 +236,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.semiBold,
   },
   description: {
-    fontSize: fontSize.sm,
+    fontSize: fontSize.md,
     fontFamily: fontFamily.regular,
     color: colors.inkMuted,
     lineHeight: 20,
@@ -254,14 +256,14 @@ const styles = StyleSheet.create({
     color: colors.inkMuted,
   },
   infoBold: {
-    fontFamily: fontFamily.bold,
+    fontFamily: fontFamily.semiBold,
     color: colors.ink,
   },
   dot: {
     color: colors.inkLight,
   },
   location: {
-    fontSize: fontSize.xs,
+    fontSize: fontSize.sm,
     fontFamily: fontFamily.regular,
     color: colors.inkLight,
   },

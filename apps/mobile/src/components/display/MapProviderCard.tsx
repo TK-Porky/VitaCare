@@ -52,8 +52,7 @@ export const MapProviderCard = ({ provider, onReserve, style }: Props) => {
         </View>
         <PrimaryButton
           label="Réserver"
-          size="sm"
-          icon={<Ionicons name="calendar-outline" size={16} color={colors.white} />}
+          icon={<Ionicons name="calendar-outline" size={18} color={colors.white} />}
           onPress={onReserve}
           style={styles.reserveBtn}
         />
@@ -73,7 +72,7 @@ export const MapProviderCard = ({ provider, onReserve, style }: Props) => {
       {/* Address */}
       {provider.address && (
         <View style={styles.addressRow}>
-          <Ionicons name="location-outline" size={14} color={colors.inkMuted} />
+          <Ionicons name="location-outline" size={14} color={colors.ink} />
           <Text style={styles.address} numberOfLines={1}>
             {provider.address}
           </Text>
@@ -87,7 +86,6 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.white,
     borderRadius: 20,
-    padding: 14,
     shadowColor: colors.ink,
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.08,
@@ -150,7 +148,7 @@ const styles = StyleSheet.create({
   },
   cover: {
     width: '100%',
-    height: 130,
+    height: 150,
     borderRadius: 12,
   },
   coverPlaceholder: {
@@ -164,7 +162,7 @@ const styles = StyleSheet.create({
   address: {
     fontFamily: fontFamily.regular,
     fontSize: fontSize.sm,
-    color: colors.inkMuted,
+    color: colors.ink,
     flex: 1,
   },
 });

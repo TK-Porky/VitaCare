@@ -7,6 +7,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { PrimaryButton  } from '../buttons';
 import { colors, fontFamily, fontSize } from '../../../src/themes';
 
 type Props = {
@@ -40,14 +41,13 @@ export const SearchBar = ({
         placeholderTextColor={colors.inkMuted}
         returnKeyType="search"
       />
-      <TouchableOpacity
-        style={styles.filterButton}
-        onPress={onFilterPress}
-        activeOpacity={0.75}
-        hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-      >
-        <Ionicons name="options-outline" size={18} color={colors.ink} />
-      </TouchableOpacity>
+       <PrimaryButton
+          onPress={onFilterPress}
+          icon={<Ionicons name="options-outline" size={18} color={colors.white} />}
+          isRound={true}
+          size="sm"
+          style={styles.filterButton}
+        />
     </View>
   );
 };
@@ -58,7 +58,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.white,
     borderRadius: 999,
-    paddingHorizontal: 14,
+    paddingLeft: 14,
+    paddingHorizontal: 4,
     height: 44,
     shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 2 },
@@ -78,10 +79,9 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   filterButton: {
-    width: 30,
-    height: 30,
+    width: 40,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 6,
   },
 });

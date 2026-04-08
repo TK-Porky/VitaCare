@@ -1,23 +1,27 @@
-import React, { useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import {
   View,
   StyleSheet,
   SafeAreaView,
   Platform,
   StatusBar,
-  Animated,
 } from 'react-native';
 import MapView, { UrlTile, PROVIDER_DEFAULT } from 'react-native-maps';
 import { useRouter } from 'expo-router';
 
 import { BackButton } from '../../../src/components';
+import {
+  FilterBottomSheet,
+  FilterBottomSheetRef,
+  FilterState,
+} from '../../../src/components/modals/FilterBottomSheet';
 import { SearchBar } from '../../../src/components';
 import { MapMarker } from '../../../src/components';
 import { MapProviderCard } from '../../../src/components';
 import { colors } from '../../../src/themes';
 
 // ---------------------------------------------------------------------------
-// Mock data — remplacer par les données réelles via API
+// Mock data
 // ---------------------------------------------------------------------------
 const MOCK_PROVIDERS = [
   {
@@ -61,32 +65,44 @@ const INITIAL_REGION = {
 
 // ---------------------------------------------------------------------------
 
-export function MapTabView() {
+export default function MapScreen() {
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(MOCK_PROVIDERS[0].id);
-  const cardAnim = useRef(new Animated.Value(0)).current;
+  const filterSheetRef = useRef<FilterBottomSheetRef>(null);
+  const [filters, setFilters] = useState<FilterState>({
+    perimeterKm: 15,
+    services: [],
+    languages: [],
+  });
 
-  const selectedProvider = MOCK_PROVIDERS.find((p) => p.id === selectedId) ?? null;
+  const providers = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return MOCK_PROVIDERS.filter((p) => {
+      if (!q) return true;
+      return (
+        p.name.toLowerCase().includes(q) ||
+        (p.address?.toLowerCase().includes(q) ?? false)
+      );
+    });
+  }, [search]);
+
+  const selectedProvider = providers.find((p) => p.id === selectedId) ?? null;
 
   const handleMarkerPress = (id: string) => {
     if (selectedId === id) return;
     setSelectedId(id);
-    Animated.spring(cardAnim, {
-      toValue: 1,
-      useNativeDriver: true,
-      tension: 60,
-      friction: 10,
-    }).start();
   };
 
   const handleFilterPress = () => {
-    // Navigation vers l'écran Filtres — à connecter une fois implémenté
-    router.push('/map/filters' as never);
+    filterSheetRef.current?.open();
+  };
+
+  const handleApplyFilters = (next: FilterState) => {
+    setFilters(next);
   };
 
   const handleReserve = () => {
-    // Navigation vers la réservation
     router.push(`/providers/${selectedId}/reserve` as never);
   };
 
@@ -104,15 +120,13 @@ export function MapTabView() {
         showsCompass={false}
         toolbarEnabled={false}
       >
-        {/* OpenStreetMap tiles — aucune clé API requise */}
         <UrlTile
           urlTemplate="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
           maximumZ={19}
           flipY={false}
           tileSize={256}
         />
-
-        {MOCK_PROVIDERS.map((provider) => (
+        {providers.map((provider) => (
           <MapMarker
             key={provider.id}
             coordinate={provider.coordinate}
@@ -123,53 +137,50 @@ export function MapTabView() {
         ))}
       </MapView>
 
-      {/* ── Top bar (SafeArea) ── */}
-      <SafeAreaView style={styles.safeTop} pointerEvents="box-none">
-        <View style={styles.topBar}>
-          <BackButton onPress={() => router.back()} />
-          <SearchBar
-            value={search}
-            onChangeText={setSearch}
-            onFilterPress={handleFilterPress}
-            style={styles.searchBar}
-          />
-        </View>
-      </SafeAreaView>
+      {/* ── Overlay layer — reçoit tous les events, laisse passer vers la carte ── */}
+      <View style={StyleSheet.absoluteFillObject} pointerEvents="box-none">
 
-      {/* ── Bottom provider card ── */}
-      {selectedProvider && (
-        <SafeAreaView style={styles.safeBottom} pointerEvents="box-none">
-          <Animated.View
-            style={[
-              styles.cardWrapper,
-              {
-                transform: [
-                  {
-                    translateY: cardAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [20, 0],
-                    }),
-                  },
-                ],
-                opacity: cardAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0.6, 1],
-                }),
-              },
-            ]}
-          >
-            <MapProviderCard
-              provider={selectedProvider}
-              onReserve={handleReserve}
+        {/* ── Top bar ── */}
+        <SafeAreaView style={styles.safeTop}>
+          <View style={styles.topBar} pointerEvents="auto">
+            <BackButton onPress={() => router.back()} />
+            <SearchBar
+              value={search}
+              onChangeText={setSearch}
+              onFilterPress={handleFilterPress}
+              style={styles.searchBar}
             />
-          </Animated.View>
+          </View>
         </SafeAreaView>
-      )}
+
+        {/* ── Bottom provider card ── */}
+        {selectedProvider && (
+          <SafeAreaView style={styles.safeBottom}>
+            <View style={styles.cardWrapper} pointerEvents="auto">
+              <MapProviderCard
+                provider={selectedProvider}
+                onReserve={handleReserve}
+              />
+            </View>
+          </SafeAreaView>
+        )}
+
+      </View>
+
+      {/* ── Filter BottomSheet — hors du overlay pour z-index maximal ── */}
+      <FilterBottomSheet
+        ref={filterSheetRef}
+        initialFilters={filters}
+        onApply={handleApplyFilters}
+      />
     </View>
   );
 }
 
-const TOP_BAR_PADDING = Platform.OS === 'android' ? (StatusBar.currentHeight ?? 24) + 8 : 8;
+// ---------------------------------------------------------------------------
+
+const TOP_BAR_PADDING =
+  Platform.OS === 'android' ? (StatusBar.currentHeight ?? 24) + 8 : 8;
 
 const styles = StyleSheet.create({
   root: {
@@ -198,7 +209,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    pointerEvents: 'box-none',
   },
   cardWrapper: {
     marginHorizontal: 16,

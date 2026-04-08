@@ -36,7 +36,7 @@ export default function ExploreScreen() {
   return (
     <SafeAreaView style={styles.root}>
       <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
-      <AppHeader onSearch={() => {}} onMap={() => {}} />
+      <AppHeader onSearch={() => {}} />
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
@@ -57,7 +57,7 @@ export default function ExploreScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.white,
   },
   content: {
     paddingHorizontal: 14,
