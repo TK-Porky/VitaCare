@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { PrimaryButton } from '../../src/components';
 import { colors, fontFamily, fontSize } from '../../src/themes';
 
@@ -32,6 +33,7 @@ export default function LandingScreen() {
             label="Se connecter par Téléphone"
             onPress={() => router.push('/(auth)/login-phone')}
             fullWidth={true}
+            icon={<Ionicons name="phone-portrait" size={18} color={colors.white} />}
           />
           
           <PrimaryButton
@@ -39,6 +41,7 @@ export default function LandingScreen() {
             onPress={() => router.push('/(auth)/login-email')}
             variant='outline'
             fullWidth={true}
+            icon={<Ionicons name="mail" size={18} color={colors.inkLight} />}
           />
         </View>
 

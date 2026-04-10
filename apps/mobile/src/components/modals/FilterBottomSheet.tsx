@@ -108,7 +108,24 @@ import React, {
         <AppBottomSheet
           ref={sheetRef}
           snapPoints={['55%', '92%']}
-          initialSnapIndex={-1}
+          footer={
+            <View style={styles.footer}>
+              <PrimaryButton
+                label="Retour"
+                variant="outline"
+                size="md"
+                onPress={handleBack}
+                style={styles.footerBtn}
+              />
+              <PrimaryButton
+                label="Afficher les résultats"
+                variant="solid"
+                size="md"
+                onPress={handleApply}
+                style={styles.footerBtnPrimary}
+              />
+            </View>
+          }
           onClose={onClose}
           scrollable
           containerStyle={styles.sheet}
@@ -198,24 +215,6 @@ import React, {
               </View>
             )}
           </View>
-  
-          {/* ── Footer actions ── */}
-          <View style={styles.footer}>
-            <PrimaryButton
-              label="Retour"
-              variant="outline"
-              size="md"
-              onPress={handleBack}
-              style={styles.footerBtn}
-            />
-            <PrimaryButton
-              label="Afficher les résultats"
-              variant="solid"
-              size="md"
-              onPress={handleApply}
-              style={styles.footerBtnPrimary}
-            />
-          </View>
         </AppBottomSheet>
       );
     }
@@ -268,7 +267,6 @@ import React, {
       flexDirection: 'row',
       gap: 12,
       paddingTop: 8,
-      paddingBottom: 16,
     },
     footerBtn: {
       flex: 1,

@@ -93,6 +93,7 @@ export function BottomTabBar() {
             onPress={() => handlePress(tab)}
             activeOpacity={0.7}
           >
+            {active && <View style={styles.indicator} />}
             <Ionicons
               name={active ? tab.iconActive : tab.icon}
               size={22}
@@ -101,7 +102,6 @@ export function BottomTabBar() {
             <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>
               {tab.label}
             </Text>
-            {active && <View style={styles.indicator} />}
           </TouchableOpacity>
         );
       })}
@@ -111,6 +111,7 @@ export function BottomTabBar() {
 
 const styles = StyleSheet.create({
   container: {
+    position: 'relative',
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
@@ -141,9 +142,13 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   indicator: {
-    width: 20,
-    height: 3,
+    position: 'absolute',
+    width: '100%',
+    height: 2,
+    top: -12,
     borderRadius: 999,
     backgroundColor: colors.primary,
+    boxShadow: `0 4px 8px ${colors.primary}`,
+
   },
 });

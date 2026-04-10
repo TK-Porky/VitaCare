@@ -40,7 +40,7 @@ export default function LoginEmailScreen() {
     try {
       // TODO: appel API connexion email
       await new Promise(resolve => setTimeout(resolve, 1500));
-      router.replace('/(tabs)/home');
+      router.replace('/(main)');
     } catch {
       setError('Une erreur est survenue.');
     } finally {
