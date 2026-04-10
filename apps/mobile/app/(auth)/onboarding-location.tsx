@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { MapPin, Search } from 'lucide-react-native';
-import { StepHeader, TextInput, PrimaryButton } from '../../src/components';
+import { StepHeader, SearchInput, PrimaryButton } from '../../src/components';
 import { colors, fontFamily, fontSize } from '../../src/themes';
 
 export default function OnboardingLocationScreen() {
@@ -44,11 +44,10 @@ export default function OnboardingLocationScreen() {
           </Text>
         </View>
 
-        <TextInput
+        <SearchInput
           value=""
           onChangeText={() => {}}
           placeholder="Rechercher votre position..."
-          leftIcon={<Search size={16} color={colors.inkMuted} />}
         />
 
         {/* Map placeholder */}
@@ -96,7 +95,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontFamily: fontFamily.regular,
-    fontSize: fontSize.sm,
+    fontSize: fontSize.md,
     color: colors.inkLight,
     lineHeight: 18,
   },

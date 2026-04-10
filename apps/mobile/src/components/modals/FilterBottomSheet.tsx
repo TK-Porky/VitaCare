@@ -7,8 +7,8 @@ import React, {
   import { View, Text, StyleSheet } from 'react-native';
   import { AppBottomSheet, AppBottomSheetRef } from '../generics';
   import { FilterSectionHeader } from './filter/FilterSectionHeader';
-  import { FilterChip } from './filter/Filterchip';
-  import { FilterRangeSlider } from './filter/Filterrangeslider';
+  import { FilterChip } from './filter/FilterChip';
+  import { FilterRangeSlider } from './filter/FilterRangeSlider';
   import { PrimaryButton } from '../buttons';
   import { colors, fontFamily, fontSize } from '../../../src/themes';
   

@@ -30,7 +30,7 @@ import {
           <PrimaryButton
             label="Terminer"
             fullWidth
-            onPress={() => router.replace('/(tabs)/home')}
+            onPress={() => router.replace('/(main)')}
           />
         </View>
       </View>

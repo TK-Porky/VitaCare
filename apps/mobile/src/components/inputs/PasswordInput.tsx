@@ -1,61 +1,32 @@
 import { useState } from 'react';
-import { TouchableOpacity, View, StyleSheet } from 'react-native';
-import { Eye, EyeOff, LockKeyhole } from 'lucide-react-native';
-import { TextInput } from './TextInput';
+import { TouchableOpacity } from 'react-native';
+import { Lock, Eye, EyeOff } from 'lucide-react-native';
+import { BaseInput, BaseInputProps } from '../generics/BaseInput';
 import { colors } from '../../themes';
 
-type Props = {
-  label?: string;
-  value: string;
-  onChangeText: (text: string) => void;
-  placeholder?: string;
-  error?: string;
-  hint?: string;
-};
+type Props = Omit<BaseInputProps, 'leftSlot' | 'rightSlot' | 'secureTextEntry'>;
 
-export function PasswordInput({
-  label,
-  value,
-  onChangeText,
-  placeholder = 'Password',
-  error,
-  hint,
-}: Props) {
+/**
+ * Champ mot de passe avec toggle visibilité.
+ * La logique show/hide est encapsulée ici — le parent n'a pas à la gérer.
+ */
+export function PasswordInput(props: Props) {
   const [visible, setVisible] = useState(false);
+  const Icon = visible ? EyeOff : Eye;
 
   return (
-    <View>
-      <TextInput
-        label={label}
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={placeholder}
-        secureTextEntry={!visible}
-        error={error}
-        hint={hint}
-        autoCapitalize="none"
-        leftIcon={
-          <LockKeyhole size={16} color={colors.inkMuted} />
-        }
-      />
-      <TouchableOpacity
-        style={styles.eyeButton}
-        onPress={() => setVisible(v => !v)}
-        activeOpacity={0.7}
-      >
-        {visible
-          ? <EyeOff size={18} color={colors.inkMuted} />
-          : <Eye size={18} color={colors.inkMuted} />
-        }
-      </TouchableOpacity>
-    </View>
+    <BaseInput
+      secureTextEntry={!visible}
+      autoCapitalize="none"
+      autoCorrect={false}
+      placeholder="Mot de passe"
+      leftSlot={<Lock size={16} color={colors.inkLight} style={{ opacity: 1.0 }} />}
+      rightSlot={
+        <TouchableOpacity onPress={() => setVisible((v) => !v)} activeOpacity={0.7}>
+          <Icon size={18} color={colors.primary} style={{ opacity: 1.0 }} />
+        </TouchableOpacity>
+      }
+      {...props}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  eyeButton: {
-    position: 'absolute',
-    right: 0,
-    bottom: 10,
-  },
-});

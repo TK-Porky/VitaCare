@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { User, Phone } from 'lucide-react-native';
-import { TopBar, TextInput, PasswordInput, PrimaryButton, HelperText, PhoneInput } from '../../src/components';
+import { TopBar, CustomInput, PasswordInput, PrimaryButton, HelperText, PhoneInput, NameInput } from '../../src/components';
 import { colors, fontFamily, fontSize } from '../../src/themes';
 import { isValidCMPhone } from '@vitacare/utils';
 
@@ -76,19 +76,22 @@ export default function RegisterScreen() {
         </View>
 
         <View style={styles.form}>
-          <TextInput
-            label="Nom Complet"
-            value={fullName}
-            onChangeText={(text) => {
-              setFullName(text);
-              if (errors.fullName) setErrors(e => ({ ...e, fullName: '' }));
-            }}
-            placeholder="Ex: Jean Ateba Mbarga"
-            error={errors.fullName}
-            leftIcon={<User size={16} color={colors.inkMuted} />}
-            autoCapitalize="words"
-          />
+          {/* Field - FullName */}
+          <View style={styles.fieldWrapper}>
+            <Text style={styles.label}>Nom complet</Text>
+            <NameInput
+              value={fullName}
+              onChangeText={(text) => {
+                setFullName(text);
+                if (errors.fullName) setErrors(e => ({ ...e, fullName: '' }));
+              }}
+              placeholder="Ex: Jean Ateba Mbarga"
+              error={!!errors.fullName}
+            />
+            {errors.fullName && <HelperText message={errors.fullName} type="error" />}
+          </View>
 
+          {/* Field - Full Phone Number */}
           <View style={styles.fieldWrapper}>
             <Text style={styles.label}>Numéro de téléphone</Text>
             <PhoneInput
@@ -102,26 +105,33 @@ export default function RegisterScreen() {
             {errors.phone && <HelperText message={errors.phone} type="error" />}
           </View>
 
-          <PasswordInput
-            label="Mot de passe"
-            value={password}
-            onChangeText={(text) => {
-              setPassword(text);
-              if (errors.password) setErrors(e => ({ ...e, password: '' }));
-            }}
-            error={errors.password}
-            hint="Le mot de passe doit faire minimum 8 caractères sans espace."
-          />
+          {/* Field - Password */}
+          <View style={styles.fieldWrapper}>
+            <Text style={styles.label}>Mot de Passe</Text>
+            <PasswordInput
+              value={password}
+              onChangeText={(text) => {
+                setPassword(text);
+                if (errors.password) setErrors(e => ({ ...e, password: '' }));
+              }}
+              error={!!errors.password}
+            />
+            {errors.password && <HelperText message={errors.password} type="error" />}
+          </View>
 
-          <PasswordInput
-            label="Confirmé le mot de passe"
-            value={confirmPassword}
-            onChangeText={(text) => {
-              setConfirmPassword(text);
-              if (errors.confirmPassword) setErrors(e => ({ ...e, confirmPassword: '' }));
-            }}
-            error={errors.confirmPassword}
-          />
+          {/* Field - Confirm Password */}
+          <View style={styles.fieldWrapper}>
+            <Text style={styles.label}>Confirmer le Mot de passe</Text>
+            <PasswordInput
+              value={confirmPassword}
+              onChangeText={(text) => {
+                setConfirmPassword(text);
+                if (errors.confirmPassword) setErrors(e => ({ ...e, confirmPassword: '' }));
+              }}
+              error={!!errors.confirmPassword}
+            />
+            {errors.confirmPassword && <HelperText message={errors.confirmPassword} type="error" />}
+          </View>
 
           {errors.global && (
             <HelperText message={errors.global} type="error" />
@@ -150,9 +160,11 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+    flexGrow: 1,
     backgroundColor: colors.white,
   },
   content: {
+    flex: 1,
     flexGrow: 1,
     paddingHorizontal: 16,
     paddingTop: 24,
