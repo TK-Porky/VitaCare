@@ -1,22 +1,10 @@
 import { useState } from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { MoreHorizontal } from "lucide-react-native";
 import { colors, fontFamily, fontSize } from "../../../src/themes";
 import { PrimaryButton } from "../buttons";
-
-export type ClinicCardData = {
-  id: string;
-  doctorName: string;
-  specialty: string;
-  price: string;
-  clinicName: string;
-  description: string;
-  hours: string;
-  days: string;
-  location: string;
-  imageUri?: string;
-  imageFallbackColor?: string;
-};
+import { ClinicProvider } from '../../types'
 
 function DoctorRow({
   name,
@@ -104,20 +92,21 @@ function ClinicInfo({
         </Text>
       </View>
 
-      <Text style={styles.location}>{location}</Text>
+      <View style={styles.locationRow}>
+        <Ionicons name="location-outline" size={14} color={colors.inkLight} />
+        <Text style={styles.location}>{location}</Text>
+      </View>
     </View>
   );
 }
 
-export function ClinicCard({
-  data,
-  onReserve,
-  onMore,
-}: {
-  data: ClinicCardData;
+interface ClinicCardProps {
+  data: ClinicProvider;
   onReserve?: () => void;
   onMore?: () => void;
-}) {
+}
+
+export function ClinicCard({data, onReserve, onMore,}: ClinicCardProps) {
   return (
     <View style={styles.card}>
       <DoctorRow
@@ -261,6 +250,11 @@ const styles = StyleSheet.create({
   },
   dot: {
     color: colors.inkLight,
+  },
+  locationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
   },
   location: {
     fontSize: fontSize.sm,
