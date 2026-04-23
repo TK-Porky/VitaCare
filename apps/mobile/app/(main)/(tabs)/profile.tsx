@@ -13,7 +13,6 @@ import {
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { colors, fontFamily, fontSize } from "../../../src/themes";
 
-// ─── Data ─────────────────────────────────────────────────────────────────────
 const MENU_SECTIONS = [
   {
     title: 'Généraux',
@@ -44,8 +43,6 @@ const MENU_SECTIONS = [
     ],
   },
 ];
-
-// ─── Components ───────────────────────────────────────────────────────────────
 
 function MenuItem({
   icon,
@@ -91,7 +88,6 @@ function MenuSection({ title, items }: { title: string; items: typeof MENU_SECTI
   );
 }
 
-// ─── Screen ───────────────────────────────────────────────────────────────────
 export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.safe}>
@@ -140,7 +136,6 @@ export default function ProfileScreen() {
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   safe: {
     flex: 1,

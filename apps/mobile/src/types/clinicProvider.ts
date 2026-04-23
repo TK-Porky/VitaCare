@@ -1,5 +1,6 @@
 export interface ClinicProvider {
   id: string;
+  avatarUri?: string;
   doctorName: string;
   specialty: string;
   price: string;

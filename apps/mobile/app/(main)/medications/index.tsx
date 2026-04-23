@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -8,16 +8,18 @@ import {
   SafeAreaView,
   StatusBar,
   Image,
-  Platform,
   ImageBackground,
-} from 'react-native';
-import { colors, fontFamily, fontSize } from '../../../src/themes';
-import { SectionHeader } from '../../../src/components';
-import { CATEGORIES, POPULAR_DRUGS } from '../../../src/data/mockStore';
-import { AppHeader } from '../../../src/components';
-import { Category, Drug } from '../../../src/types';
+  ActivityIndicator
+} from "react-native";
+import { colors, fontFamily, fontSize } from "../../../src/themes";
+import { SectionHeader } from "../../../src/components";
+import { CATEGORIES, POPULAR_DRUGS } from "../../../src/data/mockStore";
+import { AppHeader } from "../../../src/components";
+import { Category, Drug } from "../../../src/types";
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
+type Props = {
+  onReminders?: () => void;
+};
 
 function CategoryCard({ item }: { item: Category }) {
   return (
@@ -46,27 +48,37 @@ function DrugCard({ item }: { item: Drug }) {
       </View>
       <View style={styles.drugInfo}>
         <Text style={styles.drugCategory}>{item.category}</Text>
-        <Text style={styles.drugName} numberOfLines={2}>{item.name}</Text>
+        <Text style={styles.drugName} numberOfLines={2}>
+          {item.name}
+        </Text>
         <Text style={styles.drugPrice}>{item.price}</Text>
       </View>
     </TouchableOpacity>
   );
 }
 
-// ─── Screen ───────────────────────────────────────────────────────────────────
-export default function MedecineScreen() {
-  const [search, setSearch] = useState('');
+export default function MedecineScreen({ onReminders }: Props) {
+  const [isLoading, setIsLoading] = useState<Boolean>(false);
+  const [search, setSearch] = useState("");
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    )
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.primary} />
 
       {/* ── Top bar ── */}
-      <AppHeader 
+      <AppHeader
         searchBar={true}
         searchValue={search}
         onFilter={() => {}}
-        onReminders={() => {}}
+        onReminders={onReminders}
       />
 
       <ScrollView
@@ -76,7 +88,9 @@ export default function MedecineScreen() {
         {/* ── Hero Banner ── */}
         <TouchableOpacity activeOpacity={0.9} style={styles.heroBannerWrapper}>
           <ImageBackground
-            source={{ uri: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800' }}
+            source={{
+              uri: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800",
+            }}
             style={styles.heroBanner}
             imageStyle={styles.heroBannerImage}
           >
@@ -84,7 +98,8 @@ export default function MedecineScreen() {
             <View style={styles.heroBannerOverlay}>
               <Text style={styles.heroTitle}>Espaces Médicaments</Text>
               <Text style={styles.heroSubtitle}>
-                Votre annuaire de médicaments à porter de main. Renseignez-vous gratuitement sur vos produits pharmaceutiques.
+                Votre annuaire de médicaments à porter de main. Renseignez-vous
+                gratuitement sur vos produits pharmaceutiques.
               </Text>
             </View>
           </ImageBackground>
@@ -117,7 +132,6 @@ export default function MedecineScreen() {
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
 const CARD_WIDTH = 160;
 
 const styles = StyleSheet.create({
@@ -137,8 +151,8 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginBottom: 24,
     borderRadius: 20,
-    overflow: 'hidden',
-    shadowColor: 'rgba(0,0,0,0.15)',
+    overflow: "hidden",
+    shadowColor: "rgba(0,0,0,0.15)",
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 1,
     shadowRadius: 16,
@@ -146,26 +160,26 @@ const styles = StyleSheet.create({
   },
   heroBanner: {
     height: 140,
-    justifyContent: 'flex-end',
+    justifyContent: "flex-end",
   },
   heroBannerImage: {
     borderRadius: 20,
   },
   heroBannerOverlay: {
-    backgroundColor: 'rgba(10, 30, 20, 0.62)',
+    backgroundColor: "rgba(10, 30, 20, 0.62)",
     padding: 16,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
   },
   heroTitle: {
     fontSize: 17,
-    fontWeight: '700',
-    color: '#fff',
+    fontWeight: "700",
+    color: "#fff",
     marginBottom: 4,
   },
   heroSubtitle: {
     fontSize: 12,
-    color: 'rgba(255,255,255,0.82)',
+    color: "rgba(255,255,255,0.82)",
     lineHeight: 17,
   },
 
@@ -178,18 +192,18 @@ const styles = StyleSheet.create({
   categoryCard: {
     width: 130,
     borderRadius: 16,
-    overflow: 'hidden',
+    overflow: "hidden",
     backgroundColor: colors.surface,
-    shadowColor: 'rgba(0,0,0,0.07)',
+    shadowColor: "rgba(0,0,0,0.07)",
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 1,
     shadowRadius: 8,
     elevation: 3,
   },
   categoryImage: {
-    width: '100%',
+    width: "100%",
     height: 100,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: "#f0f0f0",
   },
   categoryLabelRow: {
     paddingHorizontal: 10,
@@ -204,30 +218,30 @@ const styles = StyleSheet.create({
 
   // ── Drugs grid ──
   drugsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 20,
     marginTop: 16,
   },
   drugCard: {
-    width: '47%',
+    width: "47%",
     backgroundColor: colors.surface,
     borderRadius: 16,
-    overflow: 'hidden',
-    shadowColor: 'rgba(0,0,0,0.07)',
+    overflow: "hidden",
+    shadowColor: "rgba(0,0,0,0.07)",
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 1,
     shadowRadius: 8,
     elevation: 3,
   },
   drugImageContainer: {
-    width: '100%',
+    width: "100%",
     height: 130,
-    backgroundColor: '#F8F8F8',
+    backgroundColor: "#F8F8F8",
   },
   drugImage: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   drugInfo: {
     padding: 10,

@@ -37,8 +37,8 @@ const TABS: TabItem[] = [
     label: "RDV",
   },
   {
-    name: "medecines",
-    path: "/(main)/(tabs)/medecines",
+    name: "medications",
+    path: "/(main)/(tabs)/medications",
     icon: "medical-outline",
     iconActive: "medical",
     label: "Drugs",
