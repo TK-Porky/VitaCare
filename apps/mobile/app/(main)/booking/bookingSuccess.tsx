@@ -38,7 +38,7 @@ export default function BookingSuccessScreen() {
     <SafeAreaView style={styles.root}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
 
-      <View style={styles.content}>
+      <View style={[styles.content]}>
         {/* ── Illustration / icon ── */}
         <View style={styles.iconWrapper}>
           <Ionicons name="checkmark-circle" size={72} color={colors.primary} />
@@ -59,22 +59,16 @@ export default function BookingSuccessScreen() {
             </View>
           </View>
 
-          <View style={styles.cardDivider} />
-
           {/* Date */}
           <View style={styles.infoRow}>
-            <Ionicons name="calendar-outline" size={16} color={colors.inkMuted} />
+            <Ionicons name="calendar-outline" size={16} color={colors.ink} />
             <Text style={styles.infoText}>
               {date} à {time}
             </Text>
           </View>
 
-          <View style={styles.cardDivider} />
-
           {/* Payment */}
           <Text style={styles.infoText}>{paymentLabel}</Text>
-
-          <View style={styles.cardDivider} />
 
           {/* Location */}
           <Text style={styles.infoText}>{(location as string).replace('\\n', '\n')}</Text>
@@ -87,8 +81,8 @@ export default function BookingSuccessScreen() {
           label="Voir mes réservations"
           variant="solid"
           size="md"
-          onPress={() => router.replace('/reservations' as never)}
-          style={styles.cta}
+          onPress={() => router.replace('/(main)/(tabs)/appointments' as never)}
+          fullWidth
         />
       </View>
     </SafeAreaView>
@@ -117,7 +111,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   subtitle: {
-    fontFamily: fontFamily.regular,
+    fontFamily: fontFamily.semiBold,
     fontSize: fontSize.base,
     color: colors.inkMuted,
     textAlign: 'center',
@@ -129,6 +123,7 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     borderWidth: 1,
+    backgroundColor: colors.surface,
     borderColor: colors.border,
     borderRadius: 16,
     padding: 20,
@@ -152,7 +147,7 @@ const styles = StyleSheet.create({
   },
   doctorSpecialty: {
     fontFamily: fontFamily.regular,
-    fontSize: fontSize.sm,
+    fontSize: fontSize.md,
     color: colors.inkMuted,
   },
   cardDivider: {
@@ -160,21 +155,27 @@ const styles = StyleSheet.create({
     backgroundColor: colors.border,
   },
   infoRow: {
+    display: 'flex',
     flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: colors.white,
+    padding: 12,
+    borderRadius: 10,
     gap: 8,
   },
   infoText: {
+    textAlign: 'center',
     fontFamily: fontFamily.regular,
-    fontSize: fontSize.sm,
-    color: colors.inkMuted,
+    fontSize: fontSize.md,
+    color: colors.ink,
     lineHeight: 20,
   },
 
   // Footer
   footer: {
     paddingHorizontal: 24,
-    paddingBottom: Platform.OS === 'ios' ? 32 : 24,
+    height: '10%'
   },
   cta: {
     width: '100%',

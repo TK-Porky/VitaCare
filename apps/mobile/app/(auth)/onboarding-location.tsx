@@ -14,6 +14,7 @@ import { colors, fontFamily, fontSize } from '../../src/themes';
 
 export default function OnboardingLocationScreen() {
   const [location, setLocation] = useState('Rue Simekoa, Yaoundé');
+  const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleContinue = async () => {
@@ -24,6 +25,10 @@ export default function OnboardingLocationScreen() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleChangeSearchQuery = (query: string) => {
+    setSearchQuery(query);
   };
 
   return (
@@ -45,8 +50,8 @@ export default function OnboardingLocationScreen() {
         </View>
 
         <SearchInput
-          value=""
-          onChangeText={() => {}}
+          value={searchQuery}
+          onChangeText={handleChangeSearchQuery}
           placeholder="Rechercher votre position..."
         />
 

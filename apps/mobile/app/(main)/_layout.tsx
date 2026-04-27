@@ -30,14 +30,7 @@ export default function MainLayout() {
           }}
         />
         <Stack.Screen
-          name="medications/reminder"
-          options={{
-            presentation: "modal",
-            animation: "slide_from_bottom",
-          }}
-        />
-        <Stack.Screen
-          name="booking/bookingSucess"
+          name="booking/bookingSuccess"
           options={{
             presentation: "modal"
           }}

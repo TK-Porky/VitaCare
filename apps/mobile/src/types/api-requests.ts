@@ -15,8 +15,7 @@ export interface LoginRequest {
 export interface RegisterRequest {
   email: string;
   password: string;
-  firstName: string;
-  lastName: string;
+  fullname: string;
   phone?: string;
   dateOfBirth?: string;
   gender?: 'male' | 'female' | 'other';

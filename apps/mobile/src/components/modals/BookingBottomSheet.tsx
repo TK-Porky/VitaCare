@@ -136,7 +136,7 @@ export const BookingBottomSheet = forwardRef<BookingBottomSheetRef, Props>(
         setStep((s) => s + 1);
       } else {
         sheetRef.current?.close();
-        router.push("/booking/success" as never);
+        router.push("/booking/bookingSuccess" as never);
       }
     };
 

@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -43,12 +43,22 @@ export default function LandingScreen() {
             fullWidth={true}
             icon={<Ionicons name="mail" size={18} color={colors.inkLight} />}
           />
+
+          <Text style={styles.or}>OU</Text>
+
+          <PrimaryButton
+            label="Créer un compte"
+            onPress={() => router.push('/(auth)/register')}
+            variant='outline'
+            fullWidth={true}
+            icon={<Ionicons name="person" size={18} color={colors.inkLight} />}
+          />
         </View>
 
         <Text style={styles.legal}>
-          En continuant, vous acceptez nos{' '}
+          L'utilisation de l'application marque l'accord avec nos {' '}
           <Text style={styles.legalBold}>conditions d'utilisation</Text>
-          {' '}et notre{' '}
+          {' '}et notre {' '}
           <Text style={styles.legalBold}>politique de confidentialité</Text>
         </Text>
       </View>
@@ -112,5 +122,11 @@ const styles = StyleSheet.create({
   legalBold: { 
     color: colors.ink, 
     fontFamily: fontFamily.semiBold 
+  },
+  or: {
+    fontFamily: fontFamily.regular,
+    fontSize: fontSize.sm,
+    color: colors.inkLight,
+    textAlign: 'center',
   },
 });
