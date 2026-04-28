@@ -22,6 +22,8 @@ importers:
 
   packages/shared-types: {}
 
+  packages/ui: {}
+
   packages/utils:
     dependencies:
       '@vitacare/shared-types':
