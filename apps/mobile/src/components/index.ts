@@ -12,3 +12,9 @@ export * from './layout'
 
 // Importation des composantes visuelles
 export * from './display'
+
+// Importation des composants génériques
+export * from './generics'
+
+// Importation des modales
+export * from './modals'

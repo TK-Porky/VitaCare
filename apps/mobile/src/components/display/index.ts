@@ -1,14 +1,20 @@
 // Generic Components
+export { SectionHeader } from './SectionHeader'
+export { SearchBar } from './SearchBar'
+
+// Dashboard Components
+export { StatCard } from './StatCard'
 export { AppointmentItem } from './AppointmentItem'
 export { MedicationItem } from './MedicationItem'
 export { ObservanceCard } from './ObservanceCard'
-export { SectionHeader } from './SectionHeader'
-export { StatCard } from './StatCard'
-export { SearchBar } from './SearchBar'
 
 // Maps Components
 export { MapMarker } from './MapMarker'
 export { MapProviderCard } from './MapProviderCard'
 
 // Explore Components
-export { ClinicCard, ClinicCardData } from './ClinicCard'
+export { ClinicCard } from './ClinicCard'
+
+// Appointments Component
+export { AppointmentCard } from './AppointmentCard'
+export { MonthHeader } from './MonthHeader'

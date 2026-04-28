@@ -9,17 +9,19 @@ import {
   AppointmentItem,
 } from "../../../src/components";
 import { colors, fontFamily, fontSize } from "../../../src/themes";
+import { DASHBOARD_DATA } from "../../../src/data/mockDashboard";
 
 type BoardProps = {
   onMap: () => void;
 };
 
 export default function DashboardScreen({ onMap }: BoardProps) {
+  const data = DASHBOARD_DATA;
   return (
     <View style={styles.root}>
       <StatusBar
         translucent
-        backgroundColor="transparent"
+        backgroundColor={colors.primary}
         barStyle="dark-content"
       />
       <AppHeader onSearch={() => {}} onMap={onMap} />
@@ -31,34 +33,34 @@ export default function DashboardScreen({ onMap }: BoardProps) {
         {/* Greeting */}
         <View style={styles.greeting}>
           <Text style={styles.greetingText}>
-            Bienvenue <Text style={styles.greetingName}>utilisateur</Text> !
+            Bienvenue <Text style={styles.greetingName}>{data.currentUser}</Text> !
           </Text>
-          <Text style={styles.greetingDate}>Aujourd'hui, 25 Mars 2026</Text>
+          <Text style={styles.greetingDate}>Aujourd'hui, {data.currentDate}</Text>
         </View>
 
         {/* Observance */}
         <ObservanceCard
-          remainingDoses={3}
-          totalDoses={3}
-          appointments={1}
-          observancePercent={50}
+          remainingDoses={data.stats.pending}
+          totalDoses={data.stats.total}
+          appointments={data.appointments.length}
+          observancePercent={data.stats.observance}
         />
 
         {/* Stats */}
         <View style={styles.statsRow}>
           <StatCard
             icon={<Flame size={20} color={colors.inkLight} />}
-            value={0}
+            value={data.streak}
             label={"Jours\nConsécutifs"}
           />
           <StatCard
             icon={<Pill size={20} color={colors.inkLight} />}
-            value={3}
+            value={data.activeMedications}
             label={"Médicaments\nactifs"}
           />
           <StatCard
             icon={<TrendingUp size={20} color={colors.inkLight} />}
-            value="44%"
+            value={`${data.monthlyProgress}%`}
             label="Ce mois-ci"
           />
         </View>
@@ -66,23 +68,41 @@ export default function DashboardScreen({ onMap }: BoardProps) {
         {/* Prises du jour */}
         <View style={styles.section}>
           <SectionHeader title="Prises du jour" onSeeAll={() => {}} />
-          <MedicationItem
-            name="Amoxicilline"
-            dose="2 Comprimés • Pris"
-            status="missed"
-            time="08:00"
-          />
+          {data.medications.length === 0 ? (
+            <Text style={styles.emptyText}>Aucune prise programmée</Text>
+          ):(
+            <>
+              {data.medications.map((medication, index) => (
+                <MedicationItem
+                key={index}
+                name={medication.name}
+                dose={medication.dosage}
+                status={medication.status}
+                time={medication.time}
+              />
+              ))}
+            </>
+          )}
         </View>
 
         {/* Rendez-vous */}
         <View style={styles.section}>
           <SectionHeader title="Vos Rendez-vous" onSeeAll={() => {}} />
-          <AppointmentItem
-            doctorName="Dr. Idriss Kakmo"
-            date="26 Mars 2026"
-            time="14:00"
-            status="confirmed"
-          />
+          {data.appointments.length === 0 ? (
+            <Text style={styles.emptyText}>Aucun rendez-vous prévu</Text>
+          ):(
+            <>
+              {data.appointments.map((appointment, index) => (
+                <AppointmentItem
+                key={index}
+                doctorName={appointment.doctorName}
+                date={appointment.date}
+                time={appointment.time}
+                status={appointment.status}
+              />
+              ))}
+            </>
+          )}
         </View>
       </ScrollView>
     </View>
@@ -97,7 +117,7 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 16,
     paddingTop: 8,
-    paddingBottom: 100,
+    paddingBottom: 24,
     gap: 20,
   },
   greeting: {
@@ -114,6 +134,11 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   greetingDate: {
+    fontFamily: fontFamily.regular,
+    fontSize: fontSize.sm,
+    color: colors.inkLight,
+  },
+  emptyText: {
     fontFamily: fontFamily.regular,
     fontSize: fontSize.sm,
     color: colors.inkLight,

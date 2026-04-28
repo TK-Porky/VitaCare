@@ -1,39 +1,39 @@
 import { useState } from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { MoreHorizontal } from "lucide-react-native";
 import { colors, fontFamily, fontSize } from "../../../src/themes";
 import { PrimaryButton } from "../buttons";
-
-export type ClinicCardData = {
-  id: string;
-  doctorName: string;
-  specialty: string;
-  price: string;
-  clinicName: string;
-  description: string;
-  hours: string;
-  days: string;
-  location: string;
-  imageUri?: string;
-  imageFallbackColor?: string;
-};
+import { ClinicProvider } from "../../types";
 
 function DoctorRow({
+  avatar,
   name,
   specialty,
   price,
   onMore,
+  onProfile,
 }: {
+  avatar?: string;
   name: string;
   specialty: string;
   price: string;
   onMore?: () => void;
+  onProfile?: () => void;
 }) {
   return (
     <View style={styles.doctorRow}>
-      <View style={styles.avatar}>
-        <Text style={styles.avatarInitial}>{name[4]}</Text>
-      </View>
+      <TouchableOpacity style={styles.avatar} onPress={onProfile}>
+        {avatar ? (
+          <Image
+            source={{ uri: avatar }}
+            style={styles.avatarImage}
+            resizeMode="cover"
+          />
+        ):(
+          <Text style={styles.avatarInitial}>{name[0]}</Text>
+        )}
+      </TouchableOpacity>
       <View style={styles.doctorInfo}>
         <Text style={styles.doctorName}>{name}</Text>
         <View style={styles.doctorMeta}>
@@ -43,14 +43,24 @@ function DoctorRow({
           <Text style={styles.price}> • {price}</Text>
         </View>
       </View>
-      <TouchableOpacity onPress={onMore} activeOpacity={0.7} style={styles.moreBtn}>
+      <TouchableOpacity
+        onPress={onMore}
+        activeOpacity={0.7}
+        style={styles.moreBtn}
+      >
         <MoreHorizontal size={18} color={colors.inkLight} />
       </TouchableOpacity>
     </View>
   );
 }
 
-function ClinicImage({ uri, fallbackColor = "#C8B8A2" }: { uri?: string; fallbackColor?: string }) {
+function ClinicImage({
+  uri,
+  fallbackColor = "#C8B8A2",
+}: {
+  uri?: string;
+  fallbackColor?: string;
+}) {
   if (uri) {
     return <Image source={{ uri }} style={styles.image} resizeMode="cover" />;
   }
@@ -78,11 +88,7 @@ function ClinicInfo({
     <View style={styles.infoContainer}>
       <View style={styles.titleRow}>
         <Text style={styles.clinicName}>{clinicName}</Text>
-        <PrimaryButton
-          label="Réserver"
-          size="sm"
-          onPress={onReserve}
-        />
+        <PrimaryButton label="Réserver" size="sm" onPress={onReserve} />
       </View>
 
       <Text style={styles.description}>
@@ -96,7 +102,7 @@ function ClinicInfo({
 
       <View style={styles.hoursRow}>
         <Text style={styles.infoText}>
-        <Text style={styles.infoBold}>{hours}</Text>
+          <Text style={styles.infoBold}>{hours}</Text>
         </Text>
         <Text style={styles.dot}> • </Text>
         <Text style={styles.infoText}>
@@ -104,29 +110,36 @@ function ClinicInfo({
         </Text>
       </View>
 
-      <Text style={styles.location}>{location}</Text>
+      <View style={styles.locationRow}>
+        <Ionicons name="location-outline" size={14} color={colors.inkLight} />
+        <Text style={styles.location}>{location}</Text>
+      </View>
     </View>
   );
 }
 
-export function ClinicCard({
-  data,
-  onReserve,
-  onMore,
-}: {
-  data: ClinicCardData;
+interface ClinicCardProps {
+  data: ClinicProvider;
   onReserve?: () => void;
   onMore?: () => void;
-}) {
+  onProfile?: () => void;
+}
+
+export function ClinicCard({ data, onReserve, onMore, onProfile }: ClinicCardProps) {
   return (
     <View style={styles.card}>
       <DoctorRow
+        avatar={data.avatarUri}
         name={data.doctorName}
         specialty={data.specialty}
         price={data.price}
         onMore={onMore}
+        onProfile={onProfile}
       />
-      <ClinicImage uri={data.imageUri} fallbackColor={data.imageFallbackColor} />
+      <ClinicImage
+        uri={data.imageUri}
+        fallbackColor={data.imageFallbackColor}
+      />
       <ClinicInfo
         clinicName={data.clinicName}
         description={data.description}
@@ -163,6 +176,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#D0C4B8",
     alignItems: "center",
     justifyContent: "center",
+  },
+  avatarImage:{
+    width: "100%",
+    height: "100%",
+    borderRadius: 22,
   },
   avatarInitial: {
     fontSize: fontSize.lg,
@@ -261,6 +279,11 @@ const styles = StyleSheet.create({
   },
   dot: {
     color: colors.inkLight,
+  },
+  locationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
   },
   location: {
     fontSize: fontSize.sm,

@@ -23,10 +23,16 @@ export default function MainLayout() {
           }}
         />
         <Stack.Screen
-          name="medications/[id]"
+          name="medications/reminders"
           options={{
             presentation: "modal",
             animation: "slide_from_bottom",
+          }}
+        />
+        <Stack.Screen
+          name="booking/bookingSuccess"
+          options={{
+            presentation: "modal"
           }}
         />
       </Stack>

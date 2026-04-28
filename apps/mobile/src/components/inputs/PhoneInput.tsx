@@ -2,6 +2,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { ChevronDown, Phone } from 'lucide-react-native';
 import { BaseInput, BaseInputProps } from '../generics/BaseInput';
 import { colors, fontFamily, fontSize } from '../../themes';
+import { formatCMPhone } from "@vitacare/utils";
 
 type Props = Omit<BaseInputProps, 'leftSlot' | 'keyboardType'> & {
   countryCode?: string;
@@ -15,12 +16,25 @@ type Props = Omit<BaseInputProps, 'leftSlot' | 'keyboardType'> & {
 export function PhoneInput({
   countryCode = '+237',
   onCountryPress,
+  onChangeText,
+  value,
   ...baseProps
 }: Props) {
+
+  const handleTextChange = (text: string) => {
+    if (onChangeText) {
+      const formatted = formatCMPhone(text);
+      onChangeText(formatted);
+    }
+  };
+
   return (
     <BaseInput
       keyboardType="phone-pad"
       placeholder="Numéro de téléphone"
+      onChangeText={handleTextChange}
+      value={value}
+      maxLength={15}
       leftSlot={
         <View style={styles.leftSlot}>
           <TouchableOpacity

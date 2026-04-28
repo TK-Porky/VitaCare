@@ -37,8 +37,8 @@ const TABS: TabItem[] = [
     label: "RDV",
   },
   {
-    name: "medecines",
-    path: "/(main)/(tabs)/medecines",
+    name: "medications",
+    path: "/(main)/(tabs)/medications",
     icon: "medical-outline",
     iconActive: "medical",
     label: "Drugs",
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: 4,
     paddingHorizontal: 12,
-    minWidth: 60,
+    width: 80,
   },
   tabLabel: {
     fontFamily: fontFamily.medium,
@@ -148,7 +148,5 @@ const styles = StyleSheet.create({
     top: -12,
     borderRadius: 999,
     backgroundColor: colors.primary,
-    boxShadow: `0 4px 8px ${colors.primary}`,
-
   },
 });
