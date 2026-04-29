@@ -1,12 +1,14 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
   SafeAreaView,
   Platform,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
 import MapView, { UrlTile, PROVIDER_DEFAULT } from 'react-native-maps';
+import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 
 import { BackButton } from '../../../src/components';
@@ -68,6 +70,7 @@ const INITIAL_REGION = {
 export default function MapScreen() {
   const router = useRouter();
   const [search, setSearch] = useState('');
+  const [region, setRegion] = useState(INITIAL_REGION);
   const [selectedId, setSelectedId] = useState<string | null>(MOCK_PROVIDERS[0].id);
   const filterSheetRef = useRef<FilterBottomSheetRef>(null);
   const [filters, setFilters] = useState<FilterState>({
@@ -75,6 +78,31 @@ export default function MapScreen() {
     services: [],
     languages: [],
   });
+  const [isLoadingLocation, setIsLoadingLocation] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          setIsLoadingLocation(false);
+          return;
+        }
+
+        let currentLoc = await Location.getCurrentPositionAsync({});
+        setRegion({
+          latitude: currentLoc.coords.latitude,
+          longitude: currentLoc.coords.longitude,
+          latitudeDelta: 0.05,
+          longitudeDelta: 0.05,
+        });
+      } catch (error) {
+        console.error("Error getting location:", error);
+      } finally {
+        setIsLoadingLocation(false);
+      }
+    })();
+  }, []);
 
   const providers = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -114,7 +142,8 @@ export default function MapScreen() {
       <MapView
         style={StyleSheet.absoluteFillObject}
         provider={PROVIDER_DEFAULT}
-        initialRegion={INITIAL_REGION}
+        region={region}
+        onRegionChangeComplete={setRegion}
         showsUserLocation
         showsMyLocationButton={false}
         showsCompass={false}
@@ -137,8 +166,14 @@ export default function MapScreen() {
         ))}
       </MapView>
 
-      {/* ── Overlay layer — reçoit tous les events, laisse passer vers la carte ── */}
+      {/* ── Overlay layer ── */}
       <View style={StyleSheet.absoluteFillObject} pointerEvents="box-none">
+        
+        {isLoadingLocation && (
+          <View style={styles.loaderContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+          </View>
+        )}
 
         {/* ── Top bar ── */}
         <SafeAreaView style={styles.safeTop}>
@@ -167,7 +202,7 @@ export default function MapScreen() {
 
       </View>
 
-      {/* ── Filter BottomSheet — hors du overlay pour z-index maximal ── */}
+      {/* ── Filter BottomSheet ── */}
       <FilterBottomSheet
         ref={filterSheetRef}
         initialFilters={filters}
@@ -213,5 +248,12 @@ const styles = StyleSheet.create({
   cardWrapper: {
     marginHorizontal: 16,
     marginBottom: 24,
+  },
+  loaderContainer: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255,255,255,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 99,
   },
 });

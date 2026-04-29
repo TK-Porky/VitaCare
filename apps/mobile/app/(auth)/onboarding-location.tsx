@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,16 +6,65 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
 import { MapPin, Search } from 'lucide-react-native';
+import MapView, { UrlTile, Marker, PROVIDER_DEFAULT } from 'react-native-maps';
+import * as Location from 'expo-location';
 import { StepHeader, SearchInput, PrimaryButton } from '../../src/components';
 import { colors, fontFamily, fontSize } from '../../src/themes';
 
+const INITIAL_REGION = {
+  latitude: 3.848,
+  longitude: 11.502,
+  latitudeDelta: 0.05,
+  longitudeDelta: 0.05,
+};
+
 export default function OnboardingLocationScreen() {
-  const [location, setLocation] = useState('Rue Simekoa, Yaoundé');
+  const [location, setLocation] = useState('Recherche de votre position...');
+  const [region, setRegion] = useState(INITIAL_REGION);
+  const [markerCoords, setMarkerCoords] = useState({
+    latitude: INITIAL_REGION.latitude,
+    longitude: INITIAL_REGION.longitude,
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isMapReady, setIsMapReady] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setLocation('Permission de localisation refusée');
+        return;
+      }
+
+      let currentLoc = await Location.getCurrentPositionAsync({});
+      const newRegion = {
+        latitude: currentLoc.coords.latitude,
+        longitude: currentLoc.coords.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      };
+      setRegion(newRegion);
+      setMarkerCoords({
+        latitude: currentLoc.coords.latitude,
+        longitude: currentLoc.coords.longitude,
+      });
+
+      // Reverse geocoding to get address
+      let reverse = await Location.reverseGeocodeAsync({
+        latitude: currentLoc.coords.latitude,
+        longitude: currentLoc.coords.longitude,
+      });
+      if (reverse.length > 0) {
+        const item = reverse[0];
+        setLocation(`${item.street || ''} ${item.name || ''}, ${item.city || ''}`);
+      }
+    })();
+  }, []);
 
   const handleContinue = async () => {
     setIsLoading(true);
@@ -32,9 +81,7 @@ export default function OnboardingLocationScreen() {
   };
 
   return (
-    <View
-      style={styles.root}
-    >
+    <View style={styles.root}>
       <StepHeader
         current={1}
         total={2}
@@ -55,14 +102,38 @@ export default function OnboardingLocationScreen() {
           placeholder="Rechercher votre position..."
         />
 
-        {/* Map placeholder */}
-        <View style={styles.map}>
-          <Text style={styles.mapPlaceholder}>Carte</Text>
+        {/* Map Container */}
+        <View style={styles.mapContainer}>
+          <MapView
+            style={styles.map}
+            provider={PROVIDER_DEFAULT}
+            region={region}
+            onRegionChangeComplete={setRegion}
+            onPress={(e) => setMarkerCoords(e.nativeEvent.coordinate)}
+            onMapReady={() => setIsMapReady(true)}
+          >
+            <UrlTile
+              urlTemplate="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+              maximumZ={19}
+              flipY={false}
+              tileSize={256}
+            />
+            <Marker coordinate={markerCoords}>
+              <View style={styles.customMarker}>
+                <MapPin size={24} color={colors.primary} fill={colors.white} />
+              </View>
+            </Marker>
+          </MapView>
+          {!isMapReady && (
+            <View style={styles.loaderOverlay}>
+              <ActivityIndicator color={colors.primary} />
+            </View>
+          )}
         </View>
 
         <TouchableOpacity style={styles.locationRow} activeOpacity={0.7}>
           <MapPin size={16} color={colors.inkMuted} />
-          <Text style={styles.locationText}>{location}</Text>
+          <Text style={styles.locationText} numberOfLines={1}>{location}</Text>
         </TouchableOpacity>
       </View>
 
@@ -104,18 +175,25 @@ const styles = StyleSheet.create({
     color: colors.inkLight,
     lineHeight: 18,
   },
-  map: {
+  mapContainer: {
     flex: 1,
     backgroundColor: colors.surface,
     borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+    overflow: 'hidden',
     minHeight: 280,
   },
-  mapPlaceholder: {
-    fontFamily: fontFamily.regular,
-    fontSize: fontSize.md,
-    color: colors.inkMuted,
+  map: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  loaderOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  customMarker: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   locationRow: {
     flexDirection: 'row',
@@ -124,6 +202,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   locationText: {
+    flex: 1,
     fontFamily: fontFamily.regular,
     fontSize: fontSize.md,
     color: colors.inkLight,

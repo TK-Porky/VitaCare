@@ -2,23 +2,15 @@
  * Client API pour la communication avec le backend VitaCare
  */
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_CONFIG, API_ENDPOINTS, buildUrl, HTTP_METHODS } from '../types/api-endpoints';
-import { ApiResponse, ApiErrorResponse } from '../types/api-responses';
-
-// ---------------------------------------------------------------------------
-// Configuration et constantes
-// ---------------------------------------------------------------------------
-
-const STORAGE_KEYS = {
-  ACCESS_TOKEN: '@vitacare_access_token',
-  REFRESH_TOKEN: '@vitacare_refresh_token',
-  USER_DATA: '@vitacare_user_data',
-} as const;
+import { useAuthStore } from '../store/useAuthStore';
+import { API_CONFIG, API_ENDPOINTS } from '../types/api-endpoints';
+import { ApiResponse } from '../types/api-responses';
 
 class ApiClient {
   private baseURL: string;
   private defaultHeaders: Record<string, string>;
+  private isRefreshing = false;
+  private refreshSubscribers: ((token: string) => void)[] = [];
 
   constructor() {
     this.baseURL = `${API_CONFIG.BASE_URL}/${API_CONFIG.VERSION}`;
@@ -28,54 +20,13 @@ class ApiClient {
     };
   }
 
-  // ---------------------------------------------------------------------------
-  // Gestion des tokens
-  // ---------------------------------------------------------------------------
-
-  async getAccessToken(): Promise<string | null> {
-    try {
-      return await AsyncStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
-    } catch (error) {
-      console.error('Error getting access token:', error);
-      return null;
-    }
+  private onTokenRefreshed(token: string) {
+    this.refreshSubscribers.map((callback) => callback(token));
+    this.refreshSubscribers = [];
   }
 
-  async setAccessToken(token: string): Promise<void> {
-    try {
-      await AsyncStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, token);
-    } catch (error) {
-      console.error('Error setting access token:', error);
-    }
-  }
-
-  async getRefreshToken(): Promise<string | null> {
-    try {
-      return await AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
-    } catch (error) {
-      console.error('Error getting refresh token:', error);
-      return null;
-    }
-  }
-
-  async setRefreshToken(token: string): Promise<void> {
-    try {
-      await AsyncStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, token);
-    } catch (error) {
-      console.error('Error setting refresh token:', error);
-    }
-  }
-
-  async clearTokens(): Promise<void> {
-    try {
-      await AsyncStorage.multiRemove([
-        STORAGE_KEYS.ACCESS_TOKEN,
-        STORAGE_KEYS.REFRESH_TOKEN,
-        STORAGE_KEYS.USER_DATA,
-      ]);
-    } catch (error) {
-      console.error('Error clearing tokens:', error);
-    }
+  private addRefreshSubscriber(callback: (token: string) => void) {
+    this.refreshSubscribers.push(callback);
   }
 
   // ---------------------------------------------------------------------------
@@ -86,42 +37,61 @@ class ApiClient {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
-    const url = `${this.baseURL}${endpoint}`;
+    const url = endpoint.startsWith('http') ? endpoint : `${this.baseURL}${endpoint}`;
     
-    // Récupérer le token d'accès
-    const token = await this.getAccessToken();
+    // Récupérer les tokens du store Zustand
+    const { token, logout } = useAuthStore.getState();
     
     // Préparer les headers
-    const headers = {
+    const headers: Record<string, string> = {
       ...this.defaultHeaders,
-      ...options.headers,
+      ...(options.headers as Record<string, string>),
     };
 
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    // Préparer la configuration de la requête
     const config: RequestInit = {
       ...options,
       headers,
-      signal: AbortSignal.timeout(API_CONFIG.TIMEOUT),
+      // Signal timeout si supporté par l'environnement
+      ...(typeof AbortSignal !== 'undefined' && 'timeout' in AbortSignal 
+        ? { signal: (AbortSignal as any).timeout(API_CONFIG.TIMEOUT) } 
+        : {}),
     };
 
     try {
       console.log(`[API] ${options.method || 'GET'} ${url}`);
       
       const response = await fetch(url, config);
-      const data = await response.json();
-
-      // Gérer les erreurs d'authentification
+      
+      // Gérer les erreurs d'authentification (401)
       if (response.status === 401) {
-        await this.handleTokenRefresh();
-        // Réessayer la requête avec le nouveau token
-        return this.request<T>(endpoint, options);
+        if (!this.isRefreshing) {
+          this.isRefreshing = true;
+          try {
+            const newToken = await this.handleTokenRefresh();
+            this.isRefreshing = false;
+            this.onTokenRefreshed(newToken);
+          } catch (error) {
+            this.isRefreshing = false;
+            logout(); // Déconnexion si le refresh échoue
+            throw error;
+          }
+        }
+
+        // Attendre que le token soit rafraîchi
+        return new Promise((resolve) => {
+          this.addRefreshSubscriber((newToken) => {
+            const retryHeaders = { ...headers, 'Authorization': `Bearer ${newToken}` };
+            resolve(this.request<T>(endpoint, { ...options, headers: retryHeaders }));
+          });
+        });
       }
 
-      // Retourner la réponse formatée
+      const data = await response.json();
+
       return {
         success: response.ok,
         data: response.ok ? data : undefined,
@@ -133,18 +103,10 @@ class ApiClient {
       console.error('[API] Request error:', error);
       
       if (error instanceof Error) {
-        if (error.name === 'AbortError') {
-          return {
-            success: false,
-            error: 'La requête a expiré',
-            statusCode: 408,
-          };
-        }
-        
         return {
           success: false,
-          error: error.message,
-          statusCode: 0,
+          error: error.name === 'AbortError' ? 'La requête a expiré' : error.message,
+          statusCode: error.name === 'AbortError' ? 408 : 0,
         };
       }
 
@@ -160,34 +122,29 @@ class ApiClient {
   // Refresh token
   // ---------------------------------------------------------------------------
 
-  private async handleTokenRefresh(): Promise<void> {
-    const refreshToken = await this.getRefreshToken();
+  private async handleTokenRefresh(): Promise<string> {
+    const { refreshToken, setAuth, user } = useAuthStore.getState();
     
-    if (!refreshToken) {
-      await this.clearTokens();
+    if (!refreshToken || !user) {
       throw new Error('No refresh token available');
     }
 
     try {
       const response = await fetch(`${this.baseURL}${API_ENDPOINTS.AUTH.REFRESH}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refreshToken }),
       });
 
       const data = await response.json();
 
-      if (response.ok) {
-        await this.setAccessToken(data.token);
-        await this.setRefreshToken(data.refreshToken);
+      if (response.ok && data.token) {
+        setAuth(user, data.token, data.refreshToken || refreshToken);
+        return data.token;
       } else {
-        await this.clearTokens();
         throw new Error('Token refresh failed');
       }
     } catch (error) {
-      await this.clearTokens();
       throw error;
     }
   }
@@ -211,54 +168,36 @@ class ApiClient {
       });
       const queryString = searchParams.toString();
       if (queryString) {
-        url += `?${queryString}`;
+        url += (url.includes('?') ? '&' : '?') + queryString;
       }
     }
 
     return this.request<T>(url, { method: 'GET' });
   }
 
-  async post<T = any>(
-    endpoint: string,
-    data?: any,
-    options: Omit<RequestInit, 'method' | 'body'> = {}
-  ): Promise<ApiResponse<T>> {
+  async post<T = any>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, {
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
-      ...options,
     });
   }
 
-  async put<T = any>(
-    endpoint: string,
-    data?: any,
-    options: Omit<RequestInit, 'method' | 'body'> = {}
-  ): Promise<ApiResponse<T>> {
+  async put<T = any>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, {
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
-      ...options,
     });
   }
 
-  async patch<T = any>(
-    endpoint: string,
-    data?: any,
-    options: Omit<RequestInit, 'method' | 'body'> = {}
-  ): Promise<ApiResponse<T>> {
+  async patch<T = any>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, {
       method: 'PATCH',
       body: data ? JSON.stringify(data) : undefined,
-      ...options,
     });
   }
 
-  async delete<T = any>(
-    endpoint: string,
-    options: Omit<RequestInit, 'method'> = {}
-  ): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, { method: 'DELETE', ...options });
+  async delete<T = any>(endpoint: string): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, { method: 'DELETE' });
   }
 
   // ---------------------------------------------------------------------------
@@ -267,12 +206,21 @@ class ApiClient {
 
   async upload<T = any>(
     endpoint: string,
-    file: File | Blob,
+    fileUri: string,
+    fileName: string,
+    fileType: string,
     fieldName: string = 'file',
     additionalData?: Record<string, any>
   ): Promise<ApiResponse<T>> {
     const formData = new FormData();
-    formData.append(fieldName, file);
+    
+    // Format spécifique pour React Native fetch upload
+    // @ts-ignore
+    formData.append(fieldName, {
+      uri: fileUri,
+      name: fileName,
+      type: fileType,
+    });
 
     if (additionalData) {
       Object.entries(additionalData).forEach(([key, value]) => {
@@ -280,9 +228,10 @@ class ApiClient {
       });
     }
 
-    const token = await this.getAccessToken();
+    const { token } = useAuthStore.getState();
     const headers: Record<string, string> = {
-      Accept: 'application/json',
+      'Accept': 'application/json',
+      'Content-Type': 'multipart/form-data',
     };
 
     if (token) {
@@ -294,7 +243,6 @@ class ApiClient {
         method: 'POST',
         headers,
         body: formData,
-        signal: AbortSignal.timeout(API_CONFIG.TIMEOUT * 2), // Timeout plus long pour les uploads
       });
 
       const data = await response.json();
@@ -307,8 +255,6 @@ class ApiClient {
         statusCode: response.status,
       };
     } catch (error) {
-      console.error('[API] Upload error:', error);
-      
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Upload failed',
@@ -316,42 +262,7 @@ class ApiClient {
       };
     }
   }
-
-  // ---------------------------------------------------------------------------
-  // Méthodes utilitaires
-  // ---------------------------------------------------------------------------
-
-  async healthCheck(): Promise<boolean> {
-    try {
-      const response = await this.get('/health');
-      return response.success;
-    } catch (error) {
-      return false;
-    }
-  }
-
-  async isAuthorized(): Promise<boolean> {
-    const token = await this.getAccessToken();
-    return !!token;
-  }
 }
 
-// ---------------------------------------------------------------------------
-// Instance singleton
-// ---------------------------------------------------------------------------
-
 export const apiClient = new ApiClient();
-
-// ---------------------------------------------------------------------------
-// Hooks et utilitaires React
-// ---------------------------------------------------------------------------
-
-export const useApiClient = () => {
-  return {
-    client: apiClient,
-    isAuthenticated: apiClient.isAuthorized(),
-    healthCheck: apiClient.healthCheck(),
-  };
-};
-
 export default apiClient;
