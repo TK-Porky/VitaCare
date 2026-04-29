@@ -12,8 +12,8 @@ import {
 } from 'react-native';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { colors, fontFamily, fontSize } from "../../../src/themes";
+import { router } from 'expo-router';
 
-// ─── Data ─────────────────────────────────────────────────────────────────────
 const MENU_SECTIONS = [
   {
     title: 'Généraux',
@@ -44,8 +44,6 @@ const MENU_SECTIONS = [
     ],
   },
 ];
-
-// ─── Components ───────────────────────────────────────────────────────────────
 
 function MenuItem({
   icon,
@@ -91,8 +89,12 @@ function MenuSection({ title, items }: { title: string; items: typeof MENU_SECTI
   );
 }
 
-// ─── Screen ───────────────────────────────────────────────────────────────────
 export default function ProfileScreen() {
+
+  const handleDisconnection = () => {
+    router.replace('/(auth)');
+  };
+
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.primary} />
@@ -128,9 +130,9 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Compte</Text>
           <View style={styles.sectionCard}>
-            <MenuItem icon="log-out-outline" label="Se déconnecter" danger />
+            <MenuItem icon="log-out-outline" label="Se déconnecter" onPress={handleDisconnection} danger />
             <View style={styles.itemDivider} />
-            <MenuItem icon="person-remove-outline" label="Supprimer mon compte" danger />
+            <MenuItem icon="person-remove-outline" label="Supprimer mon compte" onPress={() => {}} danger />
           </View>
         </View>
 
@@ -140,7 +142,6 @@ export default function ProfileScreen() {
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   safe: {
     flex: 1,

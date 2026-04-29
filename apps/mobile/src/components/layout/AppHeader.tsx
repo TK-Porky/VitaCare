@@ -1,3 +1,4 @@
+import React from "react";
 import {
   View,
   Text,
@@ -19,19 +20,26 @@ type Props = {
   onMap?: () => void;
   onReminders?: () => void;
   onFilter?: () => void;
+  rightActions?: React.ReactNode;
 };
 
-export function AppHeader({ title, searchBar, searchValue, onSearch, onMap, onReminders, onFilter }: Props) {
+export function AppHeader({
+  title,
+  searchBar,
+  searchValue,
+  onSearch,
+  onMap,
+  onReminders,
+  onFilter,
+  rightActions,
+}: Props) {
   const statusBarHeight = StatusBar.currentHeight ?? 50;
-  let hideLogo = false;
-
-  if (title) {
-    hideLogo = true;
-  }
+  const hideLogo = !!title;
 
   return (
     <View style={[styles.container, { paddingTop: statusBarHeight + 8 }]}>
       <View style={styles.topContainer}>
+        {/* Logo */}
         <View style={styles.logo}>
           {!hideLogo && (
             <>
@@ -41,48 +49,43 @@ export function AppHeader({ title, searchBar, searchValue, onSearch, onMap, onRe
           )}
         </View>
 
-        <View style={styles.actions}>
-          {!searchBar && (
-            <TouchableOpacity
-              onPress={onSearch}
-              activeOpacity={0.7}
-              style={styles.iconButton}
-            >
-              <Search size={20} color={colors.ink} />
-            </TouchableOpacity>
-          )}
-
-          {onFilter && (
-            <TouchableOpacity
-              onPress={onFilter}
-              activeOpacity={0.7}
-              style={styles.iconButton}
-            >
-              <Filter size={20} color={colors.ink} />
-            </TouchableOpacity>
-          )}
-
-          {onMap && (
-            <PrimaryButton
-              label="Carte"
-              onPress={onMap}
-              icon={<Ionicons name="map" size={16} color={colors.white} />}
-              style={styles.mapButton}
-              size="sm"
-            />
-          )}
-
-          {onReminders && !onMap && (
-            <PrimaryButton
-              label="Rappels"
-              onPress={onReminders}
-              icon={<Ionicons name="time-outline" size={18} color={colors.white} />}
-              size="sm"
-              style={styles.mapButton}
-            />
-          )}
-        </View>
+        {/* rightActions a priorité sur les actions individuelles */}
+        {rightActions ? (
+          <View style={styles.actions}>{rightActions}</View>
+        ) : (
+          <View style={styles.actions}>
+            {!searchBar && (
+              <TouchableOpacity onPress={onSearch} activeOpacity={0.7} style={styles.iconButton}>
+                <Search size={20} color={colors.ink} />
+              </TouchableOpacity>
+            )}
+            {onFilter && (
+              <TouchableOpacity onPress={onFilter} activeOpacity={0.7} style={styles.iconButton}>
+                <Filter size={20} color={colors.ink} />
+              </TouchableOpacity>
+            )}
+            {onMap && (
+              <PrimaryButton
+                label="Carte"
+                onPress={onMap}
+                icon={<Ionicons name="map" size={16} color={colors.white} />}
+                style={styles.mapButton}
+                size="sm"
+              />
+            )}
+            {onReminders && !onMap && (
+              <PrimaryButton
+                label="Rappels"
+                onPress={onReminders}
+                icon={<Ionicons name="time-outline" size={18} color={colors.white} />}
+                size="sm"
+                style={styles.mapButton}
+              />
+            )}
+          </View>
+        )}
       </View>
+
       {(title || searchBar) && (
         <View style={styles.bottomContainer}>
           {title && <Text style={styles.title}>{title}</Text>}
@@ -103,7 +106,6 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     backgroundColor: colors.white,
   },
-  // Top section
   topContainer: {
     width: "100%",
     flexDirection: "row",
@@ -114,9 +116,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 2,
-  },
-  logoIcon: {
-    fontSize: 24,
   },
   logoText: {
     fontFamily: fontFamily.bold,
@@ -135,12 +134,6 @@ const styles = StyleSheet.create({
     width: 100,
     gap: 1,
   },
-  mapText: {
-    fontFamily: fontFamily.semiBold,
-    fontSize: fontSize.sm,
-    color: colors.white,
-  },
-  // Bottom section
   bottomContainer: {
     width: "100%",
     paddingTop: 8,

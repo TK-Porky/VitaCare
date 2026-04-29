@@ -34,11 +34,9 @@ export default function OTPScreen() {
     setError("");
     setIsLoading(true);
 
-    setIsLoading(false);
-
     try {
       await new Promise((resolve) => setTimeout(resolve, 1500));
-      router.replace("/(auth)/register");
+      router.replace("/(main)");
     } catch {
       setError("Code incorrect. Veuillez réessayer.");
     } finally {

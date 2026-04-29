@@ -93,7 +93,7 @@ export default function LoginEmailScreen() {
               checked={rememberMe}
               onToggle={() => setRememberMe(v => !v)}
             />
-            <TouchableOpacity activeOpacity={0.7}>
+            <TouchableOpacity activeOpacity={0.7} onPress={() => router.push("/(auth)/forgot-password")}>
               <Text style={styles.forgotText}>Mot de passe oublié</Text>
             </TouchableOpacity>
           </View>

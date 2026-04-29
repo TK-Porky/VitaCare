@@ -13,7 +13,7 @@ export { MapMarker } from './MapMarker'
 export { MapProviderCard } from './MapProviderCard'
 
 // Explore Components
-export { ClinicCard, ClinicCardData } from './ClinicCard'
+export { ClinicCard } from './ClinicCard'
 
 // Appointments Component
 export { AppointmentCard } from './AppointmentCard'

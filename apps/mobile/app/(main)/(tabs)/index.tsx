@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import DashboardScreen from "../home/dashboard";
+import DashboardScreen from "../home";
 
 export default function HomeScreen() {
   const router = useRouter();

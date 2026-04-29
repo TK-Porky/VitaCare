@@ -12,10 +12,6 @@ import React, {
   import { PrimaryButton } from '../buttons';
   import { colors, fontFamily, fontSize } from '../../../src/themes';
   
-  // ---------------------------------------------------------------------------
-  // Types
-  // ---------------------------------------------------------------------------
-  
   export type FilterState = {
     perimeterKm: number;
     services: string[];
@@ -39,28 +35,16 @@ import React, {
   
   const LANGUAGES = ['Français', 'Anglais', 'Pongo', 'Bami', 'Eton', 'Arabe'];
   
-  // ---------------------------------------------------------------------------
-  // Ref API
-  // ---------------------------------------------------------------------------
-  
   export type FilterBottomSheetRef = {
     open: () => void;
     close: () => void;
   };
-  
-  // ---------------------------------------------------------------------------
-  // Props
-  // ---------------------------------------------------------------------------
   
   type Props = {
     initialFilters?: FilterState;
     onApply?: (filters: FilterState) => void;
     onClose?: () => void;
   };
-  
-  // ---------------------------------------------------------------------------
-  // Component
-  // ---------------------------------------------------------------------------
   
   export const FilterBottomSheet = forwardRef<FilterBottomSheetRef, Props>(
     ({ initialFilters = DEFAULT_FILTERS, onApply, onClose }, ref) => {
@@ -75,8 +59,6 @@ import React, {
         open: () => sheetRef.current?.open(),
         close: () => sheetRef.current?.close(),
       }));
-  
-      // ── Helpers ──────────────────────────────────────────────────────────────
   
       const toggleItem = (
         key: 'services' | 'languages',
@@ -101,8 +83,6 @@ import React, {
       const handleBack = () => {
         sheetRef.current?.close();
       };
-  
-      // ── Render ───────────────────────────────────────────────────────────────
   
       return (
         <AppBottomSheet
