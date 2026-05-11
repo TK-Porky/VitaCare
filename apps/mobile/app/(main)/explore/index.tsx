@@ -13,13 +13,29 @@ import {
   BookingBottomSheetRef,
 } from "../../../src/components/modals/BookingBottomSheet";
 
+// ================================================================================== //
+// Main
+// ================================================================================== //
 export default function ExploreScreen() {
+  // ================================================================================== //
+  // Hooks
+  // ================================================================================== //
   const router = useRouter();
+
+  // ================================================================================== //
+  // Refs
+  // ================================================================================== //
   const profileSheetRef = useRef<ProfessionalProviderBottomSheetRef>(null);
   const bookingSheetRef = useRef<BookingBottomSheetRef>(null);
 
+  // ================================================================================== //
+  // States
+  // ================================================================================== //
   const [selectedClinic, setSelectedClinic] = useState(CLINICS[0]);
 
+  // ================================================================================== //
+  // Functions
+  // ================================================================================== //
   const handleMore = (clinicId: string) => {
     const clinic = CLINICS.find((c) => c.id === clinicId);
     if (!clinic) return;
@@ -32,6 +48,9 @@ export default function ExploreScreen() {
     setTimeout(() => bookingSheetRef.current?.open(), 300);
   };
 
+  // ================================================================================== //
+  // Render
+  // ================================================================================== //
   return (
     <SafeAreaView style={styles.root}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.primary} />

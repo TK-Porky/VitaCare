@@ -13,14 +13,26 @@ import {
 } from "react-native";
 import { colors, fontFamily, fontSize } from "../../../src/themes";
 import { SectionHeader } from "../../../src/components";
-import { CATEGORIES, POPULAR_DRUGS } from "../../../src/data/mockStore";
 import { AppHeader } from "../../../src/components";
 import { Category, Drug } from "../../../src/types";
+import { MARKETPLACE_CATEGORIES, MARKETPLACE_DRUGS } from "../../../src/data/mockMedications";
 
+// ================================================================================== //
+// Types
+// ================================================================================== //
 type Props = {
   onReminders?: () => void;
 };
 
+// ================================================================================== //
+// Components
+// ================================================================================== //
+
+/**
+ * Category card component
+ * @param item - Category object
+ * @returns Category card component
+ */
 function CategoryCard({ item }: { item: Category }) {
   return (
     <TouchableOpacity style={styles.categoryCard} activeOpacity={0.85}>
@@ -36,6 +48,11 @@ function CategoryCard({ item }: { item: Category }) {
   );
 }
 
+/**
+ * Drug card component
+ * @param item - Drug object
+ * @returns Drug card component
+ */
 function DrugCard({ item }: { item: Drug }) {
   return (
     <TouchableOpacity style={styles.drugCard} activeOpacity={0.85}>
@@ -57,10 +74,19 @@ function DrugCard({ item }: { item: Drug }) {
   );
 }
 
+// ================================================================================== //
+// Main
+// ================================================================================== //
 export default function MedecineScreen({ onReminders }: Props) {
+  // ================================================================================== //
+  // States
+  // ================================================================================== //
   const [isLoading, setIsLoading] = useState<Boolean>(false);
   const [search, setSearch] = useState("");
 
+  // ================================================================================== //
+  // Loading Render
+  // ================================================================================== //
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -69,9 +95,12 @@ export default function MedecineScreen({ onReminders }: Props) {
     )
   }
 
+  // ================================================================================== //
+  // Render
+  // ================================================================================== //
   return (
     <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.primary} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
 
       {/* ── Top bar ── */}
       <AppHeader
@@ -89,7 +118,7 @@ export default function MedecineScreen({ onReminders }: Props) {
         <TouchableOpacity activeOpacity={0.9} style={styles.heroBannerWrapper}>
           <ImageBackground
             source={{
-              uri: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800",
+              uri: "https://images.unsplash.com/photo-1587854692152-cbe660dbbb88?w=800",
             }}
             style={styles.heroBanner}
             imageStyle={styles.heroBannerImage}
@@ -98,7 +127,7 @@ export default function MedecineScreen({ onReminders }: Props) {
             <View style={styles.heroBannerOverlay}>
               <Text style={styles.heroTitle}>Espaces Médicaments</Text>
               <Text style={styles.heroSubtitle}>
-                Votre annuaire de médicaments à porter de main. Renseignez-vous
+                Votre annuaire de médicaments à portée de main. Renseignez-vous
                 gratuitement sur vos produits pharmaceutiques.
               </Text>
             </View>
@@ -112,7 +141,7 @@ export default function MedecineScreen({ onReminders }: Props) {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.categoriesRow}
         >
-          {CATEGORIES.map((cat) => (
+          {MARKETPLACE_CATEGORIES.map((cat) => (
             <CategoryCard key={cat.id} item={cat} />
           ))}
         </ScrollView>
@@ -120,7 +149,7 @@ export default function MedecineScreen({ onReminders }: Props) {
         {/* ── Les plus recherchés ── */}
         <SectionHeader title="Les plus recherchés" onSeeAll={() => {}} />
         <View style={styles.drugsGrid}>
-          {POPULAR_DRUGS.map((drug) => (
+          {MARKETPLACE_DRUGS.map((drug) => (
             <DrugCard key={drug.id} item={drug} />
           ))}
         </View>
@@ -132,12 +161,13 @@ export default function MedecineScreen({ onReminders }: Props) {
   );
 }
 
-const CARD_WIDTH = 160;
-
+// ================================================================================== //
+// Styles
+// ================================================================================== //
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
   },
 
   // ── Scroll ──
@@ -152,63 +182,61 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     borderRadius: 20,
     overflow: "hidden",
-    shadowColor: "rgba(0,0,0,0.15)",
-    shadowOffset: { width: 0, height: 6 },
+    shadowColor: "rgba(0,0,0,0.1)",
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 1,
-    shadowRadius: 16,
-    elevation: 6,
+    shadowRadius: 10,
+    elevation: 4,
   },
   heroBanner: {
-    height: 140,
+    height: 160,
     justifyContent: "flex-end",
   },
   heroBannerImage: {
     borderRadius: 20,
   },
   heroBannerOverlay: {
-    backgroundColor: "rgba(10, 30, 20, 0.62)",
-    padding: 16,
+    backgroundColor: "rgba(10, 30, 20, 0.5)",
+    padding: 20,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
   },
   heroTitle: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: "#fff",
-    marginBottom: 4,
+    fontFamily: fontFamily.bold,
+    fontSize: fontSize.xl,
+    color: colors.white,
+    marginBottom: 6,
   },
   heroSubtitle: {
-    fontSize: 12,
-    color: "rgba(255,255,255,0.82)",
-    lineHeight: 17,
+    fontFamily: fontFamily.regular,
+    fontSize: fontSize.xs,
+    color: "rgba(255,255,255,0.9)",
+    lineHeight: 18,
   },
 
   // ── Categories ──
   categoriesRow: {
     gap: 12,
     marginBottom: 24,
-    marginTop: 16,
+    marginTop: 12,
   },
   categoryCard: {
-    width: 130,
+    width: 120,
     borderRadius: 16,
     overflow: "hidden",
-    backgroundColor: colors.surface,
-    shadowColor: "rgba(0,0,0,0.07)",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
-    elevation: 3,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   categoryImage: {
     width: "100%",
-    height: 100,
-    backgroundColor: "#f0f0f0",
+    height: 80,
+    backgroundColor: colors.surface,
   },
   categoryLabelRow: {
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     paddingVertical: 10,
-    backgroundColor: colors.surface,
+    alignItems: "center",
   },
   categoryLabel: {
     fontSize: fontSize.sm,
@@ -220,48 +248,46 @@ const styles = StyleSheet.create({
   drugsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 20,
-    marginTop: 16,
+    justifyContent: "space-between",
+    rowGap: 16,
+    marginTop: 12,
   },
   drugCard: {
-    width: "47%",
-    backgroundColor: colors.surface,
+    width: "48%",
+    backgroundColor: colors.white,
     borderRadius: 16,
     overflow: "hidden",
-    shadowColor: "rgba(0,0,0,0.07)",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   drugImageContainer: {
     width: "100%",
-    height: 130,
-    backgroundColor: "#F8F8F8",
+    height: 120,
+    backgroundColor: colors.surface,
   },
   drugImage: {
     width: "100%",
     height: "100%",
   },
   drugInfo: {
-    padding: 10,
+    padding: 12,
   },
   drugCategory: {
-    fontSize: fontSize.sm,
+    fontSize: fontSize.xs,
     fontFamily: fontFamily.regular,
     color: colors.inkLight,
-    marginBottom: 3,
+    marginBottom: 4,
   },
   drugName: {
-    fontSize: fontSize.md,
-    fontFamily: fontFamily.medium,
+    fontSize: fontSize.sm,
+    fontFamily: fontFamily.semiBold,
     color: colors.ink,
-    marginBottom: 4,
+    marginBottom: 6,
     lineHeight: 18,
   },
   drugPrice: {
     fontSize: fontSize.sm,
-    fontFamily: fontFamily.medium,
-    color: colors.inkLight,
+    fontFamily: fontFamily.bold,
+    color: colors.primary,
   },
 });

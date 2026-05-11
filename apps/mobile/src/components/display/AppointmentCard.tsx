@@ -20,7 +20,7 @@ export function AppointmentCard({ item, onPress }: AppointmentCardProps) {
     <TouchableOpacity style={styles.card} onPress={onPress}>
       {/* Header: avatar + name + badge */}
       <View style={styles.cardHeader}>
-        <Image source={{ uri: item.avatarUri }} style={styles.avatar} />
+        <Image source={{ uri: item.doctorAvatarUri || item.avatarUri }} style={styles.avatar} />
         <View style={styles.cardHeaderText}>
           <Text style={styles.doctorName}>{item.doctorName}</Text>
           <Text style={styles.motif} numberOfLines={1}>{item.motif}</Text>

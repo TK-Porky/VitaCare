@@ -5,7 +5,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { PrimaryButton } from '../../src/components';
 import { colors, fontFamily, fontSize } from '../../src/themes';
 
+// ================================================================================== //
+// Main
+// ================================================================================== //
 export default function LandingScreen() {
+  // ================================================================================== //
+  // Render
+  // ================================================================================== //
   return (
     <LinearGradient
       colors={[colors.gradientStart, colors.gradientMid1, colors.gradientMid2, colors.gradientEnd]}

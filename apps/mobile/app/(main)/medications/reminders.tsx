@@ -9,113 +9,115 @@ import {
   StatusBar,
   ActivityIndicator
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { AppHeader } from "../../../src/components";
+import { Bell, Plus, ShoppingBag, Pill, Info } from "lucide-react-native";
+import { AppHeader, PrimaryButton } from "../../../src/components";
 import { colors, fontFamily, fontSize } from "../../../src/themes";
 import {
   AddReminderBottomSheet,
   AddReminderBottomSheetRef,
   ReminderData,
 } from "../../../src/components/modals";
+import { MOCK_REMINDERS } from "../../../src/data/mockMedications";
 
+// ================================================================================== //
+// Types
+// ================================================================================== //
+// Reminder type with id
 type Reminder = ReminderData & { id: string };
 
+// Props type
 type Props = {
   onStore?: () => void;
 };
 
-const MOCK_REMINDERS: Reminder[] = [
-  {
-    id: "1",
-    drugName: "Doliprane",
-    form: "Gelule",
-    dosageValue: "500",
-    dosageUnit: "mg",
-    frequencyUnit: "Jour",
-    frequencyCount: "1",
-    intervalDays: "0",
-    time: "12:30",
-  },
-  {
-    id: "2",
-    drugName: "Doliprane",
-    form: "Gelule",
-    dosageValue: "500",
-    dosageUnit: "mg",
-    frequencyUnit: "Jour",
-    frequencyCount: "1",
-    intervalDays: "0",
-    time: "12:30",
-  },
-];
+const FREE_LIMIT = 5;
 
-const FREE_LIMIT = 2;
+// ================================================================================== //
+// Components
+// ================================================================================== //
 
+/**
+ * Limit banner component
+ * @param onUpgrade - Callback when upgrade button is pressed
+ * @returns Limit banner component
+ */
 const LimitBanner = ({ onUpgrade }: { onUpgrade?: () => void }) => (
   <TouchableOpacity
     style={styles.banner}
     activeOpacity={0.85}
     onPress={onUpgrade}
   >
-    <Ionicons name="star" size={20} color={colors.primary} />
+    <View style={styles.bannerIcon}>
+      <Info size={18} color={colors.primary} />
+    </View>
     <View style={styles.bannerText}>
-      <Text style={styles.bannerTitle}>Limite atteinte</Text>
+      <Text style={styles.bannerTitle}>Limite de rappels gratuits</Text>
       <Text style={styles.bannerSubtitle}>
-        Passez à un abonnement Premium pour ajouter plus de médicaments
+        Passez à VitaCare Premium pour ajouter un nombre illimité de médicaments.
       </Text>
     </View>
   </TouchableOpacity>
 );
 
-const ReminderCard = ({
-  item,
-  onView,
-}: {
-  item: Reminder;
-  onView?: (id: string) => void;
-}) => (
-  <View style={styles.card}>
+/**
+ * Reminder card component
+ * @param item - Reminder item
+ * @param onView - Callback when card is pressed
+ * @returns Reminder card component
+ */
+const ReminderCard = ({item, onView,}: {item: Reminder; onView?: (id: string) => void;}) => (
+  <TouchableOpacity 
+    style={styles.card} 
+    activeOpacity={0.7}
+    onPress={() => onView?.(item.id)}
+  >
     {/* Icon */}
     <View style={styles.cardIcon}>
-      <Ionicons name="bandage-outline" size={22} color={colors.white} />
+      <Pill size={20} color={colors.primary} />
     </View>
 
     {/* Info */}
     <View style={styles.cardInfo}>
-      <Text style={styles.cardTime}>{item.time}</Text>
-      <Text style={styles.cardName} numberOfLines={1}>
-        {item.drugName} {item.dosageValue}
-        {item.dosageUnit} x {item.frequencyCount}/
-        {item.frequencyUnit.toLowerCase().charAt(0)}j
+      <Text style={styles.cardName}>{item.drugName}</Text>
+      <Text style={styles.cardDetails}>
+        {item.dosageValue}{item.dosageUnit} • {item.frequencyCount} fois / {item.frequencyUnit.toLowerCase()}
       </Text>
     </View>
 
-    {/* Badge + action */}
+    {/* Time & Badge */}
     <View style={styles.cardRight}>
-      <Text style={styles.cardDoseBadge}>
-        {item.frequencyCount} {item.form}
-      </Text>
-      <TouchableOpacity
-        style={styles.viewBtn}
-        onPress={() => onView?.(item.id)}
-      >
-        <Text style={styles.viewBtnText}>Voir</Text>
-      </TouchableOpacity>
+      <View style={styles.timeBadge}>
+        <Bell size={12} color={colors.ink} style={{ marginRight: 4 }} />
+        <Text style={styles.cardTime}>{item.time}</Text>
+      </View>
+      <Text style={styles.cardFormBadge}>{item.form}</Text>
     </View>
-  </View>
+  </TouchableOpacity>
 );
 
+// ================================================================================== //
+// Main
+// ================================================================================== //
 export default function RemindersScreen({ onStore }: Props) {
+  // ================================================================================== //
+  // States
+  // ================================================================================== //
   const [reminders, setReminders] = useState<Reminder[]>(MOCK_REMINDERS);
   const [isLoading, setIsLoading] = useState<Boolean>(false);
   const addSheetRef = useRef<AddReminderBottomSheetRef>(null);
 
   const limitReached = reminders.length >= FREE_LIMIT;
 
+  // ================================================================================== //
+  // Handlers
+  // ================================================================================== //
   const handleAdd = (data: ReminderData) => {
     setReminders((prev) => [...prev, { ...data, id: String(Date.now()) }]);
   };
 
+  // ================================================================================== //
+  // Loading Render
+  // ================================================================================== //
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -124,77 +126,83 @@ export default function RemindersScreen({ onStore }: Props) {
     );
   }
 
+  // ================================================================================== //
+  // Render
+  // ================================================================================== //
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar
         barStyle="dark-content"
         backgroundColor={colors.white}
-        translucent={false}
       />
 
       <AppHeader
-        searchBar={false}
+        title="Mes Rappels"
         rightActions={
-          <View style={styles.headerActions}>
-            <TouchableOpacity style={styles.headerBtn}>
-              <Ionicons name="search-outline" size={22} color={colors.ink} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.shopBtn} onPress={onStore}>
-              <Ionicons name="cart-outline" size={18} color={colors.white} />
-              <Text style={styles.shopBtnText}>Magasin</Text>
-            </TouchableOpacity>
-          </View>
+          <PrimaryButton
+            label="Magasin"
+            onPress={onStore}
+            icon={<ShoppingBag size={16} color={colors.white} />}
+            size="sm"
+            style={{ width: 110 }}
+          />
         }
       />
 
-      {/* ── Limit banner (conditional) ── */}
-      {limitReached && (
-        <LimitBanner
-          onUpgrade={() => {
-            /* navigate to premium */
-          }}
-        />
-      )}
-
-      {/* ── List ── */}
       <ScrollView
-        style={styles.list}
-        contentContainerStyle={styles.listContent}
+        style={styles.root}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {reminders.length === 0 ? (
-          <View style={styles.empty}>
-            <Ionicons
-              name="bandage-outline"
-              size={48}
-              color={colors.inkFaint}
-            />
-            <Text style={styles.emptyText}>Aucun rappel pour l'instant</Text>
-            <Text style={styles.emptySubtext}>
-              Appuyez sur + pour ajouter votre premier médicament
-            </Text>
-          </View>
-        ) : (
-          reminders.map((item) => (
-            <ReminderCard
-              key={item.id}
-              item={item}
-              onView={(id) => {
-                /* navigate to detail */
-              }}
-            />
-          ))
+        {/* ── Limit banner (conditional) ── */}
+        {reminders.length >= 2 && (
+          <LimitBanner
+            onUpgrade={() => {
+              /* navigate to premium */
+            }}
+          />
         )}
+
+        {/* ── List ── */}
+        <View style={styles.list}>
+          {reminders.length === 0 ? (
+            <View style={styles.empty}>
+              <View style={styles.emptyIcon}>
+                <Bell size={40} color={colors.inkLight} />
+              </View>
+              <Text style={styles.emptyText}>Aucun rappel actif</Text>
+              <Text style={styles.emptySubtext}>
+                Ajoutez vos médicaments pour ne plus jamais oublier une prise.
+              </Text>
+              <PrimaryButton 
+                label="Ajouter un rappel"
+                onPress={() => addSheetRef.current?.open()}
+                style={{ marginTop: 16 }}
+                icon={<Plus size={18} color={colors.white} />}
+              />
+            </View>
+          ) : (
+            reminders.map((item) => (
+              <ReminderCard
+                key={item.id}
+                item={item}
+                onView={(id) => {
+                  /* navigate to detail */
+                }}
+              />
+            ))
+          )}
+        </View>
       </ScrollView>
 
       {/* ── FAB ── */}
-      {!limitReached && (
+      {!limitReached && reminders.length > 0 && (
         <TouchableOpacity
           style={styles.fab}
           onPress={() => addSheetRef.current?.open()}
           activeOpacity={0.85}
         >
-          <Ionicons name="add" size={28} color={colors.white} />
+          <Plus size={28} color={colors.white} />
         </TouchableOpacity>
       )}
 
@@ -204,50 +212,48 @@ export default function RemindersScreen({ onStore }: Props) {
   );
 }
 
+// ================================================================================== //
+// Styles
+// ================================================================================== //
+
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.white,
   },
-
-  // Header actions
-  headerActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
+  root: {
+    flex: 1,
+    backgroundColor: colors.surface,
   },
-  headerBtn: {
-    padding: 4,
-  },
-  shopBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: colors.primary,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 100,
-  },
-  shopBtnText: {
-    fontFamily: fontFamily.medium,
-    fontSize: fontSize.sm,
-    color: colors.white,
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 100,
   },
 
   // Limit banner
   banner: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     gap: 12,
-    backgroundColor: colors.surface ?? "#F5F5F5",
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    backgroundColor: colors.white,
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  bannerIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
   },
   bannerText: { flex: 1 },
   bannerTitle: {
-    fontFamily: fontFamily.semiBold,
+    fontFamily: fontFamily.bold,
     fontSize: fontSize.sm,
     color: colors.ink,
     marginBottom: 2,
@@ -255,39 +261,45 @@ const styles = StyleSheet.create({
   bannerSubtitle: {
     fontFamily: fontFamily.regular,
     fontSize: fontSize.xs,
-    color: colors.inkMuted,
-    lineHeight: 18,
+    color: colors.inkLight,
+    lineHeight: 16,
   },
 
   // List
-  list: { flex: 1 },
-  listContent: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 100,
+  list: {
     gap: 12,
   },
 
   // Empty state
   empty: {
-    flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingTop: 80,
-    gap: 8,
+    paddingTop: 60,
+  },
+  emptyIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.white,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   emptyText: {
-    fontFamily: fontFamily.semiBold,
-    fontSize: fontSize.base,
+    fontFamily: fontFamily.bold,
+    fontSize: fontSize.lg,
     color: colors.ink,
-    marginTop: 8,
   },
   emptySubtext: {
     fontFamily: fontFamily.regular,
     fontSize: fontSize.sm,
-    color: colors.inkMuted,
+    color: colors.inkLight,
     textAlign: "center",
-    paddingHorizontal: 32,
+    paddingHorizontal: 40,
+    marginTop: 8,
+    lineHeight: 20,
   },
 
   // Reminder card
@@ -295,68 +307,77 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    backgroundColor: colors.surface ?? "#F5F5F5",
+    backgroundColor: colors.white,
     borderRadius: 16,
-    padding: 14,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   cardIcon: {
     width: 48,
     height: 48,
-    borderRadius: 14,
-    backgroundColor: colors.ink,
+    borderRadius: 12,
+    backgroundColor: colors.surface,
     alignItems: "center",
     justifyContent: "center",
   },
   cardInfo: {
     flex: 1,
-  },
-  cardTime: {
-    fontFamily: fontFamily.bold,
-    fontSize: fontSize.base,
-    color: colors.ink,
+    gap: 4,
   },
   cardName: {
+    fontFamily: fontFamily.bold,
+    fontSize: fontSize.md,
+    color: colors.ink,
+  },
+  cardDetails: {
     fontFamily: fontFamily.regular,
     fontSize: fontSize.xs,
-    color: colors.inkMuted,
-    marginTop: 2,
+    color: colors.inkLight,
   },
   cardRight: {
     alignItems: "flex-end",
-    gap: 6,
+    gap: 8,
   },
-  cardDoseBadge: {
+  timeBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  cardTime: {
+    fontFamily: fontFamily.bold,
+    fontSize: fontSize.sm,
+    color: colors.ink,
+  },
+  cardFormBadge: {
     fontFamily: fontFamily.medium,
-    fontSize: fontSize.xs,
-    color: colors.inkMuted,
-  },
-  viewBtn: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 100,
-  },
-  viewBtnText: {
-    fontFamily: fontFamily.medium,
-    fontSize: fontSize.xs,
-    color: colors.white,
+    fontSize: 10,
+    color: colors.primary,
+    backgroundColor: "rgba(10, 191, 105, 0.1)", // colors.primary with opacity
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    overflow: "hidden",
   },
 
   // FAB
   fab: {
     position: "absolute",
-    bottom: 24,
+    bottom: 30,
     right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
-    elevation: 6,
+    elevation: 4,
     shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
 });

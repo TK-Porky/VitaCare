@@ -13,9 +13,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { PrimaryButton } from '../../../src/components/buttons';
 import { colors, fontFamily, fontSize } from '../../../src/themes';
 
+// ================================================================================== //
+// Main
+// ================================================================================== //
 export default function BookingSuccessScreen() {
+  // ================================================================================== //
+  // Hooks
+  // ================================================================================== //
   const router = useRouter();
 
+  // ================================================================================== //
+  // Placeholder Data
+  // ================================================================================== //
   const {
     doctorName = 'Dr. Igriss Kakmo',
     specialty = 'Génycologue',
@@ -34,6 +43,9 @@ export default function BookingSuccessScreen() {
     location?: string;
   }>();
 
+  // ================================================================================== //
+  // Render
+  // ================================================================================== //
   return (
     <SafeAreaView style={styles.root}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.white} />

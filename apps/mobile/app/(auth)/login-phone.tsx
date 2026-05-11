@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,40 +11,78 @@ import { router } from 'expo-router';
 import { PhoneInput, TopBar, HelperText, PrimaryButton } from "../../src/components";
 import { isValidCMPhone } from '@vitacare/utils';
 import { colors, fontFamily, fontSize } from '../../src/themes';
+import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
 
+import { useAuth } from '../../src/hooks/useAuth';
+import { useAuthStore } from '../../src/store';
+import { firebaseAuth } from '../../src/lib/firebase';
+
+// ================================================================================== //
+// Main
+// ================================================================================== //
 export default function LoginPhoneScreen() {
-  const [phone, setPhone] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  // ================================================================================== //
+  // States
+  // ================================================================================== //
+  const [phone, setPhone] = useState(''); // Phone input
+  const [localError, setLocalError] = useState(''); // Local validation error
+  
+  // ================================================================================== //
+  // Refs
+  // ================================================================================== //
+  const recaptchaVerifier = useRef<FirebaseRecaptchaVerifierModal>(null); // Recaptcha verifier
 
+  // ================================================================================== //
+  // Hooks
+  // ================================================================================== //
+  const { loginPhone, isLoggingInPhone } = useAuth(); // Auth hook
+  const storeError = useAuthStore(state => state.error); // Store error
+  const clearStoreError = useAuthStore(state => state.clearError); // Clear store error
+
+  // ================================================================================== //
+  // Effects
+  // ================================================================================== //
+  useEffect(() => {
+    clearStoreError();
+  }, []);
+
+  // ================================================================================== //
+  // Functions
+  // ================================================================================== //
+  
+  /**
+   * Handle form submission
+   * @returns
+   */
   const handleSubmit = async () => {
     if (!isValidCMPhone(phone)) {
-      setError('Numéro de téléphone invalide.');
+      setLocalError('Numéro de téléphone invalide.');
       return;
     }
-    setError('');
-    setIsLoading(true);
+    setLocalError('');
+    clearStoreError();
 
-    try {
-      // TODO: appel API pour envoyer le SMS
-      await new Promise(resolve => setTimeout(resolve, 1500)); // simulation
-      router.push({
-        pathname: '/(auth)/otp',
-        params: { phone: `+237${phone}` },
-      });
-    } catch {
-      setError('Une erreur est survenue. Réessayez.');
-    } finally {
-      setIsLoading(false);
-    }
+    loginPhone({ 
+      phone, 
+      verifier: recaptchaVerifier.current 
+    });
   };
 
+  // ================================================================================== //
+  // Render
+  // ================================================================================== //
   return (
     <KeyboardAvoidingView
       style={styles.root}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <TopBar />
+      
+      <FirebaseRecaptchaVerifierModal
+        ref={recaptchaVerifier}
+        firebaseConfig={firebaseAuth.app.options}
+        attemptInvisibleVerification
+      />
 
       <ScrollView
         contentContainerStyle={styles.content}
@@ -60,12 +98,13 @@ export default function LoginPhoneScreen() {
             value={phone}
             onChangeText={(text) => {
               setPhone(text);
-              if (error) setError('');
+              if (localError) setLocalError('');
+              if (storeError) clearStoreError();
             }}
-            error={!!error}
+            error={!!localError || !!storeError}
           />
-          {error ? (
-            <HelperText message={error} type="error" />
+          {localError || storeError ? (
+            <HelperText message={localError || (storeError as string)} type="error" />
           ) : (
             <HelperText
               message="En continuant, vous acceptez nos conditions d'utilisation et notre politique de confidentialité."
@@ -77,7 +116,7 @@ export default function LoginPhoneScreen() {
         <PrimaryButton
           label="Recevoir le code par SMS"
           fullWidth
-          isLoading={isLoading}
+          isLoading={isLoggingInPhone}
           loadingText="Envoi en cours..."
           onPress={handleSubmit}
         />

@@ -132,7 +132,7 @@ export function ClinicCard({ data, onReserve, onMore, onProfile }: ClinicCardPro
         avatar={data.avatarUri}
         name={data.doctorName}
         specialty={data.specialty}
-        price={data.price}
+        price={data.price || `${data.priceXCFA || 0} FCFA`}
         onMore={onMore}
         onProfile={onProfile}
       />

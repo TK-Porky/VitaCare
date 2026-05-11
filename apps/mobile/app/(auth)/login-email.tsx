@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,49 +9,81 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { router } from 'expo-router';
-import { User } from 'lucide-react-native';
 import { TopBar, CustomInput, PasswordInput, PrimaryButton, HelperText, CheckboxField, EmailInput } from '../../src/components';
 import { colors, fontFamily, fontSize } from '../../src/themes';
+import { useAuth } from '../../src/hooks/useAuth';
+import { useAuthStore } from '../../src/store';
 
+// ================================================================================== //
+// Main
+// ================================================================================== //
 export default function LoginEmailScreen() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  // ================================================================================== //
+  // States
+  // ================================================================================== //
+  const [email, setEmail] = useState('');  // Email input
+  const [password, setPassword] = useState('');  // Password input
+  const [rememberMe, setRememberMe] = useState(false);  // Remember me checkbox
+  const [localError, setLocalError] = useState('');  // Local validation error
+  
+  // ================================================================================== //
+  // Hooks
+  // ================================================================================== //
+  const { loginEmail, isLoggingInEmail } = useAuth();  // Auth hook
+  const storeError = useAuthStore(state => state.error);  // Store error
+  const clearStoreError = useAuthStore(state => state.clearError);  // Clear store error
 
+  // ================================================================================== //
+  // Effects
+  // ================================================================================== //
+  useEffect(() => {
+    // Clear any previous global errors when entering screen
+    clearStoreError();
+  }, []);
+
+  // ================================================================================== //
+  // Functions
+  // ================================================================================== //
+  
+  /**
+   * Validate form inputs
+   * @returns 
+   */
   const validate = () => {
     if (!email.trim() || !email.includes('@')) {
-      setError('Adresse email invalide.');
+      setLocalError('Adresse email invalide.');
       return false;
     }
     if (password.length < 8) {
-      setError('Mot de passe incorrect.');
+      setLocalError('Le mot de passe doit contenir au moins 8 caractères.');
       return false;
     }
     return true;
   };
 
+  /**
+   * Handle form submission
+   * @returns 
+   */
   const handleSubmit = async () => {
     if (!validate()) return;
-    setError('');
-    setIsLoading(true);
-
-    try {
-      // TODO: appel API connexion email
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      router.replace('/(main)');
-    } catch {
-      setError('Une erreur est survenue.');
-    } finally {
-      setIsLoading(false);
-    }
+    setLocalError('');
+    clearStoreError();
+    
+    loginEmail({ email, password, rememberMe });
   };
 
+  /**
+   * Handle Google login
+   * @returns 
+   */
   const handleGoogle = async () => {
     // TODO: Google OAuth
   };
 
+  // ================================================================================== //
+  // Render
+  // ================================================================================== //
   return (
     <KeyboardAvoidingView
       style={styles.root}
@@ -75,7 +107,8 @@ export default function LoginEmailScreen() {
             value={email}
             onChangeText={(text) => {
               setEmail(text);
-              if (error) setError('');
+              if (localError) setLocalError('');
+              if (storeError) clearStoreError();
             }}
           />
 
@@ -83,7 +116,8 @@ export default function LoginEmailScreen() {
             value={password}
             onChangeText={(text) => {
               setPassword(text);
-              if (error) setError('');
+              if (localError) setLocalError('');
+              if (storeError) clearStoreError();
             }}
           />
 
@@ -98,14 +132,16 @@ export default function LoginEmailScreen() {
             </TouchableOpacity>
           </View>
 
-          {error ? <HelperText message={error} type="error" /> : null}
+          {localError || storeError ? (
+            <HelperText message={localError || (storeError as string)} type="error" />
+          ) : null}
         </View>
 
         <View style={styles.footer}>
           <PrimaryButton
             label="Se connecter"
             fullWidth
-            isLoading={isLoading}
+            isLoading={isLoggingInEmail}
             onPress={handleSubmit}
           />
 
@@ -115,7 +151,7 @@ export default function LoginEmailScreen() {
             style={styles.googleButton}
             onPress={handleGoogle}
             activeOpacity={0.7}
-            disabled={isLoading}
+            disabled={isLoggingInEmail}
           >
             <Text style={styles.googleIcon}>G</Text>
             <Text style={styles.googleText}>Se connecter via Google</Text>

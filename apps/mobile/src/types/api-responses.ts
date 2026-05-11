@@ -1,3 +1,6 @@
+import { ClinicProvider } from './clinicProvider';
+import { Appointment } from './appointment';
+
 /**
  * Types des réponses API pour la communication avec le backend VitaCare
  */
@@ -60,31 +63,7 @@ export interface RefreshTokenResponse {
 // Cliniques et professionnels
 // ---------------------------------------------------------------------------
 
-export interface ClinicProviderResponse {
-  id: string;
-  avatarUri?: string;
-  doctorName: string;
-  specialty: string;
-  price: string;
-  priceXCFA?: number;
-  clinicName: string;
-  description: string;
-  hours: string;
-  days: string;
-  location: string;
-  coordinates?: {
-    latitude: number;
-    longitude: number;
-  };
-  imageUri?: string;
-  imageFallbackColor?: string;
-  rating?: number;
-  reviewCount?: number;
-  availability?: {
-    date: string;
-    slots: string[];
-  }[];
-}
+export type ClinicProviderResponse = ClinicProvider;
 
 export interface ClinicsListResponse extends PaginatedResponse<ClinicProviderResponse> {}
 
@@ -115,7 +94,7 @@ export interface BookingResponse {
   total: number;
   currency: string;
   createdAt: string;
-  provider: ClinicProviderResponse;
+  provider: ClinicProvider;
 }
 
 export interface TimeSlotsResponse {
@@ -128,29 +107,7 @@ export interface TimeSlotsResponse {
 // Rendez-vous
 // ---------------------------------------------------------------------------
 
-export interface AppointmentResponse {
-  id: string;
-  title: string;
-  doctorName: string;
-  doctorAvatarUri: string;
-  specialty: string;
-  status: 'confirmed' | 'pending' | 'paid' | 'cancelled';
-  reason: string;
-  dateTime: string;
-  clinicName: string;
-  locationSuffix: string;
-  clinicImageUri?: string;
-  paymentMethod: string;
-  invoiceLines: {
-    label: string;
-    amount: number;
-    isDiscount?: boolean;
-  }[];
-  total: number;
-  currency?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+export type AppointmentResponse = Appointment;
 
 export interface AppointmentsListResponse extends PaginatedResponse<AppointmentResponse> {}
 
@@ -296,27 +253,6 @@ export interface UserProfileResponse {
   };
   createdAt: string;
   updatedAt: string;
-}
-
-export interface UpdateProfileRequest {
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
-  dateOfBirth?: string;
-  gender?: 'male' | 'female' | 'other';
-  address?: string;
-  emergencyContact?: {
-    name: string;
-    phone: string;
-    relationship: string;
-  };
-}
-
-export interface UpdatePreferencesRequest {
-  language?: string;
-  notifications?: boolean;
-  emailNotifications?: boolean;
-  smsNotifications?: boolean;
 }
 
 // ---------------------------------------------------------------------------

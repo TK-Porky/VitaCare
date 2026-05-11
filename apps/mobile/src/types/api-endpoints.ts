@@ -1,43 +1,48 @@
 /**
- * Définition des endpoints API pour VitaCare
+ * API Endpoints Configuration for VitaCare Mobile App
+ * 
+ * This file contains all API endpoints used by the mobile application.
+ * Endpoints are organized by feature areas for better maintainability.
  */
 
-// ---------------------------------------------------------------------------
-// Configuration de base
-// ---------------------------------------------------------------------------
+// ================================================================================== //
+// API Configuration
+// ================================================================================== //
 
 export const API_CONFIG = {
   BASE_URL: process.env.EXPO_PUBLIC_API_BASE_URL || 'https://api.vitacare.cm',
-  VERSION: 'v1',
   TIMEOUT: 30000,
 } as const;
 
 export const API_ENDPOINTS = {
-  // ---------------------------------------------------------------------------
-  // Authentification
-  // ---------------------------------------------------------------------------
+  // ================================================================================== //
+  // Authentication
+  // ================================================================================== //
   AUTH: {
-    LOGIN: '/auth/login',
-    REGISTER: '/auth/register',
-    LOGOUT: '/auth/logout',
-    REFRESH: '/auth/refresh',
-    FORGOT_PASSWORD: '/auth/forgot-password',
-    RESET_PASSWORD: '/auth/reset-password',
-    CHANGE_PASSWORD: '/auth/change-password',
-    VERIFY_EMAIL: '/auth/verify-email',
-    RESEND_VERIFICATION: '/auth/resend-verification',
+    LOGIN_PHONE: '/auth/patient/login/phone',
+    LOGIN_EMAIL: '/auth/patient/login/email',
+    REGISTER_PHONE: '/auth/patient/register/phone',
+    REGISTER_EMAIL: '/auth/patient/register/email',
+    LOGOUT: '/auth/patient/logout',
+    REFRESH: '/auth/patient/refresh',
+    FORGOT_PASSWORD: '/auth/patient/forgot-password',
+    RESET_PASSWORD: '/auth/patient/reset-password',
+    RESET_PASSWORD_VERIFY: '/auth/patient/reset-password-verify',
+    CHANGE_PASSWORD: '/auth/patient/change-password',
+    VERIFY_EMAIL: '/auth/patient/verify-email',
+    RESEND_VERIFICATION: '/auth/patient/resend-verification',
   },
 
   // ---------------------------------------------------------------------------
-  // Utilisateurs
+  // Users
   // ---------------------------------------------------------------------------
   USERS: {
-    PROFILE: '/users/profile',
-    UPDATE_PROFILE: '/users/profile',
-    PREFERENCES: '/users/preferences',
-    UPDATE_PREFERENCES: '/users/preferences',
-    AVATAR: '/users/avatar',
-    DELETE_ACCOUNT: '/users/account',
+    PROFILE: '/users/patients/profile',
+    UPDATE_PROFILE: '/users/patients/profile',
+    PREFERENCES: '/users/patients/preferences',
+    UPDATE_PREFERENCES: '/users/patients/preferences',
+    AVATAR: '/users/patients/avatar',
+    DELETE_ACCOUNT: '/users/patients/account',
   },
 
   // ---------------------------------------------------------------------------
