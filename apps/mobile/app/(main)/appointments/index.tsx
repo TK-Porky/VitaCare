@@ -30,10 +30,19 @@ import {
   AppointmentCard,
 } from "../../../src/components";
 
+// ================================================================================== //
+// Main
+// ================================================================================== //
 export default function AppointmentScreen() {
+  // ================================================================================== //
+  // States
+  // ================================================================================== //
   const [activeTab, setActiveTab] = useState<"upcoming" | "past">("upcoming");
   const [selectedItem, setSelectedItem] = useState(APPOINTMENTS[0]);
   
+  // ================================================================================== //
+  // Hooks
+  // ================================================================================== //
   const router = useRouter();
   const profileSheetRef = useRef<ProfessionalProviderBottomSheetRef>(null);
   const bookingSheetRef = useRef<BookingBottomSheetRef>(null);
@@ -41,6 +50,9 @@ export default function AppointmentScreen() {
   
   const data = activeTab === "upcoming" ? APPOINTMENTS : PAST_APPOINTMENTS;
 
+  // ================================================================================== //
+  // Functions
+  // ================================================================================== //
   const handleCardPress = (item: typeof APPOINTMENTS[0]) => {
     setSelectedItem(item);
     appointmentRef.current?.open();
@@ -51,6 +63,9 @@ export default function AppointmentScreen() {
     setTimeout(() => bookingSheetRef.current?.open(), 300);
   };
 
+  // ================================================================================== //
+  // Render
+  // ================================================================================== //
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.primary} />

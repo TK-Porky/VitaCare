@@ -11,6 +11,9 @@ import { ChevronLeft } from 'lucide-react-native';
 import { StepHeader, SelectOption, PrimaryButton } from '../../src/components';
 import { colors, fontFamily, fontSize } from '../../src/themes';
 
+// ================================================================================== //
+// Types
+// ================================================================================== //
 const OPTIONS = [
   'Un médecin en urgence',
   'Un suivi de traitements réguliers',
@@ -18,10 +21,24 @@ const OPTIONS = [
   'Rien en particulier',
 ];
 
+// ================================================================================== //
+// Main
+// ================================================================================== //
 export default function OnboardingSearchScreen() {
-  const [selected, setSelected] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  // ================================================================================== //
+  // States
+  // ================================================================================== //
+  const [selected, setSelected] = useState<string | null>(null); // TODO: Replace with actual state management
+  const [isLoading, setIsLoading] = useState(false); // TODO: Replace with actual loading state
 
+  // ================================================================================== //
+  // Functions
+  // ================================================================================== //
+  
+  /**
+   * Handle continue action
+   * @returns {Promise<void>}
+   */
   const handleContinue = async () => {
     setIsLoading(true);
     try {
@@ -32,6 +49,9 @@ export default function OnboardingSearchScreen() {
     }
   };
 
+  // ================================================================================== //
+  // Render
+  // ================================================================================== //
   return (
     <View style={styles.root}>
       <StepHeader

@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, Image } from 'react-native';
 import { colors, fontFamily, fontSize } from '../../themes';
 
-type Status = 'confirmed' | 'pending' | 'cancelled';
+type Status = 'confirmed' | 'pending' | 'cancelled' | 'paid';
 
 type Props = {
   doctorName: string;
@@ -13,6 +13,7 @@ type Props = {
 
 const STATUS_CONFIG: Record<Status, { label: string; bg: string; color: string }> = {
   confirmed: { label: 'Confirmé',  bg: colors.successLight, color: colors.success },
+  paid:      { label: 'Payé',      bg: colors.successLight, color: colors.success },
   pending:   { label: 'En attente', bg: colors.warningLight, color: colors.warning },
   cancelled: { label: 'Annulé',   bg: colors.errorLight,   color: colors.error },
 };

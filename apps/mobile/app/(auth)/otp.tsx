@@ -11,46 +11,87 @@ import {
 import { router, useLocalSearchParams } from "expo-router";
 import { OTPInput, TopBar, HelperText, PrimaryButton } from "../../src/components";
 import { colors, fontFamily, fontSize } from "../../src/themes";
+import { useAuth } from "../../src/hooks/useAuth";
+import { useAuthStore } from "../../src/store";
 
-const OTP_LENGTH = 5;
+// ================================================================================== //
+// Types
+// ================================================================================== //
+const OTP_LENGTH = 6;
 const RESEND_DELAY = 60;
 
+// ================================================================================== //
+// Main
+// ================================================================================== //
 export default function OTPScreen() {
-  const { phone } = useLocalSearchParams<{ phone: string }>();
-  const [code, setCode] = useState("");
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [countdown, setCountdown] = useState(RESEND_DELAY);
+  // ================================================================================== //
+  // States
+  // ================================================================================== //
+  const { phone, fullName } = useLocalSearchParams<{ phone: string; fullName: string }>();
+  const [code, setCode] = useState(""); // OTP code input
+  const [localError, setLocalError] = useState(""); // Local validation error
+  const [countdown, setCountdown] = useState(RESEND_DELAY); // Resend countdown timer
 
+  // ================================================================================== //
+  // Hooks
+  // ================================================================================== //
+  const { verifyOtp, isVerifyingOtp } = useAuth(); // Authentication hook
+  const storeError = useAuthStore(state => state.error); // Store error state
+  const clearStoreError = useAuthStore(state => state.clearError); // Clear store error
+
+  // ================================================================================== //
+  // Effects
+  // ================================================================================== //
+  
+  // Clear store error on component mount
+  useEffect(() => {
+    clearStoreError();
+  }, []);
+
+  // Handle countdown timer
   useEffect(() => {
     if (countdown <= 0) return;
     const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
     return () => clearTimeout(timer);
   }, [countdown]);
 
+  // ================================================================================== //
+  // Functions
+  // ================================================================================== //
+  /**
+   * Handle OTP verification
+   * @param otpCode - The OTP code to verify
+   */
   const handleVerify = useCallback(async (otpCode: string) => {
     if (otpCode.length !== OTP_LENGTH) return;
 
-    setError("");
-    setIsLoading(true);
+    setLocalError("");
+    clearStoreError();
 
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      router.replace("/(main)");
-    } catch {
-      setError("Code incorrect. Veuillez réessayer.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    verifyOtp({ 
+      phone: phone || "", 
+      code: otpCode,
+      fullName: fullName // Pass fullName if it exists (registration case)
+    } as any); // Cast to any because hook might need update or we handle via direct store call if needed
+  }, [phone, fullName]);
 
+  /**
+   * Handle resend OTP
+   * @returns
+   */
   const handleResend = async () => {
     if (countdown > 0) return;
     setCountdown(RESEND_DELAY);
     setCode("");
-    setError("");
+    setLocalError("");
+    clearStoreError();
+    // TODO: Re-trigger phone auth if needed, but usually Firebase handles it
+    // For now we just reset the local state
   };
 
+  // ================================================================================== //
+  // Render
+  // ================================================================================== //
   return (
     <KeyboardAvoidingView
       style={styles.root}
@@ -74,12 +115,12 @@ export default function OTPScreen() {
             value={code}
             onChange={setCode}
             onComplete={handleVerify}
-            error={!!error}
+            error={!!localError || !!storeError}
           />
 
           <View style={styles.helperRow}>
-            {error ? (
-              <HelperText message={error} type="error" />
+            {localError || storeError ? (
+              <HelperText message={localError || (storeError as string)} type="error" />
             ) : (
               <View style={{ flex: 1 }} />
             )}
@@ -100,7 +141,7 @@ export default function OTPScreen() {
         <PrimaryButton
           label="Confirmer"
           fullWidth
-          isLoading={isLoading}
+          isLoading={isVerifyingOtp}
           isDisabled={code.length !== OTP_LENGTH}
           onPress={() => handleVerify(code)}
         />

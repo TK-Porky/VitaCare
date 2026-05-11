@@ -14,7 +14,22 @@ import { Ionicons, Feather } from '@expo/vector-icons';
 import { colors, fontFamily, fontSize } from "../../../src/themes";
 import { router } from 'expo-router';
 
-const MENU_SECTIONS = [
+// ================================================================================== //
+// Types
+// ================================================================================== //
+type MenuSection = {
+  title: string;
+  items: {
+    id: string;
+    icon: string;
+    label: string;
+  }[];
+};
+
+// ================================================================================== //
+// Constants
+// ================================================================================== //
+const MENU_SECTIONS: MenuSection[] = [
   {
     title: 'Généraux',
     items: [
@@ -45,6 +60,17 @@ const MENU_SECTIONS = [
   },
 ];
 
+// ================================================================================== //
+// Components
+// ================================================================================== //
+
+/**
+ * Menu item component
+ * @param icon - The icon to display
+ * @param label - The label to display
+ * @param danger - Whether the item is dangerous
+ * @param onPress - The function to call when the item is pressed
+ */
 function MenuItem({
   icon,
   label,
@@ -73,6 +99,11 @@ function MenuItem({
   );
 }
 
+/**
+ * Menu section component
+ * @param title - The title of the section
+ * @param items - The items in the section
+ */
 function MenuSection({ title, items }: { title: string; items: typeof MENU_SECTIONS[0]['items'] }) {
   return (
     <View style={styles.section}>
@@ -89,12 +120,20 @@ function MenuSection({ title, items }: { title: string; items: typeof MENU_SECTI
   );
 }
 
+// ================================================================================== //
+// Main
+// ================================================================================== //
 export default function ProfileScreen() {
-
+  // ================================================================================== //
+  // Handlers
+  // ================================================================================== //
   const handleDisconnection = () => {
     router.replace('/(auth)');
   };
 
+  // ================================================================================== //
+  // Render
+  // ================================================================================== //
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.primary} />
@@ -142,6 +181,9 @@ export default function ProfileScreen() {
   );
 }
 
+// ================================================================================== //
+// Styles
+// ================================================================================== //
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
