@@ -1,5 +1,5 @@
 // app/(auth)/register.tsx
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,7 +9,6 @@ import {
   ScrollView,
   TouchableOpacity,
 } from "react-native";
-import { router } from "expo-router";
 import {
   TopBar,
   PasswordInput,
@@ -21,28 +20,74 @@ import {
 } from "../../src/components";
 import { colors, fontFamily, fontSize } from "../../src/themes";
 import { isValidCMPhone } from "@vitacare/utils";
+import { FirebaseRecaptchaVerifierModal } from "expo-firebase-recaptcha";
+import { useAuth } from "../../src/hooks/useAuth";
+import { useAuthStore } from "../../src/store";
+import { firebaseAuth } from "../../src/lib/firebase";
 
+// ================================================================================== //
+// Types
+// ================================================================================== //
 type RegisterMode = "phone" | "email";
 
+// ================================================================================== //
+// Main
+// ================================================================================== //
 export default function RegisterScreen() {
-  const [mode, setMode] = useState<RegisterMode>("phone");
-  const [fullName, setFullName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isLoading, setIsLoading] = useState(false);
+  // ================================================================================== //
+  // States
+  // ================================================================================== //
+  const [mode, setMode] = useState<RegisterMode>("phone"); // Registration mode: phone or email
+  const [fullName, setFullName] = useState(""); // User's full name
+  const [phone, setPhone] = useState(""); // User's phone number
+  const [email, setEmail] = useState(""); // User's email address
+  const [password, setPassword] = useState(""); // User's password
+  const [confirmPassword, setConfirmPassword] = useState(""); // User's confirm password
+  const [localErrors, setLocalErrors] = useState<Record<string, string>>({}); // Local validation errors
+  
+  // ================================================================================== //
+  // Refs
+  // ================================================================================== //
+  const recaptchaVerifier = useRef<FirebaseRecaptchaVerifierModal>(null);
+  const { register, isRegistering } = useAuth();
+  const storeError = useAuthStore(state => state.error);
+  const clearStoreError = useAuthStore(state => state.clearError);
 
-  const clearError = (key: string) => setErrors((e) => ({ ...e, [key]: "" }));
+  // ================================================================================== //
+  // Effecs
+  // ================================================================================== //
+  useEffect(() => {
+    clearStoreError();
+  }, []);
 
+  // ================================================================================== //
+  // Functions
+  // ================================================================================== //
+  /**
+   * Clear local and store errors
+   * @param key - Error key to clear
+   */
+  const clearError = (key: string) => {
+    setLocalErrors((e) => ({ ...e, [key]: "" }));
+    if (storeError) clearStoreError();
+  };
+
+  /**
+   * Handle mode change
+   * @param next - Next mode
+   */
   const handleModeChange = (next: RegisterMode) => {
     setMode(next);
     setPhone("");
     setEmail("");
-    setErrors({});
+    setLocalErrors({});
+    clearStoreError();
   };
 
+  /**
+   * Validate form
+   * @returns True if valid, false otherwise
+   */
   const validate = () => {
     const newErrors: Record<string, string> = {};
 
@@ -68,183 +113,204 @@ export default function RegisterScreen() {
       }
     }
 
-    setErrors(newErrors);
+    setLocalErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+  /**
+   * Handle form submission
+   * @returns 
+   */
   const handleSubmit = async () => {
     if (!validate()) return;
-    setIsLoading(true);
-    try {
-      // TODO: appel API inscription
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      router.push("/(auth)/onboarding-location");
-    } catch {
-      setErrors({ global: "Une erreur est survenue. Réessayez." });
-    } finally {
-      setIsLoading(false);
-    }
+    clearStoreError();
+
+    register({
+      data: {
+        fullName,
+        mode,
+        phone: mode === "phone" ? phone : undefined,
+        email: mode === "email" ? email : undefined,
+        password: mode === "email" ? password : undefined,
+        confirmPassword: mode === "email" ? confirmPassword : undefined,
+      },
+      verifier: mode === "phone" ? recaptchaVerifier.current : undefined,
+    });
   };
 
+  // ================================================================================== //
+  // Render
+  // ================================================================================== //
   return (
-    <KeyboardAvoidingView
-      style={styles.root}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
+    <View style={styles.root}>
       <TopBar />
-      <ScrollView
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+      
+      <FirebaseRecaptchaVerifierModal
+        ref={recaptchaVerifier}
+        firebaseConfig={firebaseAuth.app.options}
+        attemptInvisibleVerification
+      />
+
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
       >
-        <View style={styles.header}>
-          <Text style={styles.title}>Rejoignez notre service !</Text>
-          <Text style={styles.subtitle}>Créez votre profil dès maintenant</Text>
-        </View>
-
-        <View style={styles.form}>
-          {/* Nom complet */}
-          <View style={styles.fieldWrapper}>
-            <Text style={styles.label}>Nom complet</Text>
-            <NameInput
-              value={fullName}
-              onChangeText={(text) => {
-                setFullName(text);
-                clearError("fullName");
-              }}
-              placeholder="Ex: Jean Ateba Mbarga"
-              error={!!errors.fullName}
-            />
-            {errors.fullName && (
-              <HelperText message={errors.fullName} type="error" />
-            )}
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.header}>
+            <Text style={styles.title}>Rejoignez notre service !</Text>
+            <Text style={styles.subtitle}>Créez votre profil dès maintenant</Text>
           </View>
 
-          {/* Toggle mode */}
-          <View style={styles.fieldWrapper}>
-            <Text style={styles.label}>Mode d'inscription</Text>
-            <View style={styles.toggle}>
-              {(["phone", "email"] as RegisterMode[]).map((m) => (
-                <TouchableOpacity
-                  key={m}
-                  style={[
-                    styles.toggleBtn,
-                    mode === m && styles.toggleBtnActive,
-                  ]}
-                  onPress={() => handleModeChange(m)}
-                  activeOpacity={0.8}
-                >
-                  <Text
-                    style={[
-                      styles.toggleLabel,
-                      mode === m && styles.toggleLabelActive,
-                    ]}
-                  >
-                    {m === "phone" ? "Téléphone" : "Email"}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+          <View style={styles.form}>
+            {/* Nom complet */}
+            <View style={styles.fieldWrapper}>
+              <Text style={styles.label}>Nom complet</Text>
+              <NameInput
+                value={fullName}
+                onChangeText={(text) => {
+                  setFullName(text);
+                  clearError("fullName");
+                }}
+                placeholder="Ex: Jean Ateba Mbarga"
+                error={!!localErrors.fullName}
+              />
+              {localErrors.fullName && (
+                <HelperText message={localErrors.fullName} type="error" />
+              )}
             </View>
-          </View>
 
-          {/* Champ dynamique : téléphone ou email */}
-          <View style={styles.fieldWrapper}>
-            <Text style={styles.label}>
-              {mode === "phone" ? "Numéro de téléphone" : "Adresse email"}
-            </Text>
-            {mode === "phone" ? (
-              <View style={styles.fieldWrapper}>
-                <PhoneInput
-                  value={phone}
-                  onChangeText={(text) => {
-                    setPhone(text);
-                    clearError("contact");
-                  }}
-                  error={!!errors.contact}
-                />
-                {errors.contact && (
-                  <HelperText message={errors.contact} type="error" />
-                )}
+            {/* Toggle mode */}
+            <View style={styles.fieldWrapper}>
+              <Text style={styles.label}>Mode d'inscription</Text>
+              <View style={styles.toggle}>
+                {(["phone", "email"] as RegisterMode[]).map((m) => (
+                  <TouchableOpacity
+                    key={m}
+                    style={[
+                      styles.toggleBtn,
+                      mode === m && styles.toggleBtnActive,
+                    ]}
+                    onPress={() => handleModeChange(m)}
+                    activeOpacity={0.8}
+                  >
+                    <Text
+                      style={[
+                        styles.toggleLabel,
+                        mode === m && styles.toggleLabelActive,
+                      ]}
+                    >
+                      {m === "phone" ? "Téléphone" : "Email"}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               </View>
-            ) : (
-              <>
+            </View>
+
+            {/* Champ dynamique : téléphone ou email */}
+            <View style={styles.fieldWrapper}>
+              <Text style={styles.label}>
+                {mode === "phone" ? "Numéro de téléphone" : "Adresse email"}
+              </Text>
+              {mode === "phone" ? (
                 <View style={styles.fieldWrapper}>
-                  <EmailInput
-                    value={email}
+                  <PhoneInput
+                    value={phone}
                     onChangeText={(text) => {
-                      setEmail(text);
+                      setPhone(text);
                       clearError("contact");
                     }}
-                    error={!!errors.contact}
+                    error={!!localErrors.contact}
                   />
-                  {errors.contact && (
-                    <HelperText message={errors.contact} type="error" />
+                  {localErrors.contact && (
+                    <HelperText message={localErrors.contact} type="error" />
                   )}
                 </View>
+              ) : (
+                <>
+                  <View style={styles.fieldWrapper}>
+                    <EmailInput
+                      value={email}
+                      onChangeText={(text) => {
+                        setEmail(text);
+                        clearError("contact");
+                      }}
+                      error={!!localErrors.contact}
+                    />
+                    {localErrors.contact && (
+                      <HelperText message={localErrors.contact} type="error" />
+                    )}
+                  </View>
 
-                {/* Mot de passe */}
-                <View style={styles.fieldWrapper}>
-                  <Text style={styles.label}>Mot de passe</Text>
-                  <PasswordInput
-                    value={password}
-                    onChangeText={(text) => {
-                      setPassword(text);
-                      clearError("password");
-                    }}
-                    error={!!errors.password}
-                  />
-                  {errors.password && (
-                    <HelperText message={errors.password} type="error" />
-                  )}
-                </View>
+                  {/* Mot de passe */}
+                  <View style={styles.fieldWrapper}>
+                    <Text style={styles.label}>Mot de passe</Text>
+                    <PasswordInput
+                      value={password}
+                      onChangeText={(text) => {
+                        setPassword(text);
+                        clearError("password");
+                      }}
+                      error={!!localErrors.password}
+                    />
+                    {localErrors.password && (
+                      <HelperText message={localErrors.password} type="error" />
+                    )}
+                  </View>
 
-                {/* Confirmation */}
-                <View style={styles.fieldWrapper}>
-                  <Text style={styles.label}>Confirmer le mot de passe</Text>
-                  <PasswordInput
-                    value={confirmPassword}
-                    onChangeText={(text) => {
-                      setConfirmPassword(text);
-                      clearError("confirmPassword");
-                    }}
-                    error={!!errors.confirmPassword}
-                  />
-                  {errors.confirmPassword && (
-                    <HelperText message={errors.confirmPassword} type="error" />
-                  )}
-                </View>
-              </>
-            )}
+                  {/* Confirmation */}
+                  <View style={styles.fieldWrapper}>
+                    <Text style={styles.label}>Confirmer le mot de passe</Text>
+                    <PasswordInput
+                      value={confirmPassword}
+                      onChangeText={(text) => {
+                        setConfirmPassword(text);
+                        clearError("confirmPassword");
+                      }}
+                      error={!!localErrors.confirmPassword}
+                    />
+                    {localErrors.confirmPassword && (
+                      <HelperText message={localErrors.confirmPassword} type="error" />
+                    )}
+                  </View>
+                </>
+              )}
+            </View>
+
+            {storeError && <HelperText message={storeError as string} type="error" />}
           </View>
 
-          {errors.global && <HelperText message={errors.global} type="error" />}
-        </View>
-
-        <View style={styles.footer}>
-          <PrimaryButton
-            label="Continuer"
-            fullWidth
-            isLoading={isLoading}
-            onPress={handleSubmit}
-          />
-          <Text style={styles.terms}>
-            En continuant, vous acceptez nos{" "}
-            <Text style={styles.link}>conditions d'utilisation</Text> et notre{" "}
-            <Text style={styles.link}>politique de confidentialité</Text>
-          </Text>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          <View style={styles.footer}>
+            <PrimaryButton
+              label="Continuer"
+              fullWidth
+              isLoading={isRegistering}
+              onPress={handleSubmit}
+            />
+            <Text style={styles.terms}>
+              En continuant, vous acceptez nos{" "}
+              <Text style={styles.link}>conditions d'utilisation</Text> et notre{" "}
+              <Text style={styles.link}>politique de confidentialité</Text>
+            </Text>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, flexGrow: 1, backgroundColor: colors.white },
+  root: { flex: 1, backgroundColor: colors.white },
   content: {
     flexGrow: 1,
     paddingHorizontal: 16,
     paddingTop: 24,
-    paddingBottom: 32,
+    paddingBottom: 48, // Added more bottom padding for better visibility
     gap: 32,
   },
   header: { gap: 4 },

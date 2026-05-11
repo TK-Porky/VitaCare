@@ -15,6 +15,9 @@ import * as Location from 'expo-location';
 import { StepHeader, SearchInput, PrimaryButton } from '../../src/components';
 import { colors, fontFamily, fontSize } from '../../src/themes';
 
+// ================================================================================== //
+// Types
+// ================================================================================== //
 const INITIAL_REGION = {
   latitude: 3.848,
   longitude: 11.502,
@@ -22,17 +25,26 @@ const INITIAL_REGION = {
   longitudeDelta: 0.05,
 };
 
+// ================================================================================== //
+// Main
+// ================================================================================== //
 export default function OnboardingLocationScreen() {
-  const [location, setLocation] = useState('Recherche de votre position...');
-  const [region, setRegion] = useState(INITIAL_REGION);
+  // ================================================================================== //
+  // States
+  // ================================================================================== //
+  const [location, setLocation] = useState('Recherche de votre position...'); // Location status
+  const [region, setRegion] = useState(INITIAL_REGION); // Map region
   const [markerCoords, setMarkerCoords] = useState({
     latitude: INITIAL_REGION.latitude,
     longitude: INITIAL_REGION.longitude,
-  });
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isMapReady, setIsMapReady] = useState(false);
+  }); // Marker coordinates
+  const [searchQuery, setSearchQuery] = useState(''); // Search query
+  const [isLoading, setIsLoading] = useState(false); // Loading state
+  const [isMapReady, setIsMapReady] = useState(false); // Map ready state
 
+  // ================================================================================== //
+  // Effects
+  // ================================================================================== //
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -66,6 +78,13 @@ export default function OnboardingLocationScreen() {
     })();
   }, []);
 
+  // ================================================================================== //
+  // Functions
+  // ================================================================================== //
+  /**
+   * Handle continue button press
+   * @returns {Promise<void>}
+   */
   const handleContinue = async () => {
     setIsLoading(true);
     try {
@@ -76,10 +95,17 @@ export default function OnboardingLocationScreen() {
     }
   };
 
+  /**
+   * Handle search query change
+   * @param query - The search query
+   */
   const handleChangeSearchQuery = (query: string) => {
     setSearchQuery(query);
   };
 
+  // ================================================================================== //
+  // Returns
+  // ================================================================================== //
   return (
     <View style={styles.root}>
       <StepHeader

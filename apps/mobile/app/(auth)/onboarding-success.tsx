@@ -8,7 +8,13 @@ import {
   import { PrimaryButton } from '../../src/components';
   import { colors, fontFamily, fontSize } from '../../src/themes';
   
+  // ================================================================================== //
+  // Main
+  // ================================================================================== //
   export default function OnboardingSuccessScreen() {
+    // ================================================================================== //
+    // Render
+    // ================================================================================== //
     return (
       <View style={styles.root}>
         <View style={styles.content}>

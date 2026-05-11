@@ -16,48 +16,18 @@ import {
   FilterBottomSheet,
   FilterBottomSheetRef,
   FilterState,
-} from '../../../src/components/modals/FilterBottomSheet';
+  BookingBottomSheet,
+  BookingBottomSheetRef,
+} from '../../../src/components/modals';
 import { SearchBar } from '../../../src/components';
 import { MapMarker } from '../../../src/components';
 import { MapProviderCard } from '../../../src/components';
-import { colors } from '../../../src/themes';
+import { colors, fontFamily, fontSize } from '../../../src/themes';
+import { useMapStore } from '../../../src/store';
 
-// ---------------------------------------------------------------------------
-// Mock data
-// ---------------------------------------------------------------------------
-const MOCK_PROVIDERS = [
-  {
-    id: '1',
-    name: 'Dr. Igriss Kakmo',
-    avatarUri: 'https://randomuser.me/api/portraits/men/32.jpg',
-    coverUri: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=600',
-    distanceKm: 0.9,
-    priceXCFA: 5000,
-    address: 'Rue Simekoa, Yaoundé',
-    coordinate: { latitude: 3.848, longitude: 11.502 },
-  },
-  {
-    id: '2',
-    name: 'Dr. Kemadjo Thérèse',
-    avatarUri: 'https://randomuser.me/api/portraits/women/44.jpg',
-    coverUri: 'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?w=600',
-    distanceKm: 3.9,
-    priceXCFA: 8000,
-    address: 'Bastos, Yaoundé',
-    coordinate: { latitude: 3.862, longitude: 11.516 },
-  },
-  {
-    id: '3',
-    name: 'Clinique Wellstar',
-    avatarUri: 'https://randomuser.me/api/portraits/men/55.jpg',
-    coverUri: 'https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=600',
-    distanceKm: 2.1,
-    priceXCFA: 15000,
-    address: 'Polytech, Yaoundé',
-    coordinate: { latitude: 3.855, longitude: 11.488 },
-  },
-];
-
+// ================================================================================== //
+// Types
+// ================================================================================== //
 const INITIAL_REGION = {
   latitude: 3.853,
   longitude: 11.502,
@@ -65,20 +35,76 @@ const INITIAL_REGION = {
   longitudeDelta: 0.05,
 };
 
-// ---------------------------------------------------------------------------
+// ================================================================================== //
+// Components
+// ================================================================================== //
 
+/**
+ * Calculate the distance between two points using the Haversine formula
+ * @param lat1 - Latitude of the first point
+ * @param lon1 - Longitude of the first point
+ * @param lat2 - Latitude of the second point
+ * @param lon2 - Longitude of the second point
+ * @returns The distance in kilometers
+ */
+function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371; // km
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+// ================================================================================== //
+// Main
+// ================================================================================== //
 export default function MapScreen() {
+  // ================================================================================== //
+  // Hooks
+  // ================================================================================== //
   const router = useRouter();
-  const [search, setSearch] = useState('');
-  const [region, setRegion] = useState(INITIAL_REGION);
-  const [selectedId, setSelectedId] = useState<string | null>(MOCK_PROVIDERS[0].id);
+  const { 
+    clinics, 
+    searchResults,
+    isLoading, 
+    fetchClinics, 
+    searchClinics, 
+    selectedClinic, 
+    setSelectedClinic 
+  } = useMapStore();
+  
+  // ================================================================================== //
+  // Refs
+  // ================================================================================== //
+  const mapRef = useRef<MapView>(null);
   const filterSheetRef = useRef<FilterBottomSheetRef>(null);
+  const bookingSheetRef = useRef<BookingBottomSheetRef>(null);
+
+  // ================================================================================== //
+  // States
+  // ================================================================================== //
+  const [search, setSearch] = useState(''); // Search query
+  const [region, setRegion] = useState(INITIAL_REGION); // Map region
+  const [userLocation, setUserLocation] = useState<Location.LocationObjectCoords | null>(null); // User location
   const [filters, setFilters] = useState<FilterState>({
-    perimeterKm: 15,
-    services: [],
-    languages: [],
+    perimeterKm: 15, // Search radius in kilometers
+    services: [], // Selected services
+    languages: [], // Selected languages
   });
-  const [isLoadingLocation, setIsLoadingLocation] = useState(true);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(true); // Loading state for user location
+
+  // ================================================================================== //
+  // Effects
+  // ================================================================================== //
+  useEffect(() => {
+    fetchClinics();
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -90,12 +116,15 @@ export default function MapScreen() {
         }
 
         let currentLoc = await Location.getCurrentPositionAsync({});
-        setRegion({
+        setUserLocation(currentLoc.coords);
+        const newRegion = {
           latitude: currentLoc.coords.latitude,
           longitude: currentLoc.coords.longitude,
           latitudeDelta: 0.05,
           longitudeDelta: 0.05,
-        });
+        };
+        setRegion(newRegion);
+        mapRef.current?.animateToRegion(newRegion, 1000);
       } catch (error) {
         console.error("Error getting location:", error);
       } finally {
@@ -104,45 +133,96 @@ export default function MapScreen() {
     })();
   }, []);
 
+  // ================================================================================== //
+  // Memo
+  // ================================================================================== //
   const providers = useMemo(() => {
+    const list = searchResults.length > 0 ? searchResults : clinics;
     const q = search.trim().toLowerCase();
-    return MOCK_PROVIDERS.filter((p) => {
+    return list.filter((p) => {
       if (!q) return true;
       return (
-        p.name.toLowerCase().includes(q) ||
-        (p.address?.toLowerCase().includes(q) ?? false)
+        p.doctorName.toLowerCase().includes(q) ||
+        p.clinicName.toLowerCase().includes(q) ||
+        p.location.toLowerCase().includes(q)
       );
     });
-  }, [search]);
+  }, [search, clinics, searchResults]);
 
-  const selectedProvider = providers.find((p) => p.id === selectedId) ?? null;
-
+  // ================================================================================== //
+  // Functions
+  // ================================================================================== //
+  
+  /**
+   * Open the 
+   * @param {string} id - The provider ID
+   * @returns {void}
+   */
   const handleMarkerPress = (id: string) => {
-    if (selectedId === id) return;
-    setSelectedId(id);
+    const provider = providers.find(c => c.id === id);
+    if (provider) {
+      setSelectedClinic(provider);
+      if (provider.coordinates) {
+        mapRef.current?.animateToRegion({
+          ...provider.coordinates,
+          latitudeDelta: 0.015,
+          longitudeDelta: 0.015,
+        }, 500);
+      }
+    }
   };
 
+  /**
+   * Opens the filter sheet
+   * @returns {void}
+   */
   const handleFilterPress = () => {
     filterSheetRef.current?.open();
   };
 
-  const handleApplyFilters = (next: FilterState) => {
+  /**
+   * Apply Filters
+   * @param {FilterState} next
+   * @returns {Promise<void>}
+   */
+  const handleApplyFilters = async (next: FilterState) => {
     setFilters(next);
+    searchClinics({
+      query: search,
+      filters: {
+        specialty: next.services,
+      },
+      coordinates: {
+        latitude: region.latitude,
+        longitude: region.longitude,
+        radius: next.perimeterKm,
+      }
+    });
   };
 
+  /**
+   * Opens the booking sheet
+   * @returns {void}
+   */
   const handleReserve = () => {
-    router.push(`/providers/${selectedId}/reserve` as never);
+    if (selectedClinic) {
+      bookingSheetRef.current?.open();
+    }
   };
 
+  // ================================================================================== //
+  // Render
+  // ================================================================================== //
   return (
     <View style={styles.root}>
       <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
 
       {/* ── Map ── */}
       <MapView
+        ref={mapRef}
         style={StyleSheet.absoluteFillObject}
         provider={PROVIDER_DEFAULT}
-        region={region}
+        initialRegion={INITIAL_REGION}
         onRegionChangeComplete={setRegion}
         showsUserLocation
         showsMyLocationButton={false}
@@ -158,9 +238,9 @@ export default function MapScreen() {
         {providers.map((provider) => (
           <MapMarker
             key={provider.id}
-            coordinate={provider.coordinate}
+            coordinate={provider.coordinates || INITIAL_REGION}
             avatarUri={provider.avatarUri}
-            isSelected={provider.id === selectedId}
+            isSelected={provider.id === selectedClinic?.id}
             onPress={() => handleMarkerPress(provider.id)}
           />
         ))}
@@ -169,7 +249,7 @@ export default function MapScreen() {
       {/* ── Overlay layer ── */}
       <View style={StyleSheet.absoluteFillObject} pointerEvents="box-none">
         
-        {isLoadingLocation && (
+        {(isLoadingLocation || isLoading) && (
           <View style={styles.loaderContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
           </View>
@@ -189,11 +269,26 @@ export default function MapScreen() {
         </SafeAreaView>
 
         {/* ── Bottom provider card ── */}
-        {selectedProvider && (
+        {selectedClinic && (
           <SafeAreaView style={styles.safeBottom}>
             <View style={styles.cardWrapper} pointerEvents="auto">
               <MapProviderCard
-                provider={selectedProvider}
+                provider={{
+                  id: selectedClinic.id,
+                  name: selectedClinic.doctorName,
+                  avatarUri: selectedClinic.avatarUri,
+                  coverUri: selectedClinic.imageUri,
+                  distanceKm: userLocation && selectedClinic.coordinates 
+                    ? Number(getDistance(
+                        userLocation.latitude, 
+                        userLocation.longitude, 
+                        selectedClinic.coordinates.latitude, 
+                        selectedClinic.coordinates.longitude
+                      ).toFixed(1))
+                    : 0,
+                  priceXCFA: selectedClinic.priceXCFA || 0,
+                  address: selectedClinic.location,
+                }}
                 onReserve={handleReserve}
               />
             </View>
@@ -208,11 +303,23 @@ export default function MapScreen() {
         initialFilters={filters}
         onApply={handleApplyFilters}
       />
+
+      {/* ── Booking BottomSheet ── */}
+      {selectedClinic && (
+        <BookingBottomSheet
+          ref={bookingSheetRef}
+          provider={{
+            name: selectedClinic.doctorName,
+            specialty: selectedClinic.specialty,
+            avatarUri: selectedClinic.avatarUri || "",
+            priceXCFA: selectedClinic.priceXCFA || 0,
+            location: selectedClinic.clinicName + ", " + selectedClinic.location,
+          }}
+        />
+      )}
     </View>
   );
 }
-
-// ---------------------------------------------------------------------------
 
 const TOP_BAR_PADDING =
   Platform.OS === 'android' ? (StatusBar.currentHeight ?? 24) + 8 : 8;
@@ -257,3 +364,4 @@ const styles = StyleSheet.create({
     zIndex: 99,
   },
 });
+

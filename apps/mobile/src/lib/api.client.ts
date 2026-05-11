@@ -1,61 +1,92 @@
 /**
- * Client API pour la communication avec le backend VitaCare
+ * Client API Handler
+ * 
+ * This class handles all API requests with automatic token management and retry logic.
  */
 
-import { useAuthStore } from '../store/useAuthStore';
 import { API_CONFIG, API_ENDPOINTS } from '../types/api-endpoints';
 import { ApiResponse } from '../types/api-responses';
+import * as SecureStore from 'expo-secure-store';
 
 class ApiClient {
   private baseURL: string;
   private defaultHeaders: Record<string, string>;
   private isRefreshing = false;
   private refreshSubscribers: ((token: string) => void)[] = [];
+  private onLogout?: () => void;
 
   constructor() {
-    this.baseURL = `${API_CONFIG.BASE_URL}/${API_CONFIG.VERSION}`;
+    this.baseURL = `${API_CONFIG.BASE_URL}`;
     this.defaultHeaders = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     };
   }
 
+  /**
+   * Set the logout handler
+   * @param fn The function to call when the user is logged out
+   */
+  setLogoutHandler(fn: () => void) {
+    this.onLogout = fn;
+  }
+
+  /**
+   * Get the access token from secure storage
+   * @returns The access token or null if not found
+   */
+  private async getToken(): Promise<string | null> {
+    return SecureStore.getItemAsync('vitacare_access_token');
+  }
+
+  /**
+   * Notify all subscribers that the token has been refreshed
+   * @param token The new access token
+   */
   private onTokenRefreshed(token: string) {
     this.refreshSubscribers.map((callback) => callback(token));
     this.refreshSubscribers = [];
   }
 
+  /**
+   * Add a subscriber to be notified when the token is refreshed
+   * @param callback The function to call when the token is refreshed
+   */
   private addRefreshSubscriber(callback: (token: string) => void) {
     this.refreshSubscribers.push(callback);
   }
 
-  // ---------------------------------------------------------------------------
-  // Méthodes HTTP principales
-  // ---------------------------------------------------------------------------
+  // ================================================================================== //
+  // Request
+  // ================================================================================== //
 
+  /**
+   * Make a request to the API
+   * @param endpoint The endpoint to request
+   * @param options The request options
+   * @returns The response from the API
+   */
   private async request<T = any>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     const url = endpoint.startsWith('http') ? endpoint : `${this.baseURL}${endpoint}`;
     
-    // Récupérer les tokens du store Zustand
-    const { token, logout } = useAuthStore.getState();
+    // Get the auth state
+    const token = await this.getToken();
     
-    // Préparer les headers
+    // Set the headers
     const headers: Record<string, string> = {
       ...this.defaultHeaders,
       ...(options.headers as Record<string, string>),
     };
 
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
+    if (token) headers['Authorization'] = `Bearer ${token}`;
 
     const config: RequestInit = {
       ...options,
       headers,
-      // Signal timeout si supporté par l'environnement
+      // Request timeout
       ...(typeof AbortSignal !== 'undefined' && 'timeout' in AbortSignal 
         ? { signal: (AbortSignal as any).timeout(API_CONFIG.TIMEOUT) } 
         : {}),
@@ -66,7 +97,7 @@ class ApiClient {
       
       const response = await fetch(url, config);
       
-      // Gérer les erreurs d'authentification (401)
+      // Handle authentication errors (401)
       if (response.status === 401) {
         if (!this.isRefreshing) {
           this.isRefreshing = true;
@@ -76,12 +107,12 @@ class ApiClient {
             this.onTokenRefreshed(newToken);
           } catch (error) {
             this.isRefreshing = false;
-            logout(); // Déconnexion si le refresh échoue
-            throw error;
+            this.onLogout?.(); // Logout if refresh fails
+            throw new Error('Session expirée');
           }
         }
 
-        // Attendre que le token soit rafraîchi
+        // Wait for the token to be refreshed
         return new Promise((resolve) => {
           this.addRefreshSubscriber((newToken) => {
             const retryHeaders = { ...headers, 'Authorization': `Bearer ${newToken}` };
@@ -118,41 +149,34 @@ class ApiClient {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Refresh token
-  // ---------------------------------------------------------------------------
+  // ================================================================================== //
+  // Refresh Token
+  // ================================================================================== //
 
+  /**
+   * Handle token refresh
+   * @returns The new access token
+   */
   private async handleTokenRefresh(): Promise<string> {
-    const { refreshToken, setAuth, user } = useAuthStore.getState();
-    
-    if (!refreshToken || !user) {
-      throw new Error('No refresh token available');
-    }
-
-    try {
-      const response = await fetch(`${this.baseURL}${API_ENDPOINTS.AUTH.REFRESH}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.token) {
-        setAuth(user, data.token, data.refreshToken || refreshToken);
-        return data.token;
-      } else {
-        throw new Error('Token refresh failed');
-      }
-    } catch (error) {
-      throw error;
-    }
+    const response = await fetch(`${this.baseURL}/auth/patient/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const data = await response.json();
+    if (response.ok && data.token) return data.token;
+    throw new Error('Token refresh failed');
   }
 
-  // ---------------------------------------------------------------------------
-  // Méthodes HTTP publiques
-  // ---------------------------------------------------------------------------
+  // ================================================================================== //
+  // HTTP Methods
+  // ================================================================================== //
 
+  /**
+   * GET request
+   * @param endpoint - API endpoint
+   * @param params - Query parameters
+   * @returns ApiResponse
+   */
   async get<T = any>(
     endpoint: string,
     params?: Record<string, string | number | boolean>
@@ -175,6 +199,12 @@ class ApiClient {
     return this.request<T>(url, { method: 'GET' });
   }
 
+  /**
+   * POST request
+   * @param endpoint - API endpoint
+   * @param data - Request body
+   * @returns ApiResponse
+   */
   async post<T = any>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, {
       method: 'POST',
@@ -182,6 +212,12 @@ class ApiClient {
     });
   }
 
+  /**
+   * PUT request
+   * @param endpoint - API endpoint
+   * @param data - Request body
+   * @returns ApiResponse
+   */
   async put<T = any>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, {
       method: 'PUT',
@@ -189,6 +225,12 @@ class ApiClient {
     });
   }
 
+  /**
+   * PATCH request
+   * @param endpoint - API endpoint
+   * @param data - Request body
+   * @returns ApiResponse
+   */
   async patch<T = any>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, {
       method: 'PATCH',
@@ -196,13 +238,22 @@ class ApiClient {
     });
   }
 
-  async delete<T = any>(endpoint: string): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, { method: 'DELETE' });
+  /**
+   * DELETE request
+   * @param endpoint - API endpoint
+   * @param data - Optional request body
+   * @returns ApiResponse
+   */
+  async delete<T = any>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, {
+      method: 'DELETE',
+      body: data ? JSON.stringify(data) : undefined,
+    });
   }
 
-  // ---------------------------------------------------------------------------
-  // Upload de fichiers
-  // ---------------------------------------------------------------------------
+  // ================================================================================== //
+  // Upload
+  // ================================================================================== //
 
   async upload<T = any>(
     endpoint: string,
@@ -214,7 +265,7 @@ class ApiClient {
   ): Promise<ApiResponse<T>> {
     const formData = new FormData();
     
-    // Format spécifique pour React Native fetch upload
+    // Specific format for React Native fetch upload
     // @ts-ignore
     formData.append(fieldName, {
       uri: fileUri,
@@ -228,7 +279,7 @@ class ApiClient {
       });
     }
 
-    const { token } = useAuthStore.getState();
+    const token = await this.getToken();
     const headers: Record<string, string> = {
       'Accept': 'application/json',
       'Content-Type': 'multipart/form-data',

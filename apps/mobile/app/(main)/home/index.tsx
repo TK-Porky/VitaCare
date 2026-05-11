@@ -1,4 +1,6 @@
-import { ScrollView, View, Text, StyleSheet, StatusBar } from "react-native";
+import { useEffect } from "react";
+import { ScrollView, View, Text, StyleSheet, StatusBar, ActivityIndicator, RefreshControl } from "react-native";
+import { router } from "expo-router";
 import { Flame, Pill, TrendingUp } from "lucide-react-native";
 import {
   AppHeader,
@@ -7,16 +9,91 @@ import {
   SectionHeader,
   MedicationItem,
   AppointmentItem,
+  HelperText,
 } from "../../../src/components";
 import { colors, fontFamily, fontSize } from "../../../src/themes";
-import { DASHBOARD_DATA } from "../../../src/data/mockDashboard";
+import { useDashboardStore, useAuthStore } from "../../../src/store";
 
+// ================================================================================== //
+// Types
+// ================================================================================== //
 type BoardProps = {
   onMap: () => void;
 };
 
+// ================================================================================== //
+// Main
+// ================================================================================== //
 export default function DashboardScreen({ onMap }: BoardProps) {
-  const data = DASHBOARD_DATA;
+  // ================================================================================== //
+  // Hooks
+  // ================================================================================== //
+  const { data, isLoading, error, fetchOverview } = useDashboardStore();
+  const user = useAuthStore(state => state.user);
+
+  // ================================================================================== //
+  // Effects
+  // ================================================================================== //
+  useEffect(() => {
+    fetchOverview();
+  }, []);
+
+  // ================================================================================== //
+  // Handlers
+  // ================================================================================== //
+  const onRefresh = () => {
+    fetchOverview();
+  };
+
+  const handleSeeAllMedications = () => {
+    router.push("/(main)/(tabs)/medications" as any);
+  };
+
+  const handleSeeAllAppointments = () => {
+    router.push("/(main)/(tabs)/appointments" as any);
+  };
+
+  const handleSearch = () => {
+    router.push("/(main)/(tabs)/explore" as any);
+  };
+
+  // ================================================================================== //
+  // Loading Render
+  // ================================================================================== //
+  if (isLoading && !data) {
+    return (
+      <View style={styles.loader}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  // ================================================================================== //
+  // Error Render
+  // ================================================================================== //
+  if (!data && error) {
+    return (
+      <View style={styles.errorContainer}>
+        <HelperText message={error} type="error" />
+        <Text style={styles.retry} onPress={() => fetchOverview()}>Réessayer</Text>
+      </View>
+    );
+  }
+
+  if (!data) return null;
+
+  // ================================================================================== //
+  // Utility Functions
+  // ================================================================================== //
+  const todayStr = new Date().toLocaleDateString('fr-FR', { 
+    weekday: 'long', 
+    day: 'numeric', 
+    month: 'long' 
+  });
+
+  // ================================================================================== //
+  // Render
+  // ================================================================================== //
   return (
     <View style={styles.root}>
       <StatusBar
@@ -24,18 +101,21 @@ export default function DashboardScreen({ onMap }: BoardProps) {
         backgroundColor={colors.primary}
         barStyle="dark-content"
       />
-      <AppHeader onSearch={() => {}} onMap={onMap} />
+      <AppHeader onSearch={handleSearch} onMap={onMap} />
 
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isLoading} onRefresh={onRefresh} tintColor={colors.primary} />
+        }
       >
         {/* Greeting */}
         <View style={styles.greeting}>
           <Text style={styles.greetingText}>
-            Bienvenue <Text style={styles.greetingName}>{data.currentUser}</Text> !
+            Bienvenue <Text style={styles.greetingName}>{user?.fullName || data.currentUser}</Text> !
           </Text>
-          <Text style={styles.greetingDate}>Aujourd'hui, {data.currentDate}</Text>
+          <Text style={styles.greetingDate}>Aujourd'hui, {todayStr}</Text>
         </View>
 
         {/* Observance */}
@@ -67,14 +147,14 @@ export default function DashboardScreen({ onMap }: BoardProps) {
 
         {/* Prises du jour */}
         <View style={styles.section}>
-          <SectionHeader title="Prises du jour" onSeeAll={() => {}} />
+          <SectionHeader title="Prises du jour" onSeeAll={handleSeeAllMedications} />
           {data.medications.length === 0 ? (
             <Text style={styles.emptyText}>Aucune prise programmée</Text>
           ):(
             <>
-              {data.medications.map((medication, index) => (
+              {data.medications.map((medication) => (
                 <MedicationItem
-                key={index}
+                key={medication.id}
                 name={medication.name}
                 dose={medication.dosage}
                 status={medication.status}
@@ -87,20 +167,26 @@ export default function DashboardScreen({ onMap }: BoardProps) {
 
         {/* Rendez-vous */}
         <View style={styles.section}>
-          <SectionHeader title="Vos Rendez-vous" onSeeAll={() => {}} />
+          <SectionHeader title="Vos Rendez-vous" onSeeAll={handleSeeAllAppointments} />
           {data.appointments.length === 0 ? (
             <Text style={styles.emptyText}>Aucun rendez-vous prévu</Text>
           ):(
             <>
-              {data.appointments.map((appointment, index) => (
-                <AppointmentItem
-                key={index}
-                doctorName={appointment.doctorName}
-                date={appointment.date}
-                time={appointment.time}
-                status={appointment.status}
-              />
-              ))}
+              {data.appointments.slice(0, 3).map((appointment) => {
+                const dateStr = appointment.date;
+                const timeStr = appointment.time;
+
+                return (
+                  <AppointmentItem
+                    key={appointment.id}
+                    doctorName={appointment.doctorName}
+                    date={dateStr}
+                    time={timeStr}
+                    status={appointment.status}
+                    avatarUrl={appointment.doctorAvatarUri}
+                  />
+                );
+              })}
             </>
           )}
         </View>
@@ -119,6 +205,24 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 24,
     gap: 20,
+  },
+  loader: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: colors.surface,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+    backgroundColor: colors.surface,
+    gap: 12,
+  },
+  retry: {
+    color: colors.primary,
+    fontFamily: fontFamily.bold,
   },
   greeting: {
     gap: 4,
@@ -151,3 +255,4 @@ const styles = StyleSheet.create({
     gap: 12,
   },
 });
+

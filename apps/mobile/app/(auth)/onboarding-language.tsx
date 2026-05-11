@@ -11,12 +11,29 @@ import { ChevronLeft } from 'lucide-react-native';
 import { StepHeader, SelectOption, PrimaryButton } from '../../src/components';
 import { colors, fontFamily, fontSize } from '../../src/themes';
 
+// ================================================================================== //
+// Types
+// ================================================================================== //
 const LANGUAGES = ['Français', 'Anglais'];
 
+// ================================================================================== //
+// Main
+// ================================================================================== //
 export default function OnboardingLanguageScreen() {
-  const [selected, setSelected] = useState<string>('Français');
-  const [isLoading, setIsLoading] = useState(false);
+  // ================================================================================== //
+  // States
+  // ================================================================================== //
+  const [selected, setSelected] = useState<string>('Français'); // Selected language
+  const [isLoading, setIsLoading] = useState(false); // Loading state
 
+  // ================================================================================== //
+  // Functions
+  // ================================================================================== //
+  
+  /**
+   * Finalize the onboarding
+   * @returns
+   */
   const handleFinish = async () => {
     setIsLoading(true);
     try {
@@ -27,6 +44,9 @@ export default function OnboardingLanguageScreen() {
     }
   };
 
+  // ================================================================================== //
+  // Render
+  // ================================================================================== //
   return (
     <View style={styles.root}>
       <StepHeader
