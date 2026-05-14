@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Pill } from 'lucide-react-native';
 import { colors, fontFamily, fontSize } from '../../themes';
 
@@ -9,6 +9,7 @@ type Props = {
   dose: string;
   status: Status;
   time: string;
+  onPress?: () => void;
 };
 
 const STATUS_CONFIG: Record<Status, { label: string; color: string }> = {
@@ -17,11 +18,16 @@ const STATUS_CONFIG: Record<Status, { label: string; color: string }> = {
   pending: { label: 'À venir', color: colors.inkLight },
 };
 
-export function MedicationItem({ name, dose, status, time }: Props) {
+export function MedicationItem({ name, dose, status, time, onPress }: Props) {
   const config = STATUS_CONFIG[status];
 
   return (
-    <View style={styles.container}>
+    <TouchableOpacity 
+      style={styles.container} 
+      onPress={onPress} 
+      activeOpacity={onPress ? 0.7 : 1}
+      disabled={!onPress}
+    >
       <View style={styles.iconWrapper}>
         <Pill size={18} color={colors.inkLight} />
       </View>
@@ -44,7 +50,7 @@ export function MedicationItem({ name, dose, status, time }: Props) {
           )}
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 

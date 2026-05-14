@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import { SectionHeader } from "../../../src/components";
 import { AppHeader } from "../../../src/components";
 import { Category, Drug } from "../../../src/types";
 import { MARKETPLACE_CATEGORIES, MARKETPLACE_DRUGS } from "../../../src/data/mockMedications";
+import { DrugDetailBottomSheet, DrugDetailBottomSheetRef } from "../../../src/components/modals";
 
 // ================================================================================== //
 // Types
@@ -51,11 +52,16 @@ function CategoryCard({ item }: { item: Category }) {
 /**
  * Drug card component
  * @param item - Drug object
+ * @param onPress - Function to handle press event
  * @returns Drug card component
  */
-function DrugCard({ item }: { item: Drug }) {
+function DrugCard({ item, onPress }: { item: Drug, onPress?: (drug: Drug) => void }) {
   return (
-    <TouchableOpacity style={styles.drugCard} activeOpacity={0.85}>
+    <TouchableOpacity 
+      style={styles.drugCard} 
+      activeOpacity={0.85}
+      onPress={() => onPress?.(item)}
+    >
       <View style={styles.drugImageContainer}>
         <Image
           source={{ uri: item.imageUri }}
@@ -79,10 +85,25 @@ function DrugCard({ item }: { item: Drug }) {
 // ================================================================================== //
 export default function MedecineScreen({ onReminders }: Props) {
   // ================================================================================== //
-  // States
+  // States & Refs
   // ================================================================================== //
   const [isLoading, setIsLoading] = useState<Boolean>(false);
   const [search, setSearch] = useState("");
+  const [selectedDrug, setSelectedDrug] = useState<Drug | null>(null);
+  const drugSheetRef = useRef<DrugDetailBottomSheetRef>(null);
+
+  // ================================================================================== //
+  // Functions
+  // ================================================================================== //
+  
+  /**
+   * Handle drug card press
+   * @param drug - Selected drug
+   */
+  const handleDrugPress = (drug: Drug) => {
+    setSelectedDrug(drug);
+    drugSheetRef.current?.open();
+  };
 
   // ================================================================================== //
   // Loading Render
@@ -150,13 +171,27 @@ export default function MedecineScreen({ onReminders }: Props) {
         <SectionHeader title="Les plus recherchés" onSeeAll={() => {}} />
         <View style={styles.drugsGrid}>
           {MARKETPLACE_DRUGS.map((drug) => (
-            <DrugCard key={drug.id} item={drug} />
+            <DrugCard 
+              key={drug.id} 
+              item={drug} 
+              onPress={handleDrugPress}
+            />
           ))}
         </View>
 
         {/* Bottom spacing */}
         <View style={{ height: 24 }} />
       </ScrollView>
+
+      {/* ── Modals ── */}
+      <DrugDetailBottomSheet 
+        ref={drugSheetRef}
+        drug={selectedDrug}
+        onAddToCart={(drug) => {
+          console.log("Add to cart:", drug.name);
+          drugSheetRef.current?.close();
+        }}
+      />
     </SafeAreaView>
   );
 }

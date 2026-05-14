@@ -7,13 +7,15 @@ import {
   Platform,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { router } from 'expo-router';
-import { MapPin, Search } from 'lucide-react-native';
+import { MapPin } from 'lucide-react-native';
 import MapView, { UrlTile, Marker, PROVIDER_DEFAULT } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { StepHeader, SearchInput, PrimaryButton } from '../../src/components';
 import { colors, fontFamily, fontSize } from '../../src/themes';
+import { useProfile } from '../../src/hooks';
 
 // ================================================================================== //
 // Types
@@ -29,6 +31,7 @@ const INITIAL_REGION = {
 // Main
 // ================================================================================== //
 export default function OnboardingLocationScreen() {
+  const { updateProfile, isUpdatingProfile } = useProfile();
   // ================================================================================== //
   // States
   // ================================================================================== //
@@ -39,7 +42,6 @@ export default function OnboardingLocationScreen() {
     longitude: INITIAL_REGION.longitude,
   }); // Marker coordinates
   const [searchQuery, setSearchQuery] = useState(''); // Search query
-  const [isLoading, setIsLoading] = useState(false); // Loading state
   const [isMapReady, setIsMapReady] = useState(false); // Map ready state
 
   // ================================================================================== //
@@ -78,20 +80,20 @@ export default function OnboardingLocationScreen() {
     })();
   }, []);
 
-  // ================================================================================== //
-  // Functions
-  // ================================================================================== //
   /**
    * Handle continue button press
    * @returns {Promise<void>}
    */
   const handleContinue = async () => {
-    setIsLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Save location to profile via API
+      await updateProfile({
+        address: location,
+      } as any); 
+      
       router.push('/(auth)/onboarding-search');
-    } finally {
-      setIsLoading(false);
+    } catch (e) {
+      Alert.alert("Erreur", "Impossible de sauvegarder votre position.");
     }
   };
 
@@ -129,7 +131,7 @@ export default function OnboardingLocationScreen() {
         />
 
         {/* Map Container */}
-        <View style={styles.mapContainer}>
+        <div style={styles.mapContainer as any}>
           <MapView
             style={styles.map}
             provider={PROVIDER_DEFAULT}
@@ -155,7 +157,7 @@ export default function OnboardingLocationScreen() {
               <ActivityIndicator color={colors.primary} />
             </View>
           )}
-        </View>
+        </div>
 
         <TouchableOpacity style={styles.locationRow} activeOpacity={0.7}>
           <MapPin size={16} color={colors.inkMuted} />
@@ -167,7 +169,7 @@ export default function OnboardingLocationScreen() {
         <PrimaryButton
           label="Continuer"
           fullWidth
-          isLoading={isLoading}
+          isLoading={isUpdatingProfile}
           onPress={handleContinue}
         />
       </View>
@@ -178,14 +180,12 @@ export default function OnboardingLocationScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    height: '100%',
     backgroundColor: colors.white,
   },
   content: {
     flex: 1,
     paddingHorizontal: 16,
-    paddingTop: 24,
-    gap: 16,
+    gap: 20,
   },
   header: {
     gap: 8,
@@ -198,15 +198,15 @@ const styles = StyleSheet.create({
   subtitle: {
     fontFamily: fontFamily.regular,
     fontSize: fontSize.md,
-    color: colors.inkLight,
-    lineHeight: 18,
+    color: colors.inkMuted,
+    lineHeight: 20,
   },
   mapContainer: {
     flex: 1,
-    backgroundColor: colors.surface,
-    borderRadius: 12,
+    borderRadius: 20,
     overflow: 'hidden',
-    minHeight: 280,
+    backgroundColor: colors.surface,
+    position: 'relative',
   },
   map: {
     ...StyleSheet.absoluteFillObject,
@@ -218,14 +218,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   customMarker: {
+    width: 40,
+    height: 40,
+    backgroundColor: colors.white,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingVertical: 4,
+    backgroundColor: colors.surface,
+    padding: 14,
+    borderRadius: 12,
+    marginBottom: 8,
   },
   locationText: {
     flex: 1,

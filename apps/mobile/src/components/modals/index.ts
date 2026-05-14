@@ -3,3 +3,4 @@ export { AddReminderBottomSheet, type ReminderData, type AddReminderBottomSheetR
 export { BookingBottomSheet, type BookingBottomSheetRef, type BookingData } from './BookingBottomSheet';
 export { ProfessionalProviderBottomSheet, type ReservationStatus, type ProfessionalProviderBottomSheetRef } from './ProfessionalProviderBottomSheet';
 export { AppointmentDetailBottomSheet, type AppointmentDetailBottomSheetRef } from './AppointmentBottomSheet';
+export { DrugDetailBottomSheet, type DrugDetailBottomSheetRef } from './DrugDetailBottomSheet';

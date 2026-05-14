@@ -105,13 +105,36 @@ function MenuItem({
  * @param items - The items in the section
  */
 function MenuSection({ title, items }: { title: string; items: typeof MENU_SECTIONS[0]['items'] }) {
+  const handlePress = (id: string) => {
+    switch (id) {
+      case 'info':
+        router.push('/(main)/profile/edit-profile');
+        break;
+      case 'password':
+        router.push('/(main)/profile/change-password');
+        break;
+      case 'notifications':
+        router.push('/(main)/profile/notifications-settings');
+        break;
+      case 'lang':
+        router.push('/(main)/profile/language-settings');
+        break;
+      default:
+        console.log('Navigate to:', id);
+    }
+  };
+
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>{title}</Text>
       <View style={styles.sectionCard}>
         {items.map((item, index) => (
           <View key={item.id}>
-            <MenuItem icon={item.icon} label={item.label} />
+            <MenuItem 
+              icon={item.icon} 
+              label={item.label} 
+              onPress={() => handlePress(item.id)}
+            />
             {index < items.length - 1 && <View style={styles.itemDivider} />}
           </View>
         ))}
