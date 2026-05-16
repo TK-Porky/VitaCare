@@ -3,7 +3,9 @@ import { API_ENDPOINTS } from "../types/api-endpoints";
 import { 
   UpdateProfileRequest, 
   UpdatePreferencesRequest,
-  DeleteAccountRequest
+  DeleteAccountRequest,
+  ChangePasswordRequest,
+  UpdateNotificationPreferencesRequest
 } from "../types/api-requests";
 import { UserProfileResponse } from "../types/api-responses";
 
@@ -31,11 +33,27 @@ export const profileService = {
   },
 
   /**
+   * Change user password
+   */
+  async changePassword(data: ChangePasswordRequest): Promise<void> {
+    const res = await apiClient.post(API_ENDPOINTS.AUTH.CHANGE_PASSWORD, data);
+    if (!res.success) throw new Error(res.error ?? "Failed to change password");
+  },
+
+  /**
    * Update user preferences
    */
   async updatePreferences(data: UpdatePreferencesRequest): Promise<void> {
     const res = await apiClient.put(API_ENDPOINTS.USERS.UPDATE_PREFERENCES, data);
     if (!res.success) throw new Error(res.error ?? "Failed to update preferences");
+  },
+
+  /**
+   * Update notification preferences
+   */
+  async updateNotificationPreferences(data: UpdateNotificationPreferencesRequest): Promise<void> {
+    const res = await apiClient.put(API_ENDPOINTS.NOTIFICATIONS.UPDATE_PREFERENCES, data);
+    if (!res.success) throw new Error(res.error ?? "Failed to update notification preferences");
   },
 
   /**

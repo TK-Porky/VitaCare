@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { colors, fontFamily, fontSize } from '../../themes';
 
 type Status = 'confirmed' | 'pending' | 'cancelled' | 'paid';
@@ -9,6 +9,7 @@ type Props = {
   time: string;
   status: Status;
   avatarUrl?: string;
+  onPress?: () => void;
 };
 
 const STATUS_CONFIG: Record<Status, { label: string; bg: string; color: string }> = {
@@ -18,11 +19,16 @@ const STATUS_CONFIG: Record<Status, { label: string; bg: string; color: string }
   cancelled: { label: 'Annulé',   bg: colors.errorLight,   color: colors.error },
 };
 
-export function AppointmentItem({ doctorName, date, time, status, avatarUrl }: Props) {
+export function AppointmentItem({ doctorName, date, time, status, avatarUrl, onPress }: Props) {
   const config = STATUS_CONFIG[status];
 
   return (
-    <View style={styles.container}>
+    <TouchableOpacity 
+      style={styles.container} 
+      onPress={onPress}
+      activeOpacity={onPress ? 0.7 : 1}
+      disabled={!onPress}
+    >
       <View style={styles.avatar}>
         {avatarUrl ? (
           <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
@@ -48,7 +54,7 @@ export function AppointmentItem({ doctorName, date, time, status, avatarUrl }: P
           </Text>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 

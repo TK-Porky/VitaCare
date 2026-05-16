@@ -5,11 +5,15 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { router } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { StepHeader, SelectOption, PrimaryButton } from '../../src/components';
 import { colors, fontFamily, fontSize } from '../../src/themes';
+import { useProfile } from '../../src/hooks';
+
+// ... (rest same)
 
 // ================================================================================== //
 // Types
@@ -20,27 +24,27 @@ const LANGUAGES = ['Français', 'Anglais'];
 // Main
 // ================================================================================== //
 export default function OnboardingLanguageScreen() {
+  const { updatePreferences, isUpdatingPreferences } = useProfile();
   // ================================================================================== //
   // States
   // ================================================================================== //
   const [selected, setSelected] = useState<string>('Français'); // Selected language
-  const [isLoading, setIsLoading] = useState(false); // Loading state
 
-  // ================================================================================== //
-  // Functions
-  // ================================================================================== //
-  
   /**
    * Finalize the onboarding
    * @returns
    */
   const handleFinish = async () => {
-    setIsLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Save language preference to profile
+      await updatePreferences({
+        language: selected === 'Français' ? 'fr' : 'en'
+      });
+      
       router.push('/(auth)/onboarding-success');
-    } finally {
-      setIsLoading(false);
+    } catch (e) {
+      // UX: Navigate anyway if it fails, or show warning
+      router.push('/(auth)/onboarding-success');
     }
   };
 
@@ -85,7 +89,7 @@ export default function OnboardingLanguageScreen() {
 
         <PrimaryButton
           label="Terminer"
-          isLoading={isLoading}
+          isLoading={isUpdatingPreferences}
           onPress={handleFinish}
           style={styles.finishButton}
         />

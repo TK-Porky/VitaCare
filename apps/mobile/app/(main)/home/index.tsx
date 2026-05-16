@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { ScrollView, View, Text, StyleSheet, StatusBar, ActivityIndicator, RefreshControl } from "react-native";
+import { ScrollView, View, Text, StyleSheet, StatusBar, ActivityIndicator, RefreshControl, Alert } from "react-native";
 import { router } from "expo-router";
 import { Flame, Pill, TrendingUp } from "lucide-react-native";
 import {
@@ -28,7 +28,7 @@ export default function DashboardScreen({ onMap }: BoardProps) {
   // ================================================================================== //
   // Hooks
   // ================================================================================== //
-  const { data, isLoading, error, fetchOverview } = useDashboardStore();
+  const { data, isLoading, error, fetchOverview, updateMedicationStatus } = useDashboardStore();
   const user = useAuthStore(state => state.user);
 
   // ================================================================================== //
@@ -55,6 +55,49 @@ export default function DashboardScreen({ onMap }: BoardProps) {
 
   const handleSearch = () => {
     router.push("/(main)/(tabs)/explore" as any);
+  };
+
+  /**
+   * Handle medication press to update status
+   */
+  const handleMedicationPress = (medicationId: string, currentStatus: string) => {
+    if (currentStatus !== 'pending') return;
+
+    Alert.alert(
+      "Suivi de prise",
+      "Avez-vous pris ce médicament ?",
+      [
+        {
+          text: "Non, manqué",
+          style: "destructive",
+          onPress: () => updateMedicationStatus({ 
+            medicationId, 
+            status: 'missed' 
+          }),
+        },
+        {
+          text: "Oui, pris",
+          onPress: () => updateMedicationStatus({ 
+            medicationId, 
+            status: 'taken',
+            takenAt: new Date().toISOString()
+          }),
+        },
+        {
+          text: "Plus tard",
+          style: "cancel"
+        }
+      ]
+    );
+  };
+
+  /**
+   * Handle appointment press
+   */
+  const handleAppointmentPress = (appointmentId: string) => {
+    // In a real app, navigate to appointment details
+    // router.push({ pathname: "/(main)/appointments/[id]", params: { id: appointmentId } } as any);
+    console.log("Navigate to appointment:", appointmentId);
   };
 
   // ================================================================================== //
@@ -159,6 +202,7 @@ export default function DashboardScreen({ onMap }: BoardProps) {
                 dose={medication.dosage}
                 status={medication.status}
                 time={medication.time}
+                onPress={() => handleMedicationPress(medication.id, medication.status)}
               />
               ))}
             </>
@@ -184,6 +228,7 @@ export default function DashboardScreen({ onMap }: BoardProps) {
                     time={timeStr}
                     status={appointment.status}
                     avatarUrl={appointment.doctorAvatarUri}
+                    onPress={() => handleAppointmentPress(appointment.id)}
                   />
                 );
               })}

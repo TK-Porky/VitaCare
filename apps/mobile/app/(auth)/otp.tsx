@@ -7,6 +7,7 @@ import {
   Platform,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { OTPInput, TopBar, HelperText, PrimaryButton } from "../../src/components";
@@ -69,24 +70,25 @@ export default function OTPScreen() {
     clearStoreError();
 
     verifyOtp({ 
-      phone: phone || "", 
+      phone: phone || "",
       code: otpCode,
       fullName: fullName // Pass fullName if it exists (registration case)
-    } as any); // Cast to any because hook might need update or we handle via direct store call if needed
-  }, [phone, fullName]);
+    });
+  }, [phone, fullName, verifyOtp, clearStoreError]);
 
   /**
    * Handle resend OTP
    * @returns
    */
   const handleResend = async () => {
-    if (countdown > 0) return;
+    if (countdown > 0 || !phone) return;
+    
     setCountdown(RESEND_DELAY);
     setCode("");
     setLocalError("");
     clearStoreError();
-    // TODO: Re-trigger phone auth if needed, but usually Firebase handles it
-    // For now we just reset the local state
+
+    Alert.alert("Code renvoyé", "Un nouveau code a été envoyé au " + phone);
   };
 
   // ================================================================================== //

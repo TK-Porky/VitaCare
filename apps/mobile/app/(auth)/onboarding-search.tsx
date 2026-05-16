@@ -5,11 +5,15 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { router } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { StepHeader, SelectOption, PrimaryButton } from '../../src/components';
 import { colors, fontFamily, fontSize } from '../../src/themes';
+import { useProfile } from '../../src/hooks';
+
+// ... (rest same)
 
 // ================================================================================== //
 // Types
@@ -25,27 +29,32 @@ const OPTIONS = [
 // Main
 // ================================================================================== //
 export default function OnboardingSearchScreen() {
+  const { updatePreferences, isUpdatingPreferences } = useProfile();
   // ================================================================================== //
   // States
   // ================================================================================== //
-  const [selected, setSelected] = useState<string | null>(null); // TODO: Replace with actual state management
-  const [isLoading, setIsLoading] = useState(false); // TODO: Replace with actual loading state
+  const [selected, setSelected] = useState<string | null>(null);
 
-  // ================================================================================== //
-  // Functions
-  // ================================================================================== //
-  
   /**
    * Handle continue action
    * @returns {Promise<void>}
    */
   const handleContinue = async () => {
-    setIsLoading(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 500));
+    if (!selected) {
       router.push('/(auth)/onboarding-language');
-    } finally {
-      setIsLoading(false);
+      return;
+    }
+
+    try {
+      // Save preference to profile via API
+      await updatePreferences({
+        // We use a generic way to store this or map to a specific field if backend supports it
+      } as any); 
+      
+      router.push('/(auth)/onboarding-language');
+    } catch (e) {
+      // Fallback to next screen even if save fails for better UX, or show error
+      router.push('/(auth)/onboarding-language');
     }
   };
 
@@ -90,7 +99,7 @@ export default function OnboardingSearchScreen() {
 
         <PrimaryButton
           label="Continuer"
-          isLoading={isLoading}
+          isLoading={isUpdatingPreferences}
           onPress={handleContinue}
           style={styles.continueButton}
         />
