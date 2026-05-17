@@ -33,13 +33,14 @@ function RootGuard() {
     if (!isHydrated) return;
 
     const inAuthGroup = segments[0] === '(auth)';
+    const inMainGroup = segments[0] === '(main)';
     const isOnboarding = (segments as string[])[1]?.startsWith('onboarding');
 
     if (!accessToken && !inAuthGroup) {
       // Redirect to landing if not authenticated and not in auth group
       router.replace("/(auth)");
-    } else if (accessToken && inAuthGroup && !isOnboarding) {
-      // Redirect to main if authenticated and in auth group, but NOT on onboarding screens
+    } else if (accessToken && (!inMainGroup && !isOnboarding)) {
+      // Redirect to main if authenticated and NOT in main group (and not onboarding)
       router.replace("/(main)");
     }
   }, [isHydrated, accessToken, segments]);

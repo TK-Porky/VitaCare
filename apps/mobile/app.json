@@ -39,7 +39,9 @@
         {
           "locationAlwaysAndWhenInUsePermission": "VitaCare utilise votre position pour trouver des établissements de santé à proximité."
         }
-      ]
+      ],
+      "expo-router",
+      "expo-secure-store"
     ]
   }
 }
