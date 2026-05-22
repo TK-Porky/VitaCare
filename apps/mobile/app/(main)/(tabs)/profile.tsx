@@ -13,6 +13,7 @@ import {
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { colors, fontFamily, fontSize } from "../../../src/themes";
 import { router } from 'expo-router';
+import { useAuthStore } from '../../../src/store';
 
 // ================================================================================== //
 // Types
@@ -150,8 +151,16 @@ export default function ProfileScreen() {
   // ================================================================================== //
   // Handlers
   // ================================================================================== //
-  const handleDisconnection = () => {
-    router.replace('/(auth)');
+  const logout = useAuthStore((s) => s.logout);
+
+  const handleDisconnection = async () => {
+    try {
+      await logout();
+    } catch (e) {
+      console.error("Erreur lors de la déconnexion :", e);
+      // Fallback
+      router.replace('/(auth)');
+    }
   };
 
   // ================================================================================== //
