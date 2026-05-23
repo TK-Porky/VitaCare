@@ -220,7 +220,7 @@ export default function MapScreen() {
       {/* ── Map ── */}
       <MapView
         ref={mapRef}
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
         provider={PROVIDER_DEFAULT}
         initialRegion={INITIAL_REGION}
         onRegionChangeComplete={setRegion}
@@ -247,7 +247,7 @@ export default function MapScreen() {
       </MapView>
 
       {/* ── Overlay layer ── */}
-      <View style={StyleSheet.absoluteFillObject} pointerEvents="box-none">
+      <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
         
         {(isLoadingLocation || isLoading) && (
           <View style={styles.loaderContainer}>
@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   loaderContainer: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(255,255,255,0.5)',
     alignItems: 'center',
     justifyContent: 'center',
