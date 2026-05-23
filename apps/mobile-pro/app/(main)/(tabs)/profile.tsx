@@ -50,11 +50,12 @@ export default function ProfileScreen() {
   const logout = useAuthStore((s) => s.logout);
 
   const initials = (user?.fullName ?? 'DR')
-    .split(' ')
+    .trim()
+    .split(/\s+/)
     .slice(0, 2)
-    .map((n) => n[0])
+    .map((n) => n[0] || '')
     .join('')
-    .toUpperCase();
+    .toUpperCase() || 'DR';
 
   const handleLogout = () => {
     Alert.alert(

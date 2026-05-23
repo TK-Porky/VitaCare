@@ -17,12 +17,13 @@ interface Props {
 }
 
 export function PatientCard({ fullName, lastVisit, totalAppointments, gender, onPress }: Props) {
-  const initials = fullName
-    .split(' ')
+  const initials = (fullName || 'P')
+    .trim()
+    .split(/\s+/)
     .slice(0, 2)
-    .map((n) => n[0])
+    .map((n) => n[0] || '')
     .join('')
-    .toUpperCase();
+    .toUpperCase() || 'P';
 
   const avatarColor = gender === 'female' ? '#F3A1C7' : gender === 'male' ? '#A1C4F3' : '#C1B8F0';
 

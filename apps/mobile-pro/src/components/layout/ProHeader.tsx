@@ -20,13 +20,14 @@ interface Props {
 export function ProHeader({ doctorName, specialty, onNotifications, notificationCount = 0 }: Props) {
   const insets = useSafeAreaInsets();
 
-  const firstName = doctorName.replace(/^Dr\.?\s*/i, '');
-  const initials  = firstName
-    .split(' ')
+  const firstName = doctorName ? doctorName.replace(/^Dr\.?\s*/i, '') : '';
+  const initials  = (firstName || 'DR')
+    .trim()
+    .split(/\s+/)
     .slice(0, 2)
-    .map((n) => n[0])
+    .map((n) => n[0] || '')
     .join('')
-    .toUpperCase();
+    .toUpperCase() || 'DR';
 
   const greeting = () => {
     const h = new Date().getHours();

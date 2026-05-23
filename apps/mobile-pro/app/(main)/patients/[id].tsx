@@ -53,7 +53,13 @@ export default function PatientDetailScreen() {
     return <View style={styles.center}><HelperText message={error ?? 'Patient introuvable'} type="error" /></View>;
   }
 
-  const initials = patient.fullName.split(' ').slice(0,2).map((n)=>n[0]).join('').toUpperCase();
+  const initials = (patient.fullName || 'P')
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((n) => n[0] || '')
+    .join('')
+    .toUpperCase() || 'P';
   const avatarColor = patient.gender === 'female' ? '#F3A1C7' : patient.gender === 'male' ? '#A1C4F3' : '#C1B8F0';
 
   return (

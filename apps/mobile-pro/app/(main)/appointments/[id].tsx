@@ -144,7 +144,13 @@ export default function AppointmentDetailScreen() {
           <View style={styles.patientCard}>
             <View style={styles.patientAvatar}>
               <Text style={styles.patientInitials}>
-                {apt.patient.fullName.split(' ').slice(0,2).map((n)=>n[0]).join('').toUpperCase()}
+                {(apt.patient.fullName || 'P')
+                  .trim()
+                  .split(/\s+/)
+                  .slice(0, 2)
+                  .map((n) => n[0] || '')
+                  .join('')
+                  .toUpperCase() || 'P'}
               </Text>
             </View>
             <View style={styles.patientInfo}>
