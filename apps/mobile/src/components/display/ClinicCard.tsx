@@ -5,6 +5,7 @@ import { MoreHorizontal } from "lucide-react-native";
 import { colors, fontFamily, fontSize } from "../../../src/themes";
 import { PrimaryButton } from "../buttons";
 import { ClinicProvider } from "../../types";
+import { Skeleton } from "../generics";
 
 function DoctorRow({
   avatar,
@@ -148,6 +149,46 @@ export function ClinicCard({ data, onReserve, onMore, onProfile }: ClinicCardPro
         location={data.location}
         onReserve={onReserve}
       />
+    </View>
+  );
+}
+
+export function ClinicCardSkeleton() {
+  return (
+    <View style={styles.card}>
+      {/* DoctorRow Skeleton */}
+      <View style={styles.doctorRow}>
+        <Skeleton width={44} height={44} borderRadius={22} />
+        <View style={[styles.doctorInfo, { gap: 6, marginLeft: 10 }]}>
+          <Skeleton width="60%" height={16} />
+          <View style={{ flexDirection: "row", gap: 6, alignItems: "center" }}>
+            <Skeleton width={80} height={12} borderRadius={10} />
+            <Skeleton width={40} height={12} />
+          </View>
+        </View>
+      </View>
+
+      {/* ClinicImage Skeleton */}
+      <Skeleton width="100%" height={200} borderRadius={0} />
+
+      {/* ClinicInfo Skeleton */}
+      <View style={styles.infoContainer}>
+        <View style={styles.titleRow}>
+          <Skeleton width="50%" height={20} />
+          <Skeleton width={80} height={32} borderRadius={20} />
+        </View>
+        <View style={{ gap: 6, marginTop: 4 }}>
+          <Skeleton width="100%" height={14} />
+          <Skeleton width="85%" height={14} />
+        </View>
+        <View style={{ flexDirection: "row", gap: 6, alignItems: "center", marginTop: 4 }}>
+          <Skeleton width={120} height={12} />
+          <Skeleton width={100} height={12} />
+        </View>
+        <View style={{ flexDirection: "row", gap: 6, alignItems: "center", marginTop: 2 }}>
+          <Skeleton width="40%" height={12} />
+        </View>
+      </View>
     </View>
   );
 }

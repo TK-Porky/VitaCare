@@ -13,8 +13,8 @@ export { MapMarker } from './MapMarker'
 export { MapProviderCard } from './MapProviderCard'
 
 // Explore Components
-export { ClinicCard } from './ClinicCard'
+export { ClinicCard, ClinicCardSkeleton } from './ClinicCard'
 
 // Appointments Component
-export { AppointmentCard } from './AppointmentCard'
+export { AppointmentCard, AppointmentCardSkeleton } from './AppointmentCard'
 export { MonthHeader } from './MonthHeader'

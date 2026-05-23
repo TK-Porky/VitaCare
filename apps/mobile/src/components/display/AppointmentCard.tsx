@@ -9,6 +9,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fontFamily, fontSize } from '../../themes';
 import { Appointment } from '../../types/appointment';
+import { Skeleton } from '../generics';
 
 interface AppointmentCardProps {
   item: Appointment;
@@ -58,6 +59,50 @@ export function AppointmentCard({ item, onPress }: AppointmentCardProps) {
         </View>
       </View>
     </TouchableOpacity>
+  );
+}
+
+export function AppointmentCardSkeleton() {
+  return (
+    <View style={styles.card}>
+      {/* Header Skeleton */}
+      <View style={styles.cardHeader}>
+        <Skeleton width={42} height={42} borderRadius={21} />
+        <View style={[styles.cardHeaderText, { gap: 4, marginLeft: 10 }]}>
+          <Skeleton width="50%" height={16} />
+          <Skeleton width="40%" height={14} />
+        </View>
+        <Skeleton width={70} height={24} borderRadius={12} />
+      </View>
+
+      {/* Divider */}
+      <View style={styles.cardDivider} />
+
+      {/* Clinic info */}
+      <View style={{ gap: 6 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Skeleton width={16} height={16} />
+          <Skeleton width="60%" height={14} />
+        </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Skeleton width={16} height={16} />
+          <Skeleton width="80%" height={14} />
+        </View>
+      </View>
+
+      {/* Date / Time */}
+      <View style={styles.dateTimeRow}>
+        <View style={styles.dateTimeBlock}>
+          <Skeleton width="30%" height={12} style={{ marginBottom: 4 }} />
+          <Skeleton width="65%" height={14} />
+        </View>
+        <View style={styles.dateTimeSeparator} />
+        <View style={styles.dateTimeBlock}>
+          <Skeleton width="30%" height={12} style={{ marginBottom: 4 }} />
+          <Skeleton width="50%" height={14} />
+        </View>
+      </View>
+    </View>
   );
 }
 
