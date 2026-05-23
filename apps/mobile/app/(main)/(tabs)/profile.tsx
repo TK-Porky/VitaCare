@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -9,10 +9,13 @@ import {
   StatusBar,
   Image,
   Platform,
+  Alert,
 } from 'react-native';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { colors, fontFamily, fontSize } from "../../../src/themes";
 import { router } from 'expo-router';
+import { useAuthStore } from '../../../src/store';
+import { profileService } from '../../../src/services/profile.service';
 
 // ================================================================================== //
 // Types
@@ -147,11 +150,101 @@ function MenuSection({ title, items }: { title: string; items: typeof MENU_SECTI
 // Main
 // ================================================================================== //
 export default function ProfileScreen() {
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
+  const [address, setAddress] = useState<string | null>(null);
+
+  // Load the full profile dynamically to retrieve the actual address if available
+  useEffect(() => {
+    const loadFullProfile = async () => {
+      try {
+        const profile = await profileService.getProfile();
+        if (profile.address) {
+          setAddress(profile.address);
+        }
+      } catch (err) {
+        console.warn("Failed to load extended profile data:", err);
+      }
+    };
+    loadFullProfile();
+  }, []);
+
+  // Safe check for the user's avatar URL
+  const avatarUri = user?.avatarUrl || 'https://randomuser.me/api/portraits/men/75.jpg';
+
   // ================================================================================== //
   // Handlers
   // ================================================================================== //
   const handleDisconnection = () => {
-    router.replace('/(auth)');
+    Alert.alert(
+      "Déconnexion",
+      "Êtes-vous sûr de vouloir vous déconnecter ?",
+      [
+        { text: "Annuler", style: "cancel" },
+        { 
+          text: "Se déconnecter", 
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await logout();
+            } catch (err) {
+              Alert.alert("Erreur", "Impossible de se déconnecter.");
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      "Suppression de compte",
+      "ATTENTION : Cette action est définitive et toutes vos données seront supprimées. Êtes-vous sûr ?",
+      [
+        { text: "Annuler", style: "cancel" },
+        {
+          text: "Supprimer",
+          style: "destructive",
+          onPress: () => {
+            if (Platform.OS === 'ios') {
+              Alert.prompt(
+                "Confirmer la suppression",
+                "Veuillez saisir votre mot de passe pour confirmer la suppression définitive de votre compte :",
+                [
+                  { text: "Annuler", style: "cancel" },
+                  {
+                    text: "Confirmer la suppression",
+                    style: "destructive",
+                    onPress: async (password?: string) => {
+                      if (!password) {
+                        Alert.alert("Erreur", "Mot de passe requis.");
+                        return;
+                      }
+                      try {
+                        await profileService.deleteAccount({ password, confirmDeletion: true });
+                        await logout();
+                      } catch (err: any) {
+                        Alert.alert("Erreur", err.message || "Échec de la suppression.");
+                      }
+                    }
+                  }
+                ],
+                "secure-text"
+              );
+            } else {
+              // Android fallback or redirect
+              Alert.alert(
+                "Validation requise",
+                "Pour confirmer la suppression de votre compte, veuillez modifier votre mot de passe ou contacter le support pour valider l'identité.",
+                [
+                  { text: "Ok", style: "default" }
+                ]
+              );
+            }
+          }
+        }
+      ]
+    );
   };
 
   // ================================================================================== //
@@ -170,16 +263,16 @@ export default function ProfileScreen() {
         <View style={styles.profileCard}>
           <View style={styles.avatarWrapper}>
             <Image
-              source={{ uri: 'https://randomuser.me/api/portraits/men/75.jpg' }}
+              source={{ uri: avatarUri }}
               style={styles.avatar}
             />
           </View>
-          <Text style={styles.userName}>Bille Théophile Kevin</Text>
-          <Text style={styles.userPhone}>+237 6 81 51 84 89</Text>
+          <Text style={styles.userName}>{user?.fullName ?? 'Utilisateur'}</Text>
+          <Text style={styles.userPhone}>{user?.phone ?? 'Non renseigné'}</Text>
 
           <TouchableOpacity style={styles.locationBtn} activeOpacity={0.85}>
             <Ionicons name="location-outline" size={16} color="#fff" />
-            <Text style={styles.locationBtnText}>Yaoundé, Mvog-betsi</Text>
+            <Text style={styles.locationBtnText}>{address ?? 'Localisation non renseignée'}</Text>
           </TouchableOpacity>
         </View>
 
@@ -194,7 +287,7 @@ export default function ProfileScreen() {
           <View style={styles.sectionCard}>
             <MenuItem icon="log-out-outline" label="Se déconnecter" onPress={handleDisconnection} danger />
             <View style={styles.itemDivider} />
-            <MenuItem icon="person-remove-outline" label="Supprimer mon compte" onPress={() => {}} danger />
+            <MenuItem icon="person-remove-outline" label="Supprimer mon compte" onPress={handleDeleteAccount} danger />
           </View>
         </View>
 
