@@ -73,10 +73,6 @@ const styles = StyleSheet.create({
     borderWidth:     1,
     borderColor:     colors.border,
     shadowColor:     colors.ink,
-    shadowOffset:    { width: 0, height: 2 },
-    shadowOpacity:   0.04,
-    shadowRadius:    6,
-    elevation:       2,
   },
   accent: {
     width:        3,
