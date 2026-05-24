@@ -29,10 +29,20 @@ interface Props {
 export function AppointmentCard({ patientName, time, duration, reason, status, onPress }: Props) {
   const cfg = STATUS_CONFIG[status];
 
+  const initials = (patientName || 'P')
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((n) => n[0] || '')
+    .join('')
+    .toUpperCase() || 'P';
+
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.85} style={styles.container}>
-      {/* Left accent bar */}
-      <View style={[styles.accent, { backgroundColor: cfg.color }]} />
+      {/* Neutral Profile Avatar */}
+      <View style={styles.avatar}>
+        <Text style={styles.avatarText}>{initials}</Text>
+      </View>
 
       {/* Content */}
       <View style={styles.content}>
@@ -74,11 +84,18 @@ const styles = StyleSheet.create({
     borderColor:     colors.border,
     shadowColor:     colors.ink,
   },
-  accent: {
-    width:        3,
-    height:       '100%',
-    borderRadius: 2,
-    minHeight:    50,
+  avatar: {
+    width:           44,
+    height:          44,
+    borderRadius:    22,
+    backgroundColor: colors.infoLight,
+    alignItems:      'center',
+    justifyContent:  'center',
+  },
+  avatarText: {
+    fontFamily: fontFamily.bold,
+    fontSize:   fontSize.md,
+    color:      colors.primary,
   },
   content: {
     flex: 1,
