@@ -43,6 +43,16 @@ function isSameDay(a: Date, b: Date) {
   return a.toDateString() === b.toDateString();
 }
 
+function getInitials(patientName: string) {
+  return (patientName || 'P')
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((n) => n[0] || '')
+    .join('')
+    .toUpperCase() || 'P';
+}
+
 const FILTER_TABS: { label: string; value: AppointmentStatus | 'all' }[] = [
   { label: 'Tous',       value: 'all' },
   { label: 'Confirmés',  value: 'confirmed' },
@@ -228,13 +238,44 @@ export default function AgendaScreen() {
 
       <ScrollView
         style={styles.scrollRoot}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, viewMode === 'calendar' && { paddingHorizontal: 8, gap: 12 }]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={isLoading} onRefresh={fetchWeekAppointments} tintColor={colors.primary} />
         }
       >
-        {/* VIEW 2: Calendar Grid (Displayed ABOVE the tabs in calendar view mode) */}
+        {/* Tabs Section — Identical to RDV.png (clock and calendar icon) */}
+        <View style={styles.tabsContainer}>
+          <TouchableOpacity
+            style={[styles.tabBtn, activeTab === 'upcoming' && styles.tabBtnActive]}
+            onPress={() => setActiveTab('upcoming')}
+          >
+            <Ionicons
+              name="time-outline"
+              size={18}
+              color={activeTab === 'upcoming' ? colors.primary : colors.inkLight}
+            />
+            <Text style={[styles.tabLabel, activeTab === 'upcoming' && styles.tabLabelActive]}>
+              A Venir
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.tabBtn, activeTab === 'past' && styles.tabBtnActive]}
+            onPress={() => setActiveTab('past')}
+          >
+            <Ionicons
+              name="calendar-outline"
+              size={18}
+              color={activeTab === 'past' ? colors.primary : colors.inkLight}
+            />
+            <Text style={[styles.tabLabel, activeTab === 'past' && styles.tabLabelActive]}>
+              Passés
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* VIEW 2: Calendar Grid (Now placed BELOW the tabs) */}
         {viewMode === 'calendar' && (
           <View style={styles.calendarCard}>
             {/* Calendar Nav */}
@@ -267,68 +308,82 @@ export default function AgendaScreen() {
                 const isSelected = isSameDay(day, selectedDate);
                 const isToday    = isSameDay(day, new Date());
                 
-                // Check if there are appointments on this day
-                const hasApts = weekAppointments.some((apt) => isSameDay(new Date(apt.date), day));
+                // Get all appointments on this day
+                const dayApts = weekAppointments.filter((apt) => isSameDay(new Date(apt.date), day));
+                
+                // Filter unique patients for this day
+                const uniqueApts: typeof weekAppointments = [];
+                const seenPatients = new Set<string>();
+                dayApts.forEach((apt) => {
+                  if (!seenPatients.has(apt.patient.id)) {
+                    seenPatients.add(apt.patient.id);
+                    uniqueApts.push(apt);
+                  }
+                });
+
+                const displayApts = uniqueApts.slice(0, 3);
+                const extraCount = uniqueApts.length - displayApts.length;
 
                 return (
                   <TouchableOpacity
                     key={day.toISOString()}
                     onPress={() => setSelectedDate(day)}
-                    style={[
-                      styles.dayCell,
-                      isSelected && styles.dayCellSelected,
-                      isToday && !isSelected && styles.dayCellToday
-                    ]}
+                    style={styles.dayCell}
                   >
-                    <Text
+                    {/* Date capsule (24x32) */}
+                    <View
                       style={[
-                        styles.dayText,
-                        isSelected && styles.dayTextSelected,
-                        isToday && !isSelected && styles.dayTextToday
+                        styles.dayNumberContainer,
+                        isSelected && styles.dayNumberContainerSelected,
+                        isToday && !isSelected && styles.dayNumberContainerToday
                       ]}
                     >
-                      {day.getDate()}
-                    </Text>
-                    {hasApts && (
-                      <View style={[styles.dayDot, isSelected && styles.dayDotSelected]} />
-                    )}
+                      <Text
+                        style={[
+                          styles.dayText,
+                          isSelected && styles.dayTextSelected,
+                          isToday && !isSelected && styles.dayTextToday
+                        ]}
+                      >
+                        {day.getDate()}
+                      </Text>
+                    </View>
+
+                    {/* Bottom area (32px) for patient avatar markers */}
+                    <View style={styles.dayCellBottom}>
+                      {uniqueApts.length > 0 && (
+                        <View style={styles.avatarStack}>
+                          {displayApts.map((apt, idx) => {
+                            const initials = getInitials(apt.patient.fullName);
+                            return (
+                              <View
+                                key={apt.id}
+                                style={[
+                                  styles.miniAvatar,
+                                  {
+                                    marginLeft: idx > 0 ? -6 : 0,
+                                    zIndex: 10 - idx,
+                                  }
+                                ]}
+                              >
+                                <Text style={styles.miniAvatarText}>{initials}</Text>
+                              </View>
+                            );
+                          })}
+                          {extraCount > 0 && (
+                            <View style={[styles.miniAvatar, styles.miniAvatarExtra, { marginLeft: -6, zIndex: 1 }]}>
+                              <Text style={styles.miniAvatarExtraText}>+{extraCount}</Text>
+                            </View>
+                          )}
+                        </View>
+                      )}
+                    </View>
                   </TouchableOpacity>
                 );
               })}
             </View>
           </View>
         )}
-
-        {/* Tabs Section — Identical to RDV.png (clock and calendar icon) */}
-        <View style={styles.tabsContainer}>
-          <TouchableOpacity
-            style={[styles.tabBtn, activeTab === 'upcoming' && styles.tabBtnActive]}
-            onPress={() => setActiveTab('upcoming')}
-          >
-            <Ionicons
-              name="time-outline"
-              size={18}
-              color={activeTab === 'upcoming' ? colors.primary : colors.inkLight}
-            />
-            <Text style={[styles.tabLabel, activeTab === 'upcoming' && styles.tabLabelActive]}>
-              A Venir
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.tabBtn, activeTab === 'past' && styles.tabBtnActive]}
-            onPress={() => setActiveTab('past')}
-          >
-            <Ionicons
-              name="calendar-outline"
-              size={18}
-              color={activeTab === 'past' ? colors.primary : colors.inkLight}
-            />
-            <Text style={[styles.tabLabel, activeTab === 'past' && styles.tabLabelActive]}>
-              Passés
-            </Text>
-          </TouchableOpacity>
-        </View>
 
         {/* Appointments list */}
         {isLoading ? (
@@ -642,13 +697,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: 22,
     padding: 16,
-    borderWidth: 1,
+    borderWidth: 0,
     borderColor: colors.border,
     shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.03,
     shadowRadius: 10,
-    elevation: 2,
+    elevation: 0,
     marginBottom: 10,
   },
   calendarNav: {
@@ -689,17 +744,23 @@ const styles = StyleSheet.create({
   },
   dayCellEmpty: {
     width: '14.28%',
-    aspectRatio: 1,
+    height: 64,
   },
   dayCell: {
     width: '14.28%',
-    aspectRatio: 1,
-    borderRadius: 20,
+    height: 64,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 2,
+  },
+  dayNumberContainer: {
+    width: 24,
+    height: 32,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    position: 'relative',
   },
-  dayCellSelected: {
+  dayNumberContainerSelected: {
     backgroundColor: colors.primary,
     shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 2 },
@@ -707,8 +768,42 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  dayCellToday: {
+  dayNumberContainerToday: {
     backgroundColor: colors.infoLight,
+  },
+  dayCellBottom: {
+    height: 32,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarStack: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  miniAvatar: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: colors.infoLight,
+    borderWidth: 1,
+    borderColor: colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  miniAvatarText: {
+    fontSize: 8,
+    fontFamily: fontFamily.bold,
+    color: colors.primary,
+  },
+  miniAvatarExtra: {
+    backgroundColor: colors.inkLight,
+  },
+  miniAvatarExtraText: {
+    fontSize: 7,
+    fontFamily: fontFamily.bold,
+    color: colors.white,
   },
   dayText: {
     fontFamily: fontFamily.medium,
@@ -722,17 +817,6 @@ const styles = StyleSheet.create({
   dayTextToday: {
     fontFamily: fontFamily.bold,
     color: colors.primary,
-  },
-  dayDot: {
-    position: 'absolute',
-    bottom: 4,
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.primary,
-  },
-  dayDotSelected: {
-    backgroundColor: colors.white,
   },
 
   // Flat Lists

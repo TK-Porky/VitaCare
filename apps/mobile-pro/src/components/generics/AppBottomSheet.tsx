@@ -112,6 +112,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.inkFaint,
   },
   content: {
+    paddingHorizontal: 16,
     flex: 1,
   },
   nonScrollContent: {
