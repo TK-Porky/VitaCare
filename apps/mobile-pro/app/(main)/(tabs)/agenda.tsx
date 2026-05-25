@@ -3,7 +3,7 @@
  * Liste des rendez-vous avec sélecteur de date par semaine
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -18,7 +18,7 @@ import {
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { AppointmentCard, HelperText } from '../../../src/components';
+import { AppointmentCard, HelperText, AppBottomSheet, AppBottomSheetRef } from '../../../src/components';
 import { useAppointmentStore } from '../../../src/store';
 import { colors, fontFamily, fontSize } from '../../../src/themes';
 import type { AppointmentStatus } from '../../../src/types/api-responses';
@@ -63,8 +63,10 @@ export default function AgendaScreen() {
   const [activeTab,        setActiveTab]        = useState<'upcoming' | 'past'>('upcoming');
   const [searchQuery,      setSearchQuery]      = useState('');
   const [isSearchActive,   setIsSearchActive]   = useState(false);
-  const [isFilterActive,   setIsFilterActive]   = useState(false);
   const [filterStatus,     setFilterStatus]     = useState<AppointmentStatus | 'all'>('all');
+
+  // BottomSheet Ref
+  const filterSheetRef = useRef<AppBottomSheetRef>(null);
 
   // Calendar Specific States
   const [selectedDate,     setSelectedDate]     = useState(new Date());
@@ -178,15 +180,16 @@ export default function AgendaScreen() {
             <Ionicons name="search-outline" size={22} color={isSearchActive ? colors.primary : colors.inkLight} />
           </TouchableOpacity>
 
-          {/* Toggle Filter Chips */}
+          {/* Toggle Filter BottomSheet */}
           <TouchableOpacity
-            style={[styles.headerIconBtn, isFilterActive && styles.headerIconBtnActive]}
-            onPress={() => {
-              setIsFilterActive(!isFilterActive);
-              if (isFilterActive) setFilterStatus('all');
-            }}
+            style={[styles.headerIconBtn, filterStatus !== 'all' && styles.headerIconBtnActive]}
+            onPress={() => filterSheetRef.current?.open()}
           >
-            <Ionicons name="funnel-outline" size={22} color={isFilterActive ? colors.primary : colors.inkLight} />
+            <Ionicons
+              name={filterStatus === 'all' ? "funnel-outline" : "funnel"}
+              size={22}
+              color={filterStatus !== 'all' ? colors.primary : colors.inkLight}
+            />
           </TouchableOpacity>
 
           {/* Toggle view mode list <-> calendar */}
@@ -220,29 +223,6 @@ export default function AgendaScreen() {
               <Ionicons name="close-circle" size={18} color={colors.inkMuted} />
             </TouchableOpacity>
           )}
-        </View>
-      )}
-
-      {/* Slide-out Filter Chips */}
-      {isFilterActive && (
-        <View style={styles.filterRowWrapper}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.filterRow}
-          >
-            {FILTER_TABS.map((tab) => (
-              <TouchableOpacity
-                key={tab.value}
-                onPress={() => setFilterStatus(tab.value)}
-                style={[styles.filterChip, filterStatus === tab.value && styles.filterChipActive]}
-              >
-                <Text style={[styles.filterText, filterStatus === tab.value && styles.filterTextActive]}>
-                  {tab.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
         </View>
       )}
 
@@ -407,6 +387,52 @@ export default function AgendaScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* Filters BottomSheet */}
+      <AppBottomSheet ref={filterSheetRef} scrollable={false} containerStyle={styles.sheetContainer}>
+        <View style={styles.sheetHeader}>
+          <Text style={styles.sheetTitle}>Filtrer par statut</Text>
+          <TouchableOpacity onPress={() => filterSheetRef.current?.close()}>
+            <Ionicons name="close-circle-outline" size={24} color={colors.inkLight} />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.radioList}>
+          {FILTER_TABS.map((tab) => {
+            const isSelected = filterStatus === tab.value;
+            return (
+              <TouchableOpacity
+                key={tab.value}
+                style={[styles.radioItem, isSelected && styles.radioItemActive]}
+                onPress={() => {
+                  setFilterStatus(tab.value);
+                  filterSheetRef.current?.close();
+                }}
+              >
+                <Text style={[styles.radioLabel, isSelected && styles.radioLabelActive]}>
+                  {tab.label}
+                </Text>
+                {/* Custom radio button visual indicator */}
+                <View style={[styles.radioCircle, isSelected && styles.radioCircleActive]}>
+                  {isSelected && <View style={styles.radioInnerCircle} />}
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        {filterStatus !== 'all' && (
+          <TouchableOpacity
+            style={styles.resetButton}
+            onPress={() => {
+              setFilterStatus('all');
+              filterSheetRef.current?.close();
+            }}
+          >
+            <Text style={styles.resetButtonText}>Réinitialiser le filtre</Text>
+          </TouchableOpacity>
+        )}
+      </AppBottomSheet>
     </View>
   );
 }
@@ -474,36 +500,81 @@ const styles = StyleSheet.create({
     padding: 0,
   },
 
-  // Slide-out Filters
-  filterRowWrapper: {
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    paddingBottom: 6,
-  },
-  filterRow: {
+  // Filters BottomSheet
+  sheetContainer: {
     paddingHorizontal: 20,
-    paddingVertical: 8,
-    gap: 8,
+    paddingTop: 8,
+    paddingBottom: 30,
   },
-  filterChip: {
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    borderRadius: 20,
+  sheetHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  sheetTitle: {
+    fontFamily: fontFamily.bold,
+    fontSize: 18,
+    color: colors.ink,
+  },
+  radioList: {
+    gap: 12,
+  },
+  radioItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
     backgroundColor: colors.white,
+  },
+  radioItemActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.infoLight,
+  },
+  radioLabel: {
+    fontFamily: fontFamily.medium,
+    fontSize: 15,
+    color: colors.ink,
+  },
+  radioLabelActive: {
+    fontFamily: fontFamily.bold,
+    color: colors.primary,
+  },
+  radioCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: colors.inkFaint,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioCircleActive: {
+    borderColor: colors.primary,
+  },
+  radioInnerCircle: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: colors.primary,
+  },
+  resetButton: {
+    marginTop: 20,
+    paddingVertical: 14,
+    borderRadius: 16,
+    alignItems: 'center',
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  filterChipActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  filterText: {
-    fontFamily: fontFamily.medium,
-    fontSize: 13,
+  resetButtonText: {
+    fontFamily: fontFamily.bold,
+    fontSize: 14,
     color: colors.inkLight,
-  },
-  filterTextActive: {
-    color: colors.white,
   },
 
   // Tabs Container — Matches RDV.png
