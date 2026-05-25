@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "VitaCare Pro",
+    "slug": "vitacare-pro",
+    "version": "0.0.1",
+    "scheme": "vitacare-pro",
+    "platforms": ["ios", "android"],
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "cm.vitacare.pro"
+    },
+    "android": {
+      "package": "cm.vitacare.pro",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "plugins": [
+      "expo-font",
+      "expo-router",
+      "expo-secure-store",
+      "expo-splash-screen",
+      "expo-status-bar"
+    ]
+  }
+}

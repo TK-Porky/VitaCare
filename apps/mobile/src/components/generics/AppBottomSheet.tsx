@@ -1,17 +1,21 @@
 import React, {
   forwardRef,
   useImperativeHandle,
-  useState,
+  useRef,
+  useCallback,
 } from 'react';
 import {
   View,
   StyleSheet,
-  TouchableWithoutFeedback,
   ViewStyle,
-  ScrollView,
   Platform,
-  Modal,
 } from 'react-native';
+import {
+  BottomSheetModal,
+  BottomSheetView,
+  BottomSheetScrollView,
+  BottomSheetBackdrop,
+} from '@gorhom/bottom-sheet';
 import { colors } from '../../../src/themes';
 
 export type AppBottomSheetRef = {
@@ -21,7 +25,7 @@ export type AppBottomSheetRef = {
 };
 
 type Props = {
-  snapPoints?: string[];
+  snapPoints?: string[]; // Ignored, as snapPoints are redefined globally as requested
   children: React.ReactNode;
   footer?: React.ReactNode;
   onClose?: () => void;
@@ -31,62 +35,63 @@ type Props = {
 
 export const AppBottomSheet = forwardRef<AppBottomSheetRef, Props>(
   ({ children, footer, onClose, scrollable = true, containerStyle }, ref) => {
-    const [visible, setVisible] = useState(false);
+    const sheetRef = useRef<BottomSheetModal>(null);
 
-    const handleClose = () => {
-      setVisible(false);
-      onClose?.();
-    };
+    // Redefined standard snap points capped at 90% as per user requirements
+    const defaultSnapPoints = ['55%', '90%'];
 
     useImperativeHandle(ref, () => ({
-      open: () => setVisible(true),
-      close: handleClose,
-      expand: () => setVisible(true),
+      open: () => sheetRef.current?.present(),
+      close: () => sheetRef.current?.dismiss(),
+      expand: () => sheetRef.current?.expand(),
     }));
 
-    const Content = scrollable ? ScrollView : View;
+    const renderBackdrop = useCallback(
+      (props: any) => (
+        <BottomSheetBackdrop
+          {...props}
+          disappearsOnIndex={-1}
+          appearsOnIndex={0}
+          opacity={0.4}
+        />
+      ),
+      []
+    );
 
     return (
-      <Modal
-        visible={visible}
-        transparent
-        animationType="slide"
-        statusBarTranslucent
-        onRequestClose={handleClose}
+      <BottomSheetModal
+        ref={sheetRef}
+        index={0}
+        snapPoints={defaultSnapPoints}
+        onDismiss={onClose}
+        enablePanDownToClose={true}
+        backdropComponent={renderBackdrop}
+        backgroundStyle={styles.background}
+        handleIndicatorStyle={styles.handleIndicator}
+        handleStyle={styles.handle}
+        keyboardBehavior="extend"
       >
-        <View style={styles.root}>
-          {/* Backdrop */}
-          <TouchableWithoutFeedback onPress={handleClose}>
-            <View style={styles.backdrop} />
-          </TouchableWithoutFeedback>
+        {scrollable ? (
+          <BottomSheetScrollView
+            style={[styles.content, containerStyle]}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            bounces={false}
+            contentContainerStyle={[
+              styles.scrollContent,
+              footer ? styles.scrollContentWithFooter : undefined,
+            ]}
+          >
+            {children}
+          </BottomSheetScrollView>
+        ) : (
+          <BottomSheetView style={[styles.content, styles.nonScrollContent, containerStyle]}>
+            {children}
+          </BottomSheetView>
+        )}
 
-          {/* Sheet */}
-          <View style={styles.sheet}>
-            <View style={styles.handleArea}>
-              <View style={styles.handle} />
-            </View>
-
-            <Content
-              style={[styles.content, containerStyle]}
-              {...(scrollable
-                ? {
-                    showsVerticalScrollIndicator: false,
-                    keyboardShouldPersistTaps: 'handled' as const,
-                    bounces: false,
-                    contentContainerStyle: [
-                      styles.scrollContent,
-                      footer ? styles.scrollContentWithFooter : undefined,
-                    ],
-                  }
-                : {})}
-            >
-              {children}
-            </Content>
-
-            {!!footer && <View style={styles.footer}>{footer}</View>}
-          </View>
-        </View>
-      </Modal>
+        {!!footer && <View style={styles.footer}>{footer}</View>}
+      </BottomSheetModal>
     );
   }
 );
@@ -94,37 +99,30 @@ export const AppBottomSheet = forwardRef<AppBottomSheetRef, Props>(
 AppBottomSheet.displayName = 'AppBottomSheet';
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-  },
-  sheet: {
+  background: {
     backgroundColor: colors.white,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    maxHeight: '92%',
     elevation: 24,
     shadowColor: colors.ink,
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.1,
     shadowRadius: 16,
   },
-  handleArea: {
-    alignItems: 'center',
+  handle: {
     paddingVertical: 14,
   },
-  handle: {
+  handleIndicator: {
     width: 40,
     height: 4,
     borderRadius: 2,
     backgroundColor: colors.inkFaint,
   },
   content: {
-    flexShrink: 1,
+    flex: 1,
+  },
+  nonScrollContent: {
+    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
   },
   scrollContent: {
     paddingBottom: Platform.OS === 'ios' ? 40 : 24,
@@ -133,9 +131,15 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.OS === 'ios' ? 128 : 112,
   },
   footer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: Platform.OS === 'ios' ? 24 : 16,
     backgroundColor: colors.white,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
   },
 });

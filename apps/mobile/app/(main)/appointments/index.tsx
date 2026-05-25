@@ -1,9 +1,10 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   StyleSheet,
   ScrollView,
   SafeAreaView,
   StatusBar,
+  View,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { colors } from "../../../src/themes";
@@ -28,6 +29,7 @@ import {
   TabsSection,
   MonthHeader,
   AppointmentCard,
+  AppointmentCardSkeleton,
 } from "../../../src/components";
 
 // ================================================================================== //
@@ -39,6 +41,7 @@ export default function AppointmentScreen() {
   // ================================================================================== //
   const [activeTab, setActiveTab] = useState<"upcoming" | "past">("upcoming");
   const [selectedItem, setSelectedItem] = useState(APPOINTMENTS[0]);
+  const [isLoading, setIsLoading] = useState(true);
   
   // ================================================================================== //
   // Hooks
@@ -49,6 +52,14 @@ export default function AppointmentScreen() {
   const appointmentRef = useRef<AppointmentDetailBottomSheetRef>(null);
   
   const data = activeTab === "upcoming" ? APPOINTMENTS : PAST_APPOINTMENTS;
+
+  useEffect(() => {
+    setIsLoading(true);
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [activeTab]);
 
   // ================================================================================== //
   // Functions
@@ -81,15 +92,23 @@ export default function AppointmentScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <MonthHeader monthLabel="Mars" count={data.length} />
+        <MonthHeader monthLabel="Mars" count={isLoading ? 3 : data.length} />
 
-        {data.map((item) => (
-          <AppointmentCard
-            key={item.id}
-            item={item}
-            onPress={() => handleCardPress(item)}
-          />
-        ))}
+        {isLoading ? (
+          <>
+            <AppointmentCardSkeleton />
+            <AppointmentCardSkeleton />
+            <AppointmentCardSkeleton />
+          </>
+        ) : (
+          data.map((item) => (
+            <AppointmentCard
+              key={item.id}
+              item={item}
+              onPress={() => handleCardPress(item)}
+            />
+          ))
+        )}
       </ScrollView>
 
       <AppointmentDetailBottomSheet

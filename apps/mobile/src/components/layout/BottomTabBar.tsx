@@ -82,7 +82,12 @@ export function BottomTabBar() {
 
   return (
     <View
-      style={[styles.container, { paddingBottom: Math.max(insets.bottom, 12) }]}
+      style={[
+        styles.container,
+        {
+          paddingBottom: Math.max(insets.bottom, 12),
+        },
+      ]}
     >
       {TABS.map((tab) => {
         const active = isActive(tab);
@@ -111,27 +116,31 @@ export function BottomTabBar() {
 
 const styles = StyleSheet.create({
   container: {
-    position: 'relative',
     flexDirection: "row",
-    justifyContent: "space-around",
+    justifyContent: "center", // Align items centered for larger displays (tablets)
     alignItems: "center",
     backgroundColor: colors.white,
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    paddingTop: 8,
-    height: Platform.OS === "android" ? 80 : 96,
-    paddingBottom: Platform.OS === "android" ? 16 : 24,
+    paddingTop: 10,
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
   },
   tabItem: {
+    flex: 1,
+    maxWidth: 100, // Keeps an elegant look on wide screens (tablets)
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 4,
-    paddingHorizontal: 12,
-    width: 80,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    position: "relative",
   },
   tabLabel: {
     fontFamily: fontFamily.medium,
-    fontSize: fontSize.xs,
+    fontSize: fontSize.xs, // Dynamic 10px standard size
     fontWeight: "500",
     color: colors.inkFaint,
     marginTop: 4,
@@ -142,11 +151,13 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   indicator: {
-    position: 'absolute',
-    width: '100%',
-    height: 2,
-    top: -12,
-    borderRadius: 999,
+    position: "absolute",
+    top: -10, // Places the indicator precisely covering the top border of the tab bar
+    left: "20%",
+    right: "20%",
+    height: 3,
+    borderBottomLeftRadius: 3,
+    borderBottomRightRadius: 3,
     backgroundColor: colors.primary,
   },
 });

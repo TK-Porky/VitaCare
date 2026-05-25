@@ -7,9 +7,10 @@ import {
   StyleSheet, 
   ActivityIndicator,
   Text,
+  ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { AppHeader, ClinicCard } from "../../../src/components";
+import { AppHeader, ClinicCard, ClinicCardSkeleton } from "../../../src/components";
 import { colors, fontFamily, fontSize } from "../../../src/themes";
 import {
   ProfessionalProviderBottomSheet,
@@ -140,19 +141,27 @@ export default function ExploreScreen() {
         searchValue={search}
       />
 
-      <FlatList
-        data={clinics}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.5}
-        ListFooterComponent={renderFooter}
-        ListEmptyComponent={renderEmpty}
-        refreshing={isLoading && clinics.length === 0}
-        onRefresh={() => fetchClinics({ search: search })}
-      />
+      {isLoading && clinics.length === 0 ? (
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <ClinicCardSkeleton />
+          <ClinicCardSkeleton />
+          <ClinicCardSkeleton />
+        </ScrollView>
+      ) : (
+        <FlatList
+          data={clinics}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={renderFooter}
+          ListEmptyComponent={renderEmpty}
+          onRefresh={() => fetchClinics({ search: search })}
+          refreshing={false}
+        />
+      )}
 
       {/* Profile sheet */}
       {selectedClinic && (
