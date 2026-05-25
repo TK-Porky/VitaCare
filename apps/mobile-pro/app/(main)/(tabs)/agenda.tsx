@@ -330,12 +330,12 @@ export default function AgendaScreen() {
                     onPress={() => setSelectedDate(day)}
                     style={styles.dayCell}
                   >
-                    {/* Date capsule (24x32) */}
                     <View
                       style={[
-                        styles.dayNumberContainer,
-                        isSelected && styles.dayNumberContainerSelected,
-                        isToday && !isSelected && styles.dayNumberContainerToday
+                        styles.dayCard,
+                        isSelected && styles.dayCardSelected,
+                        isToday && !isSelected && styles.dayCardToday,
+                        uniqueApts.length > 0 && styles.dayCardWithApts
                       ]}
                     >
                       <Text
@@ -347,34 +347,36 @@ export default function AgendaScreen() {
                       >
                         {day.getDate()}
                       </Text>
-                    </View>
 
-                    {/* Bottom area (32px) for patient avatar markers */}
-                    <View style={styles.dayCellBottom}>
                       {uniqueApts.length > 0 && (
-                        <View style={styles.avatarStack}>
-                          {displayApts.map((apt, idx) => {
-                            const initials = getInitials(apt.patient.fullName);
-                            return (
-                              <View
-                                key={apt.id}
-                                style={[
-                                  styles.miniAvatar,
-                                  {
-                                    marginLeft: idx > 0 ? -6 : 0,
-                                    zIndex: 10 - idx,
-                                  }
-                                ]}
-                              >
-                                <Text style={styles.miniAvatarText}>{initials}</Text>
+                        <View style={styles.dayCellBottom}>
+                          <View style={styles.avatarStack}>
+                            {displayApts.map((apt, idx) => {
+                              const initials = getInitials(apt.patient.fullName);
+                              return (
+                                <View
+                                  key={apt.id}
+                                  style={[
+                                    styles.miniAvatar,
+                                    isSelected && styles.miniAvatarSelected,
+                                    {
+                                      marginLeft: idx > 0 ? -12 : 0,
+                                      zIndex: 10 - idx,
+                                    }
+                                  ]}
+                                >
+                                  <Text style={[styles.miniAvatarText, isSelected && styles.miniAvatarTextSelected]}>
+                                    {initials}
+                                  </Text>
+                                </View>
+                              );
+                            })}
+                            {extraCount > 0 && (
+                              <View style={[styles.miniAvatar, styles.miniAvatarExtra, { marginLeft: -12, zIndex: 1 }]}>
+                                <Text style={styles.miniAvatarExtraText}>+{extraCount}</Text>
                               </View>
-                            );
-                          })}
-                          {extraCount > 0 && (
-                            <View style={[styles.miniAvatar, styles.miniAvatarExtra, { marginLeft: -6, zIndex: 1 }]}>
-                              <Text style={styles.miniAvatarExtraText}>+{extraCount}</Text>
-                            </View>
-                          )}
+                            )}
+                          </View>
                         </View>
                       )}
                     </View>
@@ -504,9 +506,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingBottom: 12,
     backgroundColor: colors.white,
-    borderBottomWidth: 1,
+    borderBottomWidth: 0,
     borderBottomColor: colors.border,
   },
   title: {
@@ -696,7 +697,6 @@ const styles = StyleSheet.create({
   calendarCard: {
     backgroundColor: colors.white,
     borderRadius: 22,
-    padding: 16,
     borderWidth: 0,
     borderColor: colors.border,
     shadowColor: colors.ink,
@@ -753,14 +753,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 2,
   },
-  dayNumberContainer: {
-    width: 24,
+  dayCard: {
+    width: 32,
     height: 32,
-    borderRadius: 12,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: colors.surface,
   },
-  dayNumberContainerSelected: {
+  dayCardWithApts: {
+    height: 64,
+    borderRadius: 16,
+    justifyContent: 'space-between',
+    paddingVertical: 4,
+  },
+  dayCardSelected: {
     backgroundColor: colors.primary,
     shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 2 },
@@ -768,7 +775,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  dayNumberContainerToday: {
+  dayCardToday: {
     backgroundColor: colors.infoLight,
   },
   dayCellBottom: {
@@ -792,9 +799,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  miniAvatarSelected: {
+    backgroundColor: colors.white,
+    borderColor: colors.primary,
+  },
   miniAvatarText: {
     fontSize: 8,
     fontFamily: fontFamily.bold,
+    color: colors.primary,
+  },
+  miniAvatarTextSelected: {
     color: colors.primary,
   },
   miniAvatarExtra: {
