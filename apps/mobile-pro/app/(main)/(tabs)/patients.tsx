@@ -71,9 +71,11 @@ export default function PatientsScreen() {
         <FlatList
           data={patients}
           keyExtractor={(item) => item.id}
+          numColumns={2}
+          columnWrapperStyle={styles.columnWrapper}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
-          ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+          ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
           ListEmptyComponent={
             <View style={styles.empty}>
               <Ionicons name="people-outline" size={48} color={colors.inkFaint} />
@@ -130,6 +132,9 @@ const styles = StyleSheet.create({
     color:      colors.ink,
   },
   list:  { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 32 },
+  columnWrapper: {
+    justifyContent: 'space-between',
+  },
   empty: { paddingTop: 60, alignItems: 'center', gap: 12 },
   emptyText: {
     fontFamily: fontFamily.regular,

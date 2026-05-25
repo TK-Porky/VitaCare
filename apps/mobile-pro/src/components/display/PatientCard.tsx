@@ -1,7 +1,3 @@
-/**
- * PatientCard — VitaCare Pro
- */
-
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -29,83 +25,91 @@ export function PatientCard({ fullName, lastVisit, totalAppointments, gender, on
 
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.85} style={styles.container}>
-      {/* Avatar */}
+      {/* Avatar center-top */}
       <View style={[styles.avatar, { backgroundColor: avatarColor }]}>
         <Text style={styles.avatarText}>{initials}</Text>
       </View>
 
-      {/* Info */}
+      {/* Info bottom */}
       <View style={styles.info}>
         <Text style={styles.name} numberOfLines={1}>{fullName}</Text>
         {lastVisit && (
           <Text style={styles.lastVisit}>
-            Dernière visite : {new Date(lastVisit).toLocaleDateString('fr-FR')}
+            Visite : {new Date(lastVisit).toLocaleDateString('fr-FR')}
           </Text>
         )}
       </View>
 
-      {/* Total */}
+      {/* Appointment Count Badge */}
       <View style={styles.countBadge}>
-        <Text style={styles.count}>{totalAppointments}</Text>
-        <Text style={styles.countLabel}>RDV</Text>
+        <Ionicons name="calendar" size={12} color={colors.primary} />
+        <Text style={styles.count}>{totalAppointments} RDV</Text>
       </View>
-
-      <Ionicons name="chevron-forward" size={16} color={colors.inkFaint} />
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection:   'row',
+    flexDirection:   'column',
     alignItems:      'center',
     backgroundColor: colors.white,
-    borderRadius:    14,
-    padding:         14,
+    borderRadius:    18,
+    padding:         16,
     gap:             12,
     borderWidth:     1,
     borderColor:     colors.border,
+    width:           '48.5%',
     shadowColor:     colors.ink,
-    shadowOffset:    { width: 0, height: 2 },
-    shadowOpacity:   0.04,
-    shadowRadius:    6,
+    shadowOffset:    { width: 0, height: 4 },
+    shadowOpacity:   0.03,
+    shadowRadius:    8,
     elevation:       2,
   },
   avatar: {
-    width:          44,
-    height:         44,
-    borderRadius:   22,
+    width:          60,
+    height:         60,
+    borderRadius:   30,
     alignItems:     'center',
     justifyContent: 'center',
+    marginBottom:   4,
   },
   avatarText: {
     fontFamily: fontFamily.bold,
-    fontSize:   fontSize.md,
+    fontSize:   20,
     color:      colors.white,
   },
-  info: { flex: 1, gap: 2 },
+  info: {
+    alignItems: 'center',
+    gap:        4,
+    width:      '100%',
+  },
   name: {
-    fontFamily: fontFamily.semiBold,
-    fontSize:   fontSize.md,
+    fontFamily: fontFamily.bold,
+    fontSize:   15,
     color:      colors.ink,
+    textAlign:  'center',
   },
   lastVisit: {
     fontFamily: fontFamily.regular,
-    fontSize:   fontSize.xs,
+    fontSize:   11,
     color:      colors.inkLight,
+    textAlign:  'center',
   },
   countBadge: {
-    alignItems: 'center',
-    gap:        1,
+    flexDirection:     'row',
+    alignItems:        'center',
+    justifyContent:    'center',
+    gap:               4,
+    backgroundColor:   colors.infoLight,
+    paddingVertical:   4,
+    paddingHorizontal: 10,
+    borderRadius:      12,
+    marginTop:         4,
   },
   count: {
-    fontFamily: fontFamily.bold,
-    fontSize:   fontSize.base,
+    fontFamily: fontFamily.semiBold,
+    fontSize:   12,
     color:      colors.primary,
-  },
-  countLabel: {
-    fontFamily: fontFamily.regular,
-    fontSize:   fontSize.xs,
-    color:      colors.inkLight,
   },
 });

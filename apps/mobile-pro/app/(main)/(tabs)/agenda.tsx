@@ -321,7 +321,7 @@ export default function AgendaScreen() {
                   }
                 });
 
-                const displayApts = uniqueApts.slice(0, 3);
+                const displayApts = uniqueApts.slice(0, 1);
                 const extraCount = uniqueApts.length - displayApts.length;
 
                 return (
@@ -584,12 +584,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'transparent',
     backgroundColor: colors.white,
   },
   radioItemActive: {
     borderColor: colors.primary,
-    backgroundColor: colors.infoLight,
   },
   radioLabel: {
     fontFamily: fontFamily.medium,
