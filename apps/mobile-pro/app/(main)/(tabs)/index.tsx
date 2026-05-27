@@ -73,7 +73,11 @@ export default function DashboardScreen() {
           <Text style={styles.headerBrandText}>VitaCare Pro</Text>
         </View>
         <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.headerIconBtn} activeOpacity={0.7}>
+          <TouchableOpacity
+            style={styles.headerIconBtn}
+            activeOpacity={0.7}
+            onPress={() => router.push('/(main)/search' as any)}
+          >
             <Ionicons name="search-outline" size={22} color={colors.inkLight} />
           </TouchableOpacity>
           <TouchableOpacity
