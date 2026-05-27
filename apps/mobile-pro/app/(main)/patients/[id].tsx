@@ -102,6 +102,22 @@ export default function PatientDetailScreen() {
   // Delete state
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Speech-to-Text State
+  const [isListening, setIsListening] = useState(false);
+
+  const startVoiceDictation = () => {
+    if (isListening) return;
+    setIsListening(true);
+    setTimeout(() => {
+      setIsListening(false);
+      const simulatedSentence = "Patient souffrant d'hypertension artérielle sous traitement quotidien, pas de chirurgie récente répertoriée.";
+      setFormHistory((prev) => {
+        const current = prev.trim();
+        return current ? `${current}\n${simulatedSentence}` : simulatedSentence;
+      });
+    }, 2200);
+  };
+
   useEffect(() => {
     if (id) fetchPatientById(id);
     return () => clearSelectedPatient();
@@ -675,16 +691,79 @@ export default function PatientDetailScreen() {
             onChangeText={setFormAllergies}
             leftIcon="warning-outline"
           />
+          <View style={styles.quickTagsContainer}>
+            {['Pénicilline', 'Aspirine', 'Ibuprofène', 'Pollens', 'Arachides'].map((tag) => (
+              <TouchableOpacity
+                key={tag}
+                style={styles.quickTagChip}
+                onPress={() => {
+                  const current = formAllergies.trim();
+                  if (!current) {
+                    setFormAllergies(tag);
+                  } else if (current.endsWith(',')) {
+                    setFormAllergies(`${current} ${tag}`);
+                  } else {
+                    setFormAllergies(`${current}, ${tag}`);
+                  }
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.quickTagText}>+{tag}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <View style={styles.rowBetween}>
+            <Text style={styles.inputTitleLabel}>Antécédents médicaux</Text>
+            <TouchableOpacity
+              onPress={startVoiceDictation}
+              style={[styles.voiceBtn, isListening && styles.voiceBtnActive]}
+              activeOpacity={0.7}
+            >
+              <Ionicons name={isListening ? "mic" : "mic-outline"} size={14} color={isListening ? colors.error : colors.primary} />
+              <Text style={[styles.voiceBtnText, { color: isListening ? colors.error : colors.primary }]}>
+                {isListening ? "Dictée..." : "Dicter"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {isListening && (
+            <View style={styles.voiceIndicator}>
+              <ActivityIndicator size="small" color={colors.error} />
+              <Text style={styles.voiceText}>Dictée vocale active... Parlez maintenant.</Text>
+            </View>
+          )}
 
           <AppInput
-            label="Antécédents médicaux"
-            placeholder="Entrez les antécédents notables..."
+            placeholder="Entrez les antécédents notables ou utilisez la dictée vocale..."
             value={formHistory}
             onChangeText={setFormHistory}
             leftIcon="medical-outline"
             multiline
             numberOfLines={3}
           />
+
+          <View style={styles.quickTagsContainer}>
+            {['Hypertension', 'Diabète', 'Asthme', 'Cholestérol'].map((tag) => (
+              <TouchableOpacity
+                key={tag}
+                style={styles.quickTagChip}
+                onPress={() => {
+                  const current = formHistory.trim();
+                  if (!current) {
+                    setFormHistory(tag);
+                  } else if (current.endsWith(',')) {
+                    setFormHistory(`${current} ${tag}`);
+                  } else {
+                    setFormHistory(`${current}, ${tag}`);
+                  }
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.quickTagText}>+{tag}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
 
           <View style={styles.editActions}>
             <AppButton
@@ -1426,5 +1505,77 @@ const styles = StyleSheet.create({
   deleteActions: {
     flexDirection: 'row',
     gap: 12,
+  },
+
+  // Saisie Assistée / Quick Tags Styles
+  quickTagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 4,
+    marginBottom: 10,
+    paddingHorizontal: 2,
+  },
+  quickTagChip: {
+    backgroundColor: colors.surface,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  quickTagText: {
+    fontFamily: fontFamily.medium,
+    fontSize: fontSize.xs,
+    color: colors.primary,
+  },
+  rowBetween: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 10,
+    marginBottom: 4,
+    paddingHorizontal: 2,
+  },
+  inputTitleLabel: {
+    fontFamily: fontFamily.medium,
+    fontSize: fontSize.sm,
+    color: colors.ink,
+  },
+  voiceBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: 4,
+  },
+  voiceBtnActive: {
+    backgroundColor: colors.errorLight,
+    borderColor: colors.error,
+  },
+  voiceBtnText: {
+    fontFamily: fontFamily.bold,
+    fontSize: fontSize.xs - 1,
+  },
+  voiceIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.errorLight,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.error,
+    gap: 8,
+    marginBottom: 8,
+  },
+  voiceText: {
+    fontFamily: fontFamily.medium,
+    fontSize: fontSize.xs,
+    color: colors.error,
   },
 });
