@@ -25,6 +25,7 @@ import { router } from 'expo-router';
 import { colors, fontFamily, fontSize } from '../../../src/themes';
 import { AppButton, AppBottomSheet, AppBottomSheetRef } from '../../../src/components';
 import { usePatientStore } from '../../../src/store';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -39,11 +40,16 @@ interface ExtractedMed {
 export default function OCRScannerScreen() {
   const { patients } = usePatientStore();
   
+  // Camera hardware permissions & ref
+  const [permission, requestPermission] = useCameraPermissions();
+  const cameraRef = useRef<CameraView>(null);
+  const [capturedPhotoUri, setCapturedPhotoUri] = useState<string | null>(null);
+
   const [step, setStep] = useState<'camera' | 'scanning' | 'result'>('camera');
   const [ocrProgress, setOcrProgress] = useState(0);
   const [ocrStepLabel, setOcrStepLabel] = useState('');
 
-  // Simulated photo uri (using a built-in icon placeholder)
+  // Simulated photo captured check
   const [photoCaptured, setPhotoCaptured] = useState(false);
 
   // Extracted drugs data
@@ -88,9 +94,27 @@ export default function OCRScannerScreen() {
     }
   }, [step]);
 
-  const handleCapture = () => {
-    setPhotoCaptured(true);
-    setStep('scanning');
+  const handleCapture = async () => {
+    if (cameraRef.current) {
+      try {
+        const photo = await cameraRef.current.takePictureAsync({
+          quality: 0.85,
+          skipProcessing: true,
+        });
+        if (photo && photo.uri) {
+          setCapturedPhotoUri(photo.uri);
+          setPhotoCaptured(true);
+          setStep('scanning');
+        } else {
+          setStep('scanning');
+        }
+      } catch (err) {
+        console.warn('Failed to take picture:', err);
+        setStep('scanning');
+      }
+    } else {
+      setStep('scanning');
+    }
   };
 
   const handleCreatePrescription = () => {
@@ -122,6 +146,47 @@ export default function OCRScannerScreen() {
     outputRange: [0, 240],
   });
 
+  if (!permission) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' }}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (!permission.granted) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <StatusBar barStyle="light-content" backgroundColor="#000" />
+        <View style={styles.cameraRoot}>
+          {/* Header */}
+          <View style={styles.cameraHeader}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.camClose}>
+              <Ionicons name="close" size={24} color={colors.white} />
+            </TouchableOpacity>
+            <Text style={styles.camTitle}>Autorisation</Text>
+            <View style={{ width: 40 }} />
+          </View>
+
+          <View style={styles.permissionContainer}>
+            <View style={styles.permissionIconBg}>
+              <Ionicons name="camera-outline" size={38} color={colors.primary} />
+            </View>
+            <Text style={styles.permissionTitle}>Caméra Requise</Text>
+            <Text style={styles.permissionDesc}>
+              Pour numériser des ordonnances manuscrites papier et en faire des prescriptions virtuelles, l'application nécessite l'autorisation d'accéder à l'appareil photo.
+            </Text>
+            <AppButton
+              label="Autoriser l'accès à la caméra"
+              onPress={requestPermission}
+              style={styles.permissionBtn}
+            />
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="light-content" backgroundColor="#000" />
@@ -138,16 +203,25 @@ export default function OCRScannerScreen() {
             <View style={{ width: 40 }} />
           </View>
 
-          {/* Viewfinder Overlay */}
+          {/* Viewfinder Overlay with Expo Camera View */}
           <View style={styles.viewfinderContainer}>
             <View style={styles.viewfinderFrame}>
+              <CameraView
+                ref={cameraRef}
+                style={StyleSheet.absoluteFill}
+                facing="back"
+              />
+              
+              {/* Custom Corners Markers on top of video feed */}
               <View style={styles.cornerTL} />
               <View style={styles.cornerTR} />
               <View style={styles.cornerBL} />
               <View style={styles.cornerBR} />
               
-              <Ionicons name="document-text-outline" size={100} color="rgba(255, 255, 255, 0.15)" />
-              <Text style={styles.viewfinderHelper}>Cadrez l'ordonnance papier</Text>
+              <View style={styles.viewfinderOverlay}>
+                <Ionicons name="scan-outline" size={40} color="rgba(255, 255, 255, 0.4)" />
+                <Text style={styles.viewfinderHelper}>Cadrez l'ordonnance papier</Text>
+              </View>
             </View>
           </View>
 
@@ -174,8 +248,12 @@ export default function OCRScannerScreen() {
 
           <View style={styles.viewfinderContainer}>
             <View style={[styles.viewfinderFrame, styles.scanningFrame]}>
-              {/* Captured Photo Placeholder */}
-              <Ionicons name="document-text" size={140} color="rgba(79, 110, 247, 0.3)" />
+              {/* Actual Captured Photo Render */}
+              {capturedPhotoUri ? (
+                <Image source={{ uri: capturedPhotoUri }} style={styles.capturedPhoto} />
+              ) : (
+                <Ionicons name="document-text" size={140} color="rgba(79, 110, 247, 0.3)" />
+              )}
               
               {/* Horizontal Moving Laser Line */}
               <Animated.View
@@ -423,6 +501,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'rgba(255, 255, 255, 0.3)',
     borderRadius: 24,
+    overflow: 'hidden', // Required to crop CameraView inside the rounded frame
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -794,5 +873,50 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.medium,
     fontSize: fontSize.xs,
     color: colors.inkLight,
+  },
+
+  // Real Camera Specific Styles
+  viewfinderOverlay: {
+    ...StyleSheet.absoluteFill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    backgroundColor: 'rgba(0,0,0,0.15)',
+  },
+  capturedPhoto: {
+    width: '100%',
+    height: '100%',
+  },
+  permissionContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+    gap: 16,
+  },
+  permissionIconBg: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.infoLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  permissionTitle: {
+    fontFamily: fontFamily.bold,
+    fontSize: fontSize.lg + 1,
+    color: colors.white,
+  },
+  permissionDesc: {
+    fontFamily: fontFamily.regular,
+    fontSize: fontSize.sm + 1,
+    color: 'rgba(255, 255, 255, 0.60)',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  permissionBtn: {
+    width: '100%',
+    marginTop: 12,
   },
 });
