@@ -16,6 +16,7 @@ import {
   Alert,
   Platform,
   Dimensions,
+  Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -261,6 +262,26 @@ export default function PatientDetailScreen() {
         setExportStep('success');
       }
     }, 300);
+  };
+
+  const handleDownloadExport = async () => {
+    try {
+      const message = `📄 DOSSIER MÉDICAL SÉCURISÉ (VitaCare Pro)\n\n` +
+                      `Patient : ${patient.fullName}\n` +
+                      `Âge : ${calculateAge(patient.dateOfBirth)}\n` +
+                      `Groupe Sanguin : ${patient.bloodType ?? 'O+'}\n` +
+                      `Antécédents : ${patient.medicalHistory ?? 'Aucun antécédent critique'}\n\n` +
+                      `Document généré : ${exportedFilename}\n` +
+                      `Lien de consultation HDS crypté : https://hds.vitacare.pro/shares/dossiers/${patient.id}`;
+      
+      await Share.share({
+        message,
+        title: exportedFilename,
+      });
+      exportSheetRef.current?.close();
+    } catch (error) {
+      Alert.alert('Erreur', "Impossible d'ouvrir le menu de partage.");
+    }
   };
 
   const handleConfirmDelete = async () => {
@@ -841,8 +862,8 @@ export default function PatientDetailScreen() {
               <Text style={{ fontFamily: fontFamily.bold, color: colors.ink }}>{exportedFilename}</Text>
             </Text>
             <AppButton
-              label="Télécharger le document"
-              onPress={() => exportSheetRef.current?.close()}
+              label="Télécharger et Partager le document"
+              onPress={handleDownloadExport}
               style={{ marginTop: 12, width: '100%' }}
             />
           </View>
