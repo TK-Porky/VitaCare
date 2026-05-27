@@ -326,14 +326,14 @@ export default function PatientDetailScreen() {
               : "Aucun antécédent médical critique répertorié. Suivi général préventif."}
           </Text>
 
-          {/* Active Buttons (Primary Green + Option Share-like Button) */}
+          {/* Active Buttons (Primary Pro Pill + Option Secondary Button) */}
           <View style={styles.actionButtonGroup}>
             <TouchableOpacity
               style={styles.primaryPrescribeBtn}
               onPress={() => router.push(`/(main)/prescriptions/create?patientId=${patient.id}` as any)}
               activeOpacity={0.85}
             >
-              <Ionicons name="add-circle" size={20} color={colors.ink} style={{ marginRight: 6 }} />
+              <Ionicons name="add-circle" size={20} color={colors.white} style={{ marginRight: 6 }} />
               <Text style={styles.primaryBtnLabel}>Créer une prescription</Text>
             </TouchableOpacity>
 
@@ -961,10 +961,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#7BEB3C', // Bright premium green matching patient booking button
+    backgroundColor: colors.primary, // Pro Indigo Primary
     paddingVertical: 13,
     borderRadius: 30,
-    shadowColor: 'rgba(123, 235, 60, 0.4)',
+    shadowColor: 'rgba(79, 110, 247, 0.35)', // Indigo shadow
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 1,
     shadowRadius: 10,
@@ -973,7 +973,7 @@ const styles = StyleSheet.create({
   primaryBtnLabel: {
     fontFamily: fontFamily.bold,
     fontSize: fontSize.md,
-    color: colors.ink, // Contrast ink colored text on bright green background
+    color: colors.white, // Crisp white contrast text
   },
   optionsActionBtn: {
     width: 46,
