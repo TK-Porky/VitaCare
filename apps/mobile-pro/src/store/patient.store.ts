@@ -14,6 +14,8 @@ interface PatientState {
 
   fetchPatients:       (search?: string) => Promise<void>;
   fetchPatientById:    (id: string) => Promise<void>;
+  updatePatient:       (id: string, updatedFields: Partial<PatientDetail>) => void;
+  deletePatient:       (id: string) => void;
   clearSelectedPatient:() => void;
   clearError:          () => void;
 }
@@ -42,6 +44,25 @@ export const usePatientStore = create<PatientState>((set) => ({
     } catch (e: any) {
       set({ error: e?.message ?? 'Erreur', isLoading: false });
     }
+  },
+
+  updatePatient: (id, updatedFields) => {
+    set((state) => {
+      const updatedPatients = state.patients.map((p) =>
+        p.id === id ? { ...p, ...updatedFields } : p
+      );
+      const updatedSelected = state.selectedPatient && state.selectedPatient.id === id
+        ? { ...state.selectedPatient, ...updatedFields }
+        : state.selectedPatient;
+      return { patients: updatedPatients, selectedPatient: updatedSelected };
+    });
+  },
+
+  deletePatient: (id) => {
+    set((state) => ({
+      patients: state.patients.filter((p) => p.id !== id),
+      selectedPatient: state.selectedPatient?.id === id ? null : state.selectedPatient,
+    }));
   },
 
   clearSelectedPatient: () => set({ selectedPatient: null }),
