@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { PatientCard, HelperText, AppBottomSheet, AppBottomSheetRef, AppButton } from '../../../src/components';
 import { usePatientStore } from '../../../src/store';
 import { colors, fontFamily, fontSize } from '../../../src/themes';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 
 export default function PatientsScreen() {
   const { patients, isLoading, error, fetchPatients } = usePatientStore();
@@ -28,6 +29,12 @@ export default function PatientsScreen() {
   const [scanStep, setScanStep] = useState<'camera' | 'importing' | 'success'>('camera');
   const [scannedPatient, setScannedPatient] = useState<any>(null);
 
+  // Camera permissions & refs
+  const [permission, requestPermission] = useCameraPermissions();
+  const [isSimulatedScan, setIsSimulatedScan] = useState(false);
+  const [bypassPermission, setBypassPermission] = useState(false);
+  const [hasScanned, setHasScanned] = useState(false);
+
   useEffect(() => { fetchPatients(); }, []);
 
   const handleSearch = (text: string) => {
@@ -35,39 +42,77 @@ export default function PatientsScreen() {
     fetchPatients(text || undefined);
   };
 
-  const handleOpenQRScanner = () => {
+  const triggerSuccessImport = (id: string, name: string) => {
+    const newPat = {
+      id,
+      fullName: name,
+      phone: '+237 6 72 567 890',
+      email: name.toLowerCase().replace(' ', '.') + '@email.cm',
+      gender: 'male' as const,
+      dateOfBirth: '1960-09-08',
+      bloodType: 'O-',
+      allergies: ['Ibuprofen'],
+      medicalHistory: 'Asthme chronique, insuffisance cardiaque légère.',
+      lastVisit: '2026-05-20',
+      totalAppointments: 24,
+    };
+
+    // Real-time reactive Zustand insertion
+    usePatientStore.setState({
+      patients: [newPat, ...patients],
+    });
+
+    setScannedPatient(newPat);
+    setHasScanned(true);
+    setScanStep('success');
+  };
+
+  useEffect(() => {
+    let t1: any;
+    let t2: any;
+    if (scanStep === 'camera' && isSimulatedScan && !hasScanned) {
+      t1 = setTimeout(() => {
+        setScanStep('importing');
+        t2 = setTimeout(() => {
+          triggerSuccessImport('pat-imported-' + Date.now(), 'Samuel Atangana');
+        }, 1200);
+      }, 2000);
+    }
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [scanStep, isSimulatedScan, hasScanned]);
+
+  const handleOpenQRScanner = async () => {
     setScanStep('camera');
     setScannedPatient(null);
+    setHasScanned(false);
     qrSheetRef.current?.open();
 
-    // Autofocus and Scanning Simulation
+    if (!permission || !permission.granted) {
+      const res = await requestPermission();
+      if (!res.granted) {
+        setIsSimulatedScan(true);
+      }
+    } else {
+      setIsSimulatedScan(false);
+    }
+  };
+
+  const handleBarcodeScanned = ({ data }: { data: string }) => {
+    if (hasScanned || scanStep !== 'camera') return;
+    setHasScanned(true);
+    setScanStep('importing');
+
+    let importedName = 'Samuel Atangana';
+    if (data && data.length < 30) {
+      importedName = data;
+    }
+
     setTimeout(() => {
-      setScanStep('importing');
-
-      setTimeout(() => {
-        const newPat = {
-          id: 'pat-imported-' + Date.now(),
-          fullName: 'Samuel Atangana',
-          phone: '+237 6 72 567 890',
-          email: 's.atangana@email.cm',
-          gender: 'male' as const,
-          dateOfBirth: '1960-09-08',
-          bloodType: 'O-',
-          allergies: ['Ibuprofen'],
-          medicalHistory: 'Asthme chronique, insuffisance cardiaque légère.',
-          lastVisit: '2026-05-20',
-          totalAppointments: 24,
-        };
-
-        // Real-time reactive Zustand insertion
-        usePatientStore.setState({
-          patients: [newPat, ...patients],
-        });
-
-        setScannedPatient(newPat);
-        setScanStep('success');
-      }, 1200);
-    }, 1800);
+      triggerSuccessImport('pat-qr-' + Date.now(), importedName);
+    }, 1500);
   };
 
   return (
@@ -154,11 +199,62 @@ export default function PatientsScreen() {
 
         {scanStep === 'camera' && (
           <View style={styles.cameraContainer}>
-            <View style={styles.cameraViewfinder}>
-              <View style={styles.scannerLine} />
-              <Ionicons name="scan-outline" size={160} color="rgba(79, 110, 247, 0.3)" style={styles.scannerIconOverlay} />
-            </View>
-            <Text style={styles.cameraHelperText}>Autofocus actif • Analyse du code QR...</Text>
+            {(!permission || (!permission.granted && !bypassPermission)) ? (
+              <View style={styles.cameraPermissionOverlay}>
+                <Ionicons name="camera-outline" size={32} color={colors.primary} />
+                <Text style={styles.permissionOverlayTitle}>Caméra Requise</Text>
+                <Text style={styles.permissionOverlayDesc}>
+                  L'application nécessite l'autorisation caméra pour scanner les codes QR.
+                </Text>
+                <AppButton
+                  label="Autoriser l'accès"
+                  onPress={requestPermission}
+                  style={styles.permissionOverlayBtn}
+                />
+                <TouchableOpacity
+                  onPress={() => {
+                    setIsSimulatedScan(true);
+                    setBypassPermission(true);
+                  }}
+                  style={styles.permissionOverlayBypass}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.bypassBtnText}>Simuler le scan sans caméra</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.cameraViewfinder}>
+                {isSimulatedScan ? (
+                  <View style={styles.virtualQRFeed}>
+                    <Ionicons name="qr-code-outline" size={120} color="rgba(79, 110, 247, 0.4)" />
+                    <Text style={styles.virtualQRText}>Scan virtuel actif...</Text>
+                    <View style={styles.scannerLine} />
+                  </View>
+                ) : (
+                  <CameraView
+                    style={StyleSheet.absoluteFill}
+                    facing="back"
+                    barcodeScannerSettings={{
+                      barcodeTypes: ['qr'],
+                    }}
+                    onBarcodeScanned={handleBarcodeScanned}
+                    onMountError={() => {
+                      setIsSimulatedScan(true);
+                    }}
+                  >
+                    <View style={styles.scannerLine} />
+                    <Ionicons name="scan-outline" size={160} color="rgba(255, 255, 255, 0.3)" style={styles.scannerIconOverlay} />
+                  </CameraView>
+                )}
+              </View>
+            )}
+            
+            {permission && permission.granted && !isSimulatedScan && (
+              <Text style={styles.cameraHelperText}>Pointez la caméra vers le code QR du patient</Text>
+            )}
+            {isSimulatedScan && (
+              <Text style={styles.cameraHelperTextSimulated}>Mode Démo Simulateur actif • Importation dans 2s...</Text>
+            )}
           </View>
         )}
 
@@ -188,7 +284,6 @@ export default function PatientsScreen() {
               label="Ouvrir le dossier patient"
               onPress={() => {
                 qrSheetRef.current?.close();
-                // Delay slightly to allow keyboard/modal dismiss safely
                 setTimeout(() => {
                   router.push(`/(main)/patients/${scannedPatient.id}` as any);
                 }, 200);
@@ -380,5 +475,54 @@ const styles = StyleSheet.create({
   detailVal: {
     fontFamily: fontFamily.bold,
     color: colors.ink,
+  },
+  cameraPermissionOverlay: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    gap: 12,
+  },
+  permissionOverlayTitle: {
+    fontFamily: fontFamily.bold,
+    fontSize: fontSize.md,
+    color: colors.ink,
+    marginTop: 4,
+  },
+  permissionOverlayDesc: {
+    fontFamily: fontFamily.regular,
+    fontSize: fontSize.xs + 1,
+    color: colors.inkLight,
+    textAlign: 'center',
+    lineHeight: 16,
+  },
+  permissionOverlayBtn: {
+    width: '100%',
+    marginTop: 8,
+  },
+  permissionOverlayBypass: {
+    paddingVertical: 8,
+  },
+  bypassBtnText: {
+    fontFamily: fontFamily.bold,
+    fontSize: fontSize.xs,
+    color: colors.primary,
+  },
+  virtualQRFeed: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: '#0F172A',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  virtualQRText: {
+    fontFamily: fontFamily.medium,
+    fontSize: fontSize.xs,
+    color: 'rgba(255, 255, 255, 0.4)',
+  },
+  cameraHelperTextSimulated: {
+    fontFamily: fontFamily.medium,
+    fontSize: fontSize.xs + 1,
+    color: colors.primaryLight,
+    textAlign: 'center',
   },
 });
