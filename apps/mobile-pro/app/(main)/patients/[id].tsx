@@ -96,7 +96,7 @@ export default function PatientDetailScreen() {
   const [formAllergies, setFormAllergies] = useState('');
 
   // Export states
-  const [exportStep, setExportStep] = useState<'select' | 'loading' | 'success'>('select');
+  const [exportStep, setExportStep] = useState<'select' | 'loading' | 'success' | 'preview'>('select');
   const [exportProgress, setExportProgress] = useState(0);
   const [exportedFilename, setExportedFilename] = useState('');
 
@@ -862,14 +862,169 @@ export default function PatientDetailScreen() {
               <Text style={{ fontFamily: fontFamily.bold, color: colors.ink }}>{exportedFilename}</Text>
             </Text>
             <AppButton
-              label="Télécharger et Partager le document"
-              onPress={handleDownloadExport}
+              label="Prévisualiser le document"
+              onPress={() => setExportStep('preview')}
               style={{ marginTop: 12, width: '100%' }}
+            />
+            <AppButton
+              label="Télécharger et Partager le document"
+              variant="outline"
+              onPress={handleDownloadExport}
+              style={{ marginTop: 10, width: '100%' }}
             />
           </View>
         )}
 
-        {exportStep !== 'loading' && (
+        {exportStep === 'preview' && (
+          <View style={styles.previewDocContainer}>
+            <View style={styles.previewDocHeader}>
+              <TouchableOpacity onPress={() => setExportStep('success')} style={styles.previewBackBtn}>
+                <Ionicons name="arrow-back" size={20} color={colors.ink} />
+              </TouchableOpacity>
+              <Text style={styles.previewDocTitle}>
+                {exportedFilename.endsWith('.pdf') ? 'Aperçu du Rapport PDF' : 'Aperçu Excel (.xlsx)'}
+              </Text>
+              <View style={{ width: 32 }} />
+            </View>
+
+            <ScrollView contentContainerStyle={styles.previewDocScroll} showsVerticalScrollIndicator={false}>
+              {exportedFilename.endsWith('.pdf') ? (
+                <View style={styles.pdfPage}>
+                  <View style={styles.pdfHeader}>
+                    <View>
+                      <Text style={styles.pdfDocName}>Dr. Jean-Claude Mbarga</Text>
+                      <Text style={styles.pdfDocSpec}>Généraliste • Hôpital Central</Text>
+                      <Text style={styles.pdfDocContact}>Tél: +237 6 99 88 77 66</Text>
+                    </View>
+                    <View style={styles.pdfBadgeHDS}>
+                      <Text style={styles.pdfBadgeText}>HDS CERTIFIÉ</Text>
+                    </View>
+                  </View>
+                  
+                  <View style={styles.pdfDividerLine} />
+                  
+                  <Text style={styles.pdfReportTitle}>RAPPORT MÉDICAL DE SYNTHÈSE</Text>
+                  <Text style={styles.pdfReportDate}>Généré le : {new Date().toLocaleDateString('fr-FR')}</Text>
+
+                  <View style={styles.pdfSection}>
+                    <Text style={styles.pdfSectionTitle}>1. IDENTITÉ DU PATIENT</Text>
+                    <View style={styles.pdfGridRow}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.pdfLabel}>Nom Complet : <Text style={styles.pdfValue}>{patient.fullName}</Text></Text>
+                        <Text style={styles.pdfLabel}>Âge : <Text style={styles.pdfValue}>{calculateAge(patient.dateOfBirth)}</Text></Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.pdfLabel}>Groupe Sanguin : <Text style={styles.pdfValue}>{patient.bloodType ?? 'O+'}</Text></Text>
+                        <Text style={styles.pdfLabel}>Genre : <Text style={styles.pdfValue}>{patient.gender === 'male' ? 'Homme' : 'Femme'}</Text></Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  <View style={styles.pdfSection}>
+                    <Text style={styles.pdfSectionTitle}>2. DIAGNOSTIC ET ANTÉCÉDENTS</Text>
+                    <Text style={styles.pdfBodyText}>
+                      {patient.medicalHistory ?? 'Aucun antécédent critique répertorié à ce jour.'}
+                    </Text>
+                    <Text style={styles.pdfLabel}>Allergies connues : <Text style={styles.pdfValue}>{patient.allergies?.join(', ') || 'Aucune allergie répertoriée'}</Text></Text>
+                  </View>
+
+                  <View style={styles.pdfSection}>
+                    <Text style={styles.pdfSectionTitle}>3. OBSERVANCE DE TRAITEMENT (30 JOURS)</Text>
+                    <Text style={styles.pdfBodyText}>
+                      Le taux d'observance globale calculé est de <Text style={{ fontFamily: fontFamily.bold }}>88%</Text>.
+                    </Text>
+                    <View style={styles.pdfBulletList}>
+                      <Text style={styles.pdfBulletItem}>• Doliprane 1000mg : 95% de prises observées (Très satisfaisant)</Text>
+                      <Text style={styles.pdfBulletItem}>• Amoxicilline 500mg : 80% de prises observées (Satisfaisant)</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.pdfFooterSignature}>
+                    <Text style={styles.pdfSignatureTitle}>Signature électronique certifiée</Text>
+                    <View style={styles.pdfStampBox}>
+                      <Ionicons name="shield-checkmark" size={14} color={colors.primary} />
+                      <Text style={styles.pdfStampText}>VitaCare SecurDoc cryptographique</Text>
+                    </View>
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.excelSheet}>
+                  <View style={styles.excelHeaderRow}>
+                    <View style={styles.excelIndexCell}><Text style={styles.excelIndexText}></Text></View>
+                    <View style={[styles.excelCellHeader, { width: 80 }]}><Text style={styles.excelHeaderText}>A</Text></View>
+                    <View style={[styles.excelCellHeader, { width: 120 }]}><Text style={styles.excelHeaderText}>B</Text></View>
+                    <View style={[styles.excelCellHeader, { width: 70 }]}><Text style={styles.excelHeaderText}>C</Text></View>
+                  </View>
+                  
+                  <View style={styles.excelRow}>
+                    <View style={styles.excelIndexCell}><Text style={styles.excelIndexText}>1</Text></View>
+                    <View style={[styles.excelCell, { width: 80 }]}><Text style={styles.excelTextBold}>Patient ID</Text></View>
+                    <View style={[styles.excelCell, { width: 120 }]}><Text style={styles.excelText}>{patient.id}</Text></View>
+                    <View style={[styles.excelCell, { width: 70 }]}><Text style={styles.excelText}></Text></View>
+                  </View>
+
+                  <View style={styles.excelRow}>
+                    <View style={styles.excelIndexCell}><Text style={styles.excelIndexText}>2</Text></View>
+                    <View style={[styles.excelCell, { width: 80 }]}><Text style={styles.excelTextBold}>Nom Complet</Text></View>
+                    <View style={[styles.excelCell, { width: 120 }]}><Text style={styles.excelText}>{patient.fullName}</Text></View>
+                    <View style={[styles.excelCell, { width: 70 }]}><Text style={styles.excelText}></Text></View>
+                  </View>
+
+                  <View style={styles.excelRow}>
+                    <View style={styles.excelIndexCell}><Text style={styles.excelIndexText}>3</Text></View>
+                    <View style={[styles.excelCell, { width: 80 }]}><Text style={styles.excelTextBold}>Sang</Text></View>
+                    <View style={[styles.excelCell, { width: 120 }]}><Text style={styles.excelText}>{patient.bloodType ?? 'O+'}</Text></View>
+                    <View style={[styles.excelCell, { width: 70 }]}><Text style={styles.excelText}></Text></View>
+                  </View>
+
+                  <View style={styles.excelRow}>
+                    <View style={styles.excelIndexCell}><Text style={styles.excelIndexText}>4</Text></View>
+                    <View style={[styles.excelCell, { width: 80 }]}><Text style={styles.excelTextBold}>Observance</Text></View>
+                    <View style={[styles.excelCell, { width: 120, backgroundColor: 'rgba(52, 199, 89, 0.1)' }]}><Text style={[styles.excelText, { color: colors.success, fontFamily: fontFamily.bold }]}>88%</Text></View>
+                    <View style={[styles.excelCell, { width: 70 }]}><Text style={styles.excelText}></Text></View>
+                  </View>
+
+                  <View style={styles.excelRow}>
+                    <View style={styles.excelIndexCell}><Text style={styles.excelIndexText}>5</Text></View>
+                    <View style={[styles.excelCell, { width: 80 }]}><Text style={styles.excelTextBold}>Médicament</Text></View>
+                    <View style={[styles.excelCell, { width: 120 }]}><Text style={styles.excelTextBold}>Fréquence</Text></View>
+                    <View style={[styles.excelCell, { width: 70 }]}><Text style={styles.excelTextBold}>Taux</Text></View>
+                  </View>
+
+                  <View style={styles.excelRow}>
+                    <View style={styles.excelIndexCell}><Text style={styles.excelIndexText}>6</Text></View>
+                    <View style={[styles.excelCell, { width: 80 }]}><Text style={styles.excelText}>Doliprane</Text></View>
+                    <View style={[styles.excelCell, { width: 120 }]}><Text style={styles.excelText}>Matin & Soir</Text></View>
+                    <View style={[styles.excelCell, { width: 70 }]}><Text style={styles.excelText}>95%</Text></View>
+                  </View>
+
+                  <View style={styles.excelRow}>
+                    <View style={styles.excelIndexCell}><Text style={styles.excelIndexText}>7</Text></View>
+                    <View style={[styles.excelCell, { width: 80 }]}><Text style={styles.excelText}>Amoxicilline</Text></View>
+                    <View style={[styles.excelCell, { width: 120 }]}><Text style={styles.excelText}>Midi</Text></View>
+                    <View style={[styles.excelCell, { width: 70 }]}><Text style={styles.excelText}>80%</Text></View>
+                  </View>
+                </View>
+              )}
+            </ScrollView>
+
+            <View style={styles.previewActions}>
+              <AppButton
+                label="Partager ce document"
+                onPress={handleDownloadExport}
+                style={{ flex: 1 }}
+              />
+              <AppButton
+                label="Fermer"
+                variant="outline"
+                onPress={() => exportSheetRef.current?.close()}
+                style={{ width: 100 }}
+              />
+            </View>
+          </View>
+        )}
+
+        {exportStep !== 'loading' && exportStep !== 'preview' && (
           <AppButton
             label="Fermer"
             variant="outline"
@@ -1598,5 +1753,238 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.medium,
     fontSize: fontSize.xs,
     color: colors.error,
+  },
+  previewDocContainer: {
+    paddingHorizontal: 4,
+    paddingBottom: Platform.OS === 'ios' ? 32 : 16,
+    gap: 12,
+  },
+  previewDocHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  previewBackBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  previewDocTitle: {
+    fontFamily: fontFamily.bold,
+    fontSize: fontSize.base,
+    color: colors.ink,
+  },
+  previewDocScroll: {
+    paddingVertical: 10,
+    maxHeight: 280, // Keep scroll height constrained to fit BottomSheet nicely
+  },
+  previewActions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 10,
+  },
+  pdfPage: {
+    backgroundColor: '#FFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  pdfHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  pdfDocName: {
+    fontFamily: fontFamily.bold,
+    fontSize: 11,
+    color: colors.primary,
+  },
+  pdfDocSpec: {
+    fontFamily: fontFamily.semiBold,
+    fontSize: 8.5,
+    color: colors.inkMuted,
+    marginTop: 1,
+  },
+  pdfDocContact: {
+    fontFamily: fontFamily.regular,
+    fontSize: 8,
+    color: colors.inkLight,
+    marginTop: 1,
+  },
+  pdfBadgeHDS: {
+    backgroundColor: 'rgba(79, 110, 247, 0.1)',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(79, 110, 247, 0.2)',
+  },
+  pdfBadgeText: {
+    fontFamily: fontFamily.bold,
+    fontSize: 7.5,
+    color: colors.primary,
+  },
+  pdfDividerLine: {
+    height: 1.5,
+    backgroundColor: colors.primary,
+    marginVertical: 10,
+  },
+  pdfReportTitle: {
+    fontFamily: fontFamily.bold,
+    fontSize: 12,
+    color: colors.ink,
+    textAlign: 'center',
+    letterSpacing: 0.5,
+  },
+  pdfReportDate: {
+    fontFamily: fontFamily.medium,
+    fontSize: 8.5,
+    color: colors.inkMuted,
+    textAlign: 'center',
+    marginTop: 2,
+    marginBottom: 10,
+  },
+  pdfSection: {
+    marginBottom: 12,
+  },
+  pdfSectionTitle: {
+    fontFamily: fontFamily.bold,
+    fontSize: 9.5,
+    color: colors.primary,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+    paddingBottom: 3,
+    marginBottom: 6,
+  },
+  pdfGridRow: {
+    flexDirection: 'row',
+  },
+  pdfLabel: {
+    fontFamily: fontFamily.medium,
+    fontSize: 9,
+    color: colors.inkLight,
+    lineHeight: 14,
+  },
+  pdfValue: {
+    fontFamily: fontFamily.bold,
+    color: colors.ink,
+  },
+  pdfBodyText: {
+    fontFamily: fontFamily.regular,
+    fontSize: 9,
+    color: colors.ink,
+    lineHeight: 14,
+    marginBottom: 6,
+  },
+  pdfBulletList: {
+    gap: 4,
+    marginTop: 4,
+  },
+  pdfBulletItem: {
+    fontFamily: fontFamily.medium,
+    fontSize: 8.5,
+    color: colors.ink,
+  },
+  pdfFooterSignature: {
+    alignItems: 'flex-end',
+    marginTop: 16,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+  },
+  pdfSignatureTitle: {
+    fontFamily: fontFamily.semiBold,
+    fontSize: 8,
+    color: colors.inkMuted,
+    marginBottom: 4,
+  },
+  pdfStampBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(52, 199, 89, 0.08)',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(52, 199, 89, 0.2)',
+  },
+  pdfStampText: {
+    fontFamily: fontFamily.bold,
+    fontSize: 7.5,
+    color: colors.success,
+  },
+  excelSheet: {
+    backgroundColor: '#FFF',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  excelHeaderRow: {
+    flexDirection: 'row',
+    backgroundColor: '#F3F4F6',
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#D1D5DB',
+  },
+  excelRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  excelIndexCell: {
+    width: 24,
+    backgroundColor: '#F3F4F6',
+    borderRightWidth: 1.5,
+    borderRightColor: '#D1D5DB',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 24,
+  },
+  excelIndexText: {
+    fontFamily: fontFamily.bold,
+    fontSize: 8.5,
+    color: colors.inkMuted,
+  },
+  excelCellHeader: {
+    borderRightWidth: 1,
+    borderRightColor: '#D1D5DB',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 24,
+  },
+  excelHeaderText: {
+    fontFamily: fontFamily.bold,
+    fontSize: 9,
+    color: colors.inkLight,
+  },
+  excelCell: {
+    borderRightWidth: 1,
+    borderRightColor: '#E5E7EB',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+    height: 24,
+  },
+  excelText: {
+    fontFamily: fontFamily.regular,
+    fontSize: 8,
+    color: colors.ink,
+  },
+  excelTextBold: {
+    fontFamily: fontFamily.bold,
+    fontSize: 8,
+    color: colors.ink,
   },
 });
