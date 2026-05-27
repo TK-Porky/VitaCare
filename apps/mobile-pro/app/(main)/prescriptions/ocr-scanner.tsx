@@ -146,7 +146,7 @@ export default function OCRScannerScreen() {
 
   const translateLaserY = laserAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, 240],
+    outputRange: [0, 390],
   });
 
   if (!permission) {
@@ -206,91 +206,95 @@ export default function OCRScannerScreen() {
       {/* ── CAMERA STEP ── */}
       {step === 'camera' && (
         <View style={styles.cameraRoot}>
-          {/* Header */}
-          <View style={styles.cameraHeader}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.camClose}>
-              <Ionicons name="close" size={24} color={colors.white} />
-            </TouchableOpacity>
-            <Text style={styles.camTitle}>Scanner d'ordonnance</Text>
-            <TouchableOpacity
-              onPress={() => setIsSimulatedCamera(!isSimulatedCamera)}
-              style={styles.camModeToggle}
-              activeOpacity={0.7}
-            >
-              <Ionicons
-                name={isSimulatedCamera ? "videocam" : "videocam-off"}
-                size={22}
-                color={colors.primaryLight}
-              />
-            </TouchableOpacity>
-          </View>
-
-          {isSimulatedCamera && (
-            <View style={styles.simulatorBanner}>
-              <Ionicons name="sparkles" size={14} color={colors.primaryLight} />
-              <Text style={styles.simulatorBannerText}>
-                Mode Simulateur Actif (Ordonnance Virtuelle Témoin)
-              </Text>
-            </View>
-          )}
-
-          {/* Viewfinder Overlay with Expo Camera View or Virtual Preview */}
-          <View style={styles.viewfinderContainer}>
-            <View style={styles.viewfinderFrame}>
-              {isSimulatedCamera ? (
-                <View style={styles.virtualFeedContainer}>
-                  <View style={styles.virtualPrescriptionPaper}>
-                    <View>
-                      <Text style={styles.virtualDocName}>Dr. Jean-Claude Mbarga</Text>
-                      <Text style={styles.virtualDocSpecialty}>Généraliste • Ordre N° 1245</Text>
-                      <View style={styles.virtualPaperDivider} />
-                      <Text style={styles.virtualPatientName}>Patient: Pierre Kamto</Text>
-                      <Text style={styles.virtualDate}>Date: 27/05/2026</Text>
-                    </View>
-                    
-                    <View style={styles.virtualRxContainer}>
-                      <Text style={styles.virtualRxSymbol}>Rx</Text>
-                      <Text style={styles.virtualHandwriting}>1. Paracétamol 1000mg</Text>
-                      <Text style={styles.virtualHandwritingSub}>   3 comprimés par jour pendant 5j</Text>
-                      <Text style={styles.virtualHandwriting}>2. Spasfon Lyoc 80mg</Text>
-                      <Text style={styles.virtualHandwritingSub}>   2 cp en cas de crise (max 3/j)</Text>
-                    </View>
+          {/* Full Screen Viewfinder (Camera Feed or Simulator Feed) */}
+          <View style={StyleSheet.absoluteFill}>
+            {isSimulatedCamera ? (
+              <View style={styles.virtualFeedContainer}>
+                <View style={styles.virtualPrescriptionPaperFullScreen}>
+                  <View>
+                    <Text style={styles.virtualDocName}>Dr. Jean-Claude Mbarga</Text>
+                    <Text style={styles.virtualDocSpecialty}>Généraliste • Ordre N° 1245</Text>
+                    <View style={styles.virtualPaperDivider} />
+                    <Text style={styles.virtualPatientName}>Patient: Pierre Kamto</Text>
+                    <Text style={styles.virtualDate}>Date: 27/05/2026</Text>
+                  </View>
+                  
+                  <View style={styles.virtualRxContainer}>
+                    <Text style={styles.virtualRxSymbol}>Rx</Text>
+                    <Text style={styles.virtualHandwriting}>1. Paracétamol 1000mg</Text>
+                    <Text style={styles.virtualHandwritingSub}>   3 comprimés par jour pendant 5j</Text>
+                    <Text style={styles.virtualHandwriting}>2. Spasfon Lyoc 80mg</Text>
+                    <Text style={styles.virtualHandwritingSub}>   2 cp en cas de crise (max 3/j)</Text>
                   </View>
                 </View>
-              ) : (
-                <CameraView
-                  ref={cameraRef}
-                  style={StyleSheet.absoluteFill}
-                  facing="back"
-                  onMountError={() => {
-                    setIsSimulatedCamera(true);
-                  }}
+              </View>
+            ) : (
+              <CameraView
+                ref={cameraRef}
+                style={StyleSheet.absoluteFill}
+                facing="back"
+                onMountError={() => {
+                  setIsSimulatedCamera(true);
+                }}
+              />
+            )}
+          </View>
+
+          {/* Immersive Controls & Frame Layout */}
+          <View style={styles.fullScreenOverlay}>
+            {/* Header */}
+            <View style={styles.cameraHeaderFloating}>
+              <TouchableOpacity onPress={() => router.back()} style={styles.camClose}>
+                <Ionicons name="close" size={24} color={colors.white} />
+              </TouchableOpacity>
+              <Text style={styles.camTitle}>Scanner d'ordonnance</Text>
+              <TouchableOpacity
+                onPress={() => setIsSimulatedCamera(!isSimulatedCamera)}
+                style={styles.camModeToggle}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name={isSimulatedCamera ? "videocam" : "videocam-off"}
+                  size={22}
+                  color={colors.primaryLight}
                 />
-              )}
-              
-              {/* Custom Corners Markers on top of video feed */}
+              </TouchableOpacity>
+            </View>
+
+            {isSimulatedCamera && (
+              <View style={styles.simulatorBannerFloating}>
+                <Ionicons name="sparkles" size={14} color={colors.primaryLight} />
+                <Text style={styles.simulatorBannerText}>
+                  Mode Simulateur Actif
+                </Text>
+              </View>
+            )}
+
+            {/* Viewfinder Overlay aligned with phone screen borders */}
+            <View style={styles.immersiveViewfinderFrame}>
+              {/* Custom Corners Markers on top of full size video feed */}
               <View style={styles.cornerTL} />
               <View style={styles.cornerTR} />
               <View style={styles.cornerBL} />
               <View style={styles.cornerBR} />
               
-              <View style={styles.viewfinderOverlay}>
-                <Ionicons name="scan-outline" size={40} color="rgba(255, 255, 255, 0.4)" />
-                <Text style={styles.viewfinderHelper}>
+              <View style={styles.viewfinderOverlayImmersive}>
+                <Ionicons name="scan-outline" size={48} color="rgba(255, 255, 255, 0.4)" />
+                <Text style={styles.viewfinderHelperImmersive}>
                   {isSimulatedCamera ? "Ordonnance témoin cadrée" : "Cadrez l'ordonnance papier"}
                 </Text>
               </View>
             </View>
-          </View>
 
-          {/* Controller footer */}
-          <View style={styles.cameraFooter}>
-            <Text style={styles.camTip}>
-              Veillez à ce que l'écriture manuscrite et les posologies soient bien éclairées et lisibles.
-            </Text>
-            <TouchableOpacity onPress={handleCapture} style={styles.captureBtn} activeOpacity={0.85}>
-              <View style={styles.captureBtnInner} />
-            </TouchableOpacity>
+            {/* Controller footer */}
+            <View style={styles.cameraFooterFloating}>
+              <Text style={styles.camTip}>
+                Veillez à ce que l'écriture manuscrite et les posologies soient bien éclairées et lisibles.
+              </Text>
+              <TouchableOpacity onPress={handleCapture} style={styles.captureBtn} activeOpacity={0.85}>
+                <View style={styles.captureBtnInner} />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       )}
@@ -298,53 +302,61 @@ export default function OCRScannerScreen() {
       {/* ── SCANNING STEP (OCR BALAYAGE LASER) ── */}
       {step === 'scanning' && (
         <View style={styles.cameraRoot}>
-          <View style={styles.cameraHeader}>
-            <View style={{ width: 40 }} />
-            <Text style={styles.camTitle}>Numérisation par IA</Text>
-            <View style={{ width: 40 }} />
-          </View>
-
-          <View style={styles.viewfinderContainer}>
-            <View style={[styles.viewfinderFrame, styles.scanningFrame]}>
-              {/* Actual Captured Photo Render or simulated paper preview */}
-              {capturedPhotoUri ? (
-                <Image source={{ uri: capturedPhotoUri }} style={styles.capturedPhoto} />
-              ) : (
-                <View style={styles.virtualFeedContainer}>
-                  <View style={styles.virtualPrescriptionPaper}>
-                    <View>
-                      <Text style={styles.virtualDocName}>Dr. Jean-Claude Mbarga</Text>
-                      <Text style={styles.virtualDocSpecialty}>Généraliste • Ordre N° 1245</Text>
-                      <View style={styles.virtualPaperDivider} />
-                      <Text style={styles.virtualPatientName}>Patient: Pierre Kamto</Text>
-                      <Text style={styles.virtualDate}>Date: 27/05/2026</Text>
-                    </View>
-                    
-                    <View style={styles.virtualRxContainer}>
-                      <Text style={styles.virtualRxSymbol}>Rx</Text>
-                      <Text style={styles.virtualHandwriting}>1. Paracétamol 1000mg</Text>
-                      <Text style={styles.virtualHandwritingSub}>   3 comprimés par jour pendant 5j</Text>
-                      <Text style={styles.virtualHandwriting}>2. Spasfon Lyoc 80mg</Text>
-                      <Text style={styles.virtualHandwritingSub}>   2 cp en cas de crise (max 3/j)</Text>
-                    </View>
+          {/* Full Screen Captured Image or Simulated Feed */}
+          <View style={StyleSheet.absoluteFill}>
+            {capturedPhotoUri ? (
+              <Image source={{ uri: capturedPhotoUri }} style={styles.capturedPhoto} />
+            ) : (
+              <View style={styles.virtualFeedContainer}>
+                <View style={styles.virtualPrescriptionPaperFullScreen}>
+                  <View>
+                    <Text style={styles.virtualDocName}>Dr. Jean-Claude Mbarga</Text>
+                    <Text style={styles.virtualDocSpecialty}>Généraliste • Ordre N° 1245</Text>
+                    <View style={styles.virtualPaperDivider} />
+                    <Text style={styles.virtualPatientName}>Patient: Pierre Kamto</Text>
+                    <Text style={styles.virtualDate}>Date: 27/05/2026</Text>
+                  </View>
+                  
+                  <View style={styles.virtualRxContainer}>
+                    <Text style={styles.virtualRxSymbol}>Rx</Text>
+                    <Text style={styles.virtualHandwriting}>1. Paracétamol 1000mg</Text>
+                    <Text style={styles.virtualHandwritingSub}>   3 comprimés par jour pendant 5j</Text>
+                    <Text style={styles.virtualHandwriting}>2. Spasfon Lyoc 80mg</Text>
+                    <Text style={styles.virtualHandwritingSub}>   2 cp en cas de crise (max 3/j)</Text>
                   </View>
                 </View>
-              )}
+              </View>
+            )}
+          </View>
+
+          {/* Full Screen Overlay with Laser Sweep */}
+          <View style={styles.fullScreenOverlay}>
+            <View style={styles.cameraHeaderFloating}>
+              <View style={{ width: 40 }} />
+              <Text style={styles.camTitle}>Numérisation par IA</Text>
+              <View style={{ width: 40 }} />
+            </View>
+
+            <View style={styles.immersiveViewfinderFrame}>
+              <View style={styles.cornerTL} />
+              <View style={styles.cornerTR} />
+              <View style={styles.cornerBL} />
+              <View style={styles.cornerBR} />
               
-              {/* Horizontal Moving Laser Line */}
+              {/* Full height laser sweeping line */}
               <Animated.View
                 style={[
-                  styles.laserLine,
+                  styles.laserLineFullScreen,
                   { transform: [{ translateY: translateLaserY }] },
                 ]}
               />
             </View>
-          </View>
 
-          <View style={styles.scanningProgressWrap}>
-            <ActivityIndicator size="small" color={colors.primary} />
-            <Text style={styles.scanningProgressTitle}>Analyse OCR en cours... {ocrProgress}%</Text>
-            <Text style={styles.scanningProgressStep}>{ocrStepLabel || 'Initialisation du numériseur...'}</Text>
+            <View style={styles.scanningProgressWrapFloating}>
+              <ActivityIndicator size="small" color={colors.primaryLight} />
+              <Text style={styles.scanningProgressTitle}>Analyse OCR en cours... {ocrProgress}%</Text>
+              <Text style={styles.scanningProgressStep}>{ocrStepLabel || 'Initialisation du numériseur...'}</Text>
+            </View>
           </View>
         </View>
       )}
@@ -1085,5 +1097,91 @@ const styles = StyleSheet.create({
     fontSize: 9,
     color: colors.inkLight,
     marginBottom: 4,
+  },
+  fullScreenOverlay: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  cameraHeaderFloating: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: Platform.OS === 'ios' ? 44 : 24,
+    width: '100%',
+    height: Platform.OS === 'ios' ? 96 : 64,
+  },
+  simulatorBannerFloating: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(79, 110, 247, 0.75)',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    gap: 8,
+    marginTop: 8,
+  },
+  immersiveViewfinderFrame: {
+    width: SCREEN_WIDTH - 48,
+    height: 420,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  viewfinderOverlayImmersive: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  viewfinderHelperImmersive: {
+    fontFamily: fontFamily.medium,
+    fontSize: fontSize.sm + 1,
+    color: colors.white,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  cameraFooterFloating: {
+    width: '100%',
+    paddingHorizontal: 32,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+    alignItems: 'center',
+    gap: 20,
+  },
+  scanningProgressWrapFloating: {
+    width: '100%',
+    paddingHorizontal: 24,
+    paddingBottom: Platform.OS === 'ios' ? 60 : 40,
+    alignItems: 'center',
+    gap: 8,
+  },
+  laserLineFullScreen: {
+    width: '100%',
+    height: 4,
+    backgroundColor: colors.primaryLight,
+    position: 'absolute',
+    top: 10,
+    left: 0,
+    shadowColor: colors.primaryLight,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  virtualPrescriptionPaperFullScreen: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#FFF',
+    padding: 24,
+    paddingTop: Platform.OS === 'ios' ? 100 : 80,
+    paddingBottom: Platform.OS === 'ios' ? 120 : 100,
+    justifyContent: 'space-between',
   },
 });
