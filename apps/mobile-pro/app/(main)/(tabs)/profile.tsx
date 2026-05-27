@@ -104,27 +104,6 @@ export default function ProfileScreen() {
     );
   };
 
-  const handleDeleteAccount = () => {
-    Alert.alert(
-      'Suppression de compte',
-      'ATTENTION : Cette action est définitive et toutes vos données professionnelles seront supprimées. Êtes-vous sûr ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Supprimer',
-          style: 'destructive',
-          onPress: () => {
-            Alert.alert(
-              'Confirmer la suppression',
-              'Pour confirmer la suppression définitive de votre compte professionnel, veuillez contacter le support de la clinique.',
-              [{ text: 'Ok', style: 'default' }]
-            );
-          },
-        },
-      ]
-    );
-  };
-
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
@@ -161,6 +140,7 @@ export default function ProfileScreen() {
               icon="cash-outline"
               label="Consultation"
               value={user?.consultationFee ? `${user.consultationFee} ${user.currency ?? 'XAF'}` : '—'}
+              onPress={() => router.push('/(main)/profile/fee-settings' as any)}
             />
           </View>
         </View>
@@ -175,6 +155,25 @@ export default function ProfileScreen() {
           </View>
         </View>
 
+        {/* ── Section: Préférences ── */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Préférences</Text>
+          <View style={styles.sectionCard}>
+            <MenuItem
+              icon="globe-outline"
+              label="Langue"
+              value="Français"
+              onPress={() => router.push('/(main)/profile/language-settings' as any)}
+            />
+            <View style={styles.itemDivider} />
+            <MenuItem
+              icon="notifications-outline"
+              label="Notifications"
+              onPress={() => router.push('/(main)/profile/notifications-settings' as any)}
+            />
+          </View>
+        </View>
+
         {/* ── Section: Sécurité ── */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Sécurité</Text>
@@ -184,11 +183,29 @@ export default function ProfileScreen() {
               label="Modifier le mot de passe"
               onPress={() => router.push('/(main)/profile/change-password' as any)}
             />
+          </View>
+        </View>
+
+        {/* ── Section: Assistance ── */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Assistance</Text>
+          <View style={styles.sectionCard}>
+            <MenuItem
+              icon="help-circle-outline"
+              label="Aide & FAQ"
+              onPress={() => router.push('/(main)/profile/help' as any)}
+            />
             <View style={styles.itemDivider} />
             <MenuItem
-              icon="notifications-outline"
-              label="Notifications"
-              onPress={() => router.push('/(main)/profile/notifications-settings' as any)}
+              icon="chatbubbles-outline"
+              label="Support Technique"
+              onPress={() => router.push('/(main)/profile/support-chat' as any)}
+            />
+            <View style={styles.itemDivider} />
+            <MenuItem
+              icon="document-text-outline"
+              label="Conditions d'Utilisation"
+              onPress={() => router.push('/(main)/profile/terms' as any)}
             />
           </View>
         </View>
@@ -202,7 +219,7 @@ export default function ProfileScreen() {
             <MenuItem
               icon="person-remove-outline"
               label="Supprimer mon compte"
-              onPress={handleDeleteAccount}
+              onPress={() => router.push('/(main)/profile/delete-account' as any)}
               danger
             />
           </View>
