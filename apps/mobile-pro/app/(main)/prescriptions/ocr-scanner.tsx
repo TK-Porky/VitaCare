@@ -44,6 +44,8 @@ export default function OCRScannerScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
   const [capturedPhotoUri, setCapturedPhotoUri] = useState<string | null>(null);
+  const [isSimulatedCamera, setIsSimulatedCamera] = useState(false);
+  const [bypassPermission, setBypassPermission] = useState(false);
 
   const [step, setStep] = useState<'camera' | 'scanning' | 'result'>('camera');
   const [ocrProgress, setOcrProgress] = useState(0);
@@ -95,7 +97,7 @@ export default function OCRScannerScreen() {
   }, [step]);
 
   const handleCapture = async () => {
-    if (cameraRef.current) {
+    if (!isSimulatedCamera && cameraRef.current) {
       try {
         const photo = await cameraRef.current.takePictureAsync({
           quality: 0.85,
@@ -113,6 +115,7 @@ export default function OCRScannerScreen() {
         setStep('scanning');
       }
     } else {
+      setCapturedPhotoUri(null);
       setStep('scanning');
     }
   };
@@ -154,7 +157,7 @@ export default function OCRScannerScreen() {
     );
   }
 
-  if (!permission.granted) {
+  if (!permission.granted && !bypassPermission) {
     return (
       <SafeAreaView style={styles.safe}>
         <StatusBar barStyle="light-content" backgroundColor="#000" />
@@ -181,6 +184,15 @@ export default function OCRScannerScreen() {
               onPress={requestPermission}
               style={styles.permissionBtn}
             />
+            <AppButton
+              label="Tester avec la caméra virtuelle"
+              variant="outline"
+              onPress={() => {
+                setIsSimulatedCamera(true);
+                setBypassPermission(true);
+              }}
+              style={{ ...styles.permissionBtn, marginTop: -4 }}
+            />
           </View>
         </View>
       </SafeAreaView>
@@ -200,17 +212,61 @@ export default function OCRScannerScreen() {
               <Ionicons name="close" size={24} color={colors.white} />
             </TouchableOpacity>
             <Text style={styles.camTitle}>Scanner d'ordonnance</Text>
-            <View style={{ width: 40 }} />
+            <TouchableOpacity
+              onPress={() => setIsSimulatedCamera(!isSimulatedCamera)}
+              style={styles.camModeToggle}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name={isSimulatedCamera ? "videocam" : "videocam-off"}
+                size={22}
+                color={colors.primaryLight}
+              />
+            </TouchableOpacity>
           </View>
 
-          {/* Viewfinder Overlay with Expo Camera View */}
+          {isSimulatedCamera && (
+            <View style={styles.simulatorBanner}>
+              <Ionicons name="sparkles" size={14} color={colors.primaryLight} />
+              <Text style={styles.simulatorBannerText}>
+                Mode Simulateur Actif (Ordonnance Virtuelle Témoin)
+              </Text>
+            </View>
+          )}
+
+          {/* Viewfinder Overlay with Expo Camera View or Virtual Preview */}
           <View style={styles.viewfinderContainer}>
             <View style={styles.viewfinderFrame}>
-              <CameraView
-                ref={cameraRef}
-                style={StyleSheet.absoluteFill}
-                facing="back"
-              />
+              {isSimulatedCamera ? (
+                <View style={styles.virtualFeedContainer}>
+                  <View style={styles.virtualPrescriptionPaper}>
+                    <View>
+                      <Text style={styles.virtualDocName}>Dr. Jean-Claude Mbarga</Text>
+                      <Text style={styles.virtualDocSpecialty}>Généraliste • Ordre N° 1245</Text>
+                      <View style={styles.virtualPaperDivider} />
+                      <Text style={styles.virtualPatientName}>Patient: Pierre Kamto</Text>
+                      <Text style={styles.virtualDate}>Date: 27/05/2026</Text>
+                    </View>
+                    
+                    <View style={styles.virtualRxContainer}>
+                      <Text style={styles.virtualRxSymbol}>Rx</Text>
+                      <Text style={styles.virtualHandwriting}>1. Paracétamol 1000mg</Text>
+                      <Text style={styles.virtualHandwritingSub}>   3 comprimés par jour pendant 5j</Text>
+                      <Text style={styles.virtualHandwriting}>2. Spasfon Lyoc 80mg</Text>
+                      <Text style={styles.virtualHandwritingSub}>   2 cp en cas de crise (max 3/j)</Text>
+                    </View>
+                  </View>
+                </View>
+              ) : (
+                <CameraView
+                  ref={cameraRef}
+                  style={StyleSheet.absoluteFill}
+                  facing="back"
+                  onMountError={() => {
+                    setIsSimulatedCamera(true);
+                  }}
+                />
+              )}
               
               {/* Custom Corners Markers on top of video feed */}
               <View style={styles.cornerTL} />
@@ -220,7 +276,9 @@ export default function OCRScannerScreen() {
               
               <View style={styles.viewfinderOverlay}>
                 <Ionicons name="scan-outline" size={40} color="rgba(255, 255, 255, 0.4)" />
-                <Text style={styles.viewfinderHelper}>Cadrez l'ordonnance papier</Text>
+                <Text style={styles.viewfinderHelper}>
+                  {isSimulatedCamera ? "Ordonnance témoin cadrée" : "Cadrez l'ordonnance papier"}
+                </Text>
               </View>
             </View>
           </View>
@@ -248,11 +306,29 @@ export default function OCRScannerScreen() {
 
           <View style={styles.viewfinderContainer}>
             <View style={[styles.viewfinderFrame, styles.scanningFrame]}>
-              {/* Actual Captured Photo Render */}
+              {/* Actual Captured Photo Render or simulated paper preview */}
               {capturedPhotoUri ? (
                 <Image source={{ uri: capturedPhotoUri }} style={styles.capturedPhoto} />
               ) : (
-                <Ionicons name="document-text" size={140} color="rgba(79, 110, 247, 0.3)" />
+                <View style={styles.virtualFeedContainer}>
+                  <View style={styles.virtualPrescriptionPaper}>
+                    <View>
+                      <Text style={styles.virtualDocName}>Dr. Jean-Claude Mbarga</Text>
+                      <Text style={styles.virtualDocSpecialty}>Généraliste • Ordre N° 1245</Text>
+                      <View style={styles.virtualPaperDivider} />
+                      <Text style={styles.virtualPatientName}>Patient: Pierre Kamto</Text>
+                      <Text style={styles.virtualDate}>Date: 27/05/2026</Text>
+                    </View>
+                    
+                    <View style={styles.virtualRxContainer}>
+                      <Text style={styles.virtualRxSymbol}>Rx</Text>
+                      <Text style={styles.virtualHandwriting}>1. Paracétamol 1000mg</Text>
+                      <Text style={styles.virtualHandwritingSub}>   3 comprimés par jour pendant 5j</Text>
+                      <Text style={styles.virtualHandwriting}>2. Spasfon Lyoc 80mg</Text>
+                      <Text style={styles.virtualHandwritingSub}>   2 cp en cas de crise (max 3/j)</Text>
+                    </View>
+                  </View>
+                </View>
               )}
               
               {/* Horizontal Moving Laser Line */}
@@ -918,5 +994,96 @@ const styles = StyleSheet.create({
   permissionBtn: {
     width: '100%',
     marginTop: 12,
+  },
+  camModeToggle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  simulatorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(79, 110, 247, 0.15)',
+    paddingVertical: 8,
+    gap: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(79, 110, 247, 0.3)',
+  },
+  simulatorBannerText: {
+    fontFamily: fontFamily.semiBold,
+    fontSize: fontSize.xs,
+    color: colors.primaryLight,
+  },
+  virtualFeedContainer: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: '#1E293B',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+  },
+  virtualPrescriptionPaper: {
+    width: '90%',
+    height: '90%',
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    padding: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 3,
+    justifyContent: 'space-between',
+  },
+  virtualDocName: {
+    fontFamily: fontFamily.bold,
+    fontSize: 13,
+    color: colors.primary,
+  },
+  virtualDocSpecialty: {
+    fontFamily: fontFamily.medium,
+    fontSize: 9,
+    color: colors.inkLight,
+    marginTop: -2,
+  },
+  virtualPaperDivider: {
+    height: 1,
+    backgroundColor: '#E2E8F0',
+    marginVertical: 4,
+  },
+  virtualPatientName: {
+    fontFamily: fontFamily.bold,
+    fontSize: 10,
+    color: colors.ink,
+  },
+  virtualDate: {
+    fontFamily: fontFamily.regular,
+    fontSize: 9,
+    color: colors.inkLight,
+    marginTop: -2,
+  },
+  virtualRxContainer: {
+    flex: 1,
+    marginTop: 6,
+  },
+  virtualRxSymbol: {
+    fontFamily: fontFamily.bold,
+    fontSize: 14,
+    color: colors.primary,
+    marginBottom: 2,
+  },
+  virtualHandwriting: {
+    fontFamily: fontFamily.bold,
+    fontSize: 11,
+    color: '#0F172A',
+  },
+  virtualHandwritingSub: {
+    fontFamily: fontFamily.regular,
+    fontSize: 9,
+    color: colors.inkLight,
+    marginBottom: 4,
   },
 });
