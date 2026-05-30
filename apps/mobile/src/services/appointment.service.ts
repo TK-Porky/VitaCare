@@ -59,7 +59,7 @@ export const appointmentService = {
    * Cancel an appointment
    */
   async cancelAppointment(id: string, data: CancelAppointmentRequest): Promise<void> {
-    const res = await apiClient.post(API_ENDPOINTS.APPOINTMENTS.CANCEL(id), data);
+    const res = await apiClient.patch(API_ENDPOINTS.APPOINTMENTS.CANCEL(id), data);
     if (!res.success) throw new Error(res.error ?? "Failed to cancel appointment");
   },
 
@@ -67,7 +67,7 @@ export const appointmentService = {
    * Reschedule an appointment
    */
   async rescheduleAppointment(id: string, data: RescheduleAppointmentRequest): Promise<AppointmentResponse> {
-    const res = await apiClient.post<AppointmentResponse>(API_ENDPOINTS.APPOINTMENTS.RESCHEDULE(id), data);
+    const res = await apiClient.patch<AppointmentResponse>(API_ENDPOINTS.APPOINTMENTS.RESCHEDULE(id), data);
     if (!res.success) throw new Error(res.error ?? "Failed to reschedule appointment");
     return res.data!;
   },
