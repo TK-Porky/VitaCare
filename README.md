@@ -86,4 +86,4 @@ ISC - TK
 
 ## 🤝 Contribution
 
-Les contributions sont les bienvenues ! Veuillez suivre les guidelines du projet.
+Les contributions sont les bienvenues ! Veuillez suivre les [guidelines de développement et de versionnement du projet](GUIDELINES.md).
