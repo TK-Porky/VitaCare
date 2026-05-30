@@ -73,7 +73,11 @@ export default function DashboardScreen() {
           <Text style={styles.headerBrandText}>VitaCare Pro</Text>
         </View>
         <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.headerIconBtn} activeOpacity={0.7}>
+          <TouchableOpacity
+            style={styles.headerIconBtn}
+            activeOpacity={0.7}
+            onPress={() => router.push('/(main)/search' as any)}
+          >
             <Ionicons name="search-outline" size={22} color={colors.inkLight} />
           </TouchableOpacity>
           <TouchableOpacity
@@ -148,6 +152,22 @@ export default function DashboardScreen() {
             </View>
           </View>
         </View>
+
+        {/* OCR Scanner Shortcut Card */}
+        <TouchableOpacity
+          style={styles.ocrShortcutCard}
+          onPress={() => router.push('/(main)/prescriptions/ocr-scanner' as any)}
+          activeOpacity={0.85}
+        >
+          <View style={styles.ocrIconBg}>
+            <Ionicons name="camera-outline" size={20} color={colors.primary} />
+          </View>
+          <View style={{ flex: 1, gap: 2 }}>
+            <Text style={styles.ocrCardTitle}>Numériser ordonnance manuscrite</Text>
+            <Text style={styles.ocrCardDesc}>Capturez une ordonnance papier pour extraire les posologies par IA</Text>
+          </View>
+          <Ionicons name="chevron-forward-outline" size={16} color={colors.inkMuted} />
+        </TouchableOpacity>
 
         {/* Three Stats Cards — Matches Home.png Flame/Pill/Trend stats structure */}
         <View style={styles.statsRow}>
@@ -490,5 +510,38 @@ const styles = StyleSheet.create({
   weekDayLabelActive: {
     fontFamily: fontFamily.bold,
     color: colors.primary,
+  },
+
+  // OCR Scanner Shortcut Card styles
+  ocrShortcutCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 16,
+    padding: 14,
+    gap: 12,
+  },
+  ocrIconBg: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ocrCardTitle: {
+    fontFamily: fontFamily.bold,
+    fontSize: fontSize.sm + 1,
+    color: colors.ink,
+  },
+  ocrCardDesc: {
+    fontFamily: fontFamily.regular,
+    fontSize: fontSize.xs,
+    color: colors.inkLight,
+    lineHeight: 14,
   },
 });

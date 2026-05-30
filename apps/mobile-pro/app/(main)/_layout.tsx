@@ -14,6 +14,11 @@ export default function MainLayout() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="appointments/[id]" />
         <Stack.Screen name="patients/[id]" />
+        <Stack.Screen name="search" options={{ animation: 'fade_from_bottom' }} />
+        <Stack.Screen
+          name="prescriptions/ocr-scanner"
+          options={{ animation: 'fade_from_bottom' }}
+        />
         <Stack.Screen
           name="prescriptions/create"
           options={{ presentation: 'modal', animation: 'slide_from_bottom' }}

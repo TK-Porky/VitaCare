@@ -8,6 +8,7 @@ export { HelperText } from './generics/HelperText';
 // Layout
 export { BottomTabBar } from './layout/BottomTabBar';
 export { ProHeader } from './layout/ProHeader';
+export { ProTopBar } from './layout/ProTopBar';
 
 // Display
 export { AppointmentCard } from './display/AppointmentCard';
