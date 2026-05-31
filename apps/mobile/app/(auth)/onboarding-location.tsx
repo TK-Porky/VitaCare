@@ -131,7 +131,7 @@ export default function OnboardingLocationScreen() {
         />
 
         {/* Map Container */}
-        <div style={styles.mapContainer as any}>
+        <View style={styles.mapContainer}>
           <MapView
             style={styles.map}
             provider={PROVIDER_DEFAULT}
@@ -157,7 +157,7 @@ export default function OnboardingLocationScreen() {
               <ActivityIndicator color={colors.primary} />
             </View>
           )}
-        </div>
+        </View>
 
         <TouchableOpacity style={styles.locationRow} activeOpacity={0.7}>
           <MapPin size={16} color={colors.inkMuted} />

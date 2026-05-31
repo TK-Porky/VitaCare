@@ -13,6 +13,7 @@ import {
   import { apiClient } from "../lib/api.client";
   import { LoginEmailInput, RegisterInput } from "../schemas/auth.schema";
 import { API_ENDPOINTS } from "../types/api-endpoints";
+import type { ApiResponse } from "../types/api-responses";
   
   // ================================================================================== //
   // Types
@@ -31,6 +32,20 @@ import { API_ENDPOINTS } from "../types/api-endpoints";
     email?: string;
     phone?: string;
     avatarUrl?: string;
+  }
+
+  export interface BackendAuthResponse {
+      accessToken: string;
+      refreshToken?: string;
+      patient: UserProfile;
+    }
+
+    export interface BackendAuthResponseWrapper {
+      success: boolean;
+      message: string;
+      data: BackendAuthResponse;
+      statusCode: number;
+      timestamp?: string;
   }
   
   // Auth Result
@@ -112,12 +127,19 @@ import { API_ENDPOINTS } from "../types/api-endpoints";
         const firebaseToken = await getIdToken(credential.user);
         _confirmationResult = null;
     
-        const res = await apiClient.post<AuthResult>(
+        const res = await apiClient.post<BackendAuthResponseWrapper>(
           API_ENDPOINTS.AUTH.LOGIN_PHONE,
           { fullName, firebaseToken } // Send both token and fullName
         );
-        if (!res.success) throw new Error(res.error ?? "Erreur serveur");
-        return res.data!;
+        if (!res.success || !res.data) throw new Error(res.error ?? "Erreur serveur");
+        const payload = res.data.data;
+        return {
+          tokens: {
+            accessToken: payload.accessToken,
+            refreshToken: payload.refreshToken ?? '',
+          },
+          user: payload.patient,
+        };
       } catch (error) {
         throw new Error(mapAuthError(error));
       }
@@ -135,13 +157,20 @@ import { API_ENDPOINTS } from "../types/api-endpoints";
         );
         const firebaseToken = await getIdToken(credential.user);
     
-        const res = await apiClient.post<AuthResult>(
+        const res = await apiClient.post<BackendAuthResponseWrapper>(
           API_ENDPOINTS.AUTH.LOGIN_EMAIL,
           { firebaseToken }
         );
         console.log("Full Response:", res);
-        if (!res.success) throw new Error(res.error ?? "Erreur serveur");
-        return res.data!;
+        if (!res.success || !res.data) throw new Error(res.error ?? "Erreur serveur");
+        const payload = res.data.data;
+        return {
+          tokens: {
+            accessToken: payload.accessToken,
+            refreshToken: payload.refreshToken ?? '',
+          },
+          user: payload.patient,
+        };
       } catch (error) {
         throw new Error(mapAuthError(error));
       }
@@ -163,13 +192,20 @@ import { API_ENDPOINTS } from "../types/api-endpoints";
         );
         const firebaseToken = await getIdToken(credential.user);
     
-        const res = await apiClient.post<AuthResult>(
+        const res = await apiClient.post<BackendAuthResponseWrapper>(
           API_ENDPOINTS.AUTH.REGISTER_EMAIL,
           { fullName: data.fullName, firebaseToken }
         );
         console.log("Full Response:", res);
-        if (!res.success) throw new Error(res.error ?? "Erreur serveur");
-        return res.data!;
+        if (!res.success || !res.data) throw new Error(res.error ?? "Erreur serveur");
+        const payload = res.data.data;
+        return {
+          tokens: {
+            accessToken: payload.accessToken,
+            refreshToken: payload.refreshToken ?? '',
+          },
+          user: payload.patient,
+        };
       } catch (error) {
         throw new Error(mapAuthError(error));
       }

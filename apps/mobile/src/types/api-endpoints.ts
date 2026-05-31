@@ -10,7 +10,7 @@
 // ================================================================================== //
 
 export const API_CONFIG = {
-  BASE_URL: process.env.EXPO_PUBLIC_API_BASE_URL || 'https://api.vitacare.cm',
+  BASE_URL: process.env.EXPO_PUBLIC_API_BASE_URL || 'http://192.168.1.100:8080/api',
   TIMEOUT: 30000,
 } as const;
 
@@ -46,15 +46,16 @@ export const API_ENDPOINTS = {
   },
 
   // ---------------------------------------------------------------------------
-  // Cliniques et professionnels
+  // Cliniques et professionnels (Mapped to Doctors in backend)
   // ---------------------------------------------------------------------------
   CLINICS: {
-    LIST: '/clinics',
-    DETAIL: (id: string) => `/clinics/${id}`,
-    SEARCH: '/clinics/search',
-    AVAILABILITY: (id: string) => `/clinics/${id}/availability`,
-    REVIEWS: (id: string) => `/clinics/${id}/reviews`,
-    CREATE_REVIEW: '/clinics/reviews',
+    LIST: '/doctors',
+    DETAIL: (id: string | number) => `/doctors/${id}`,
+    SEARCH: '/doctors/search',
+    AVAILABILITY: (id: string | number) => `/doctors/${id}/availabilities`,
+    REVIEWS: (id: string | number) => `/doctors/${id}/reviews`,
+    CREATE_REVIEW: (id: string | number) => `/doctors/${id}/reviews`,
+    AVAILABLE_SLOTS: (id: string | number) => `/doctors/${id}/available-slots`,
   },
 
   // ---------------------------------------------------------------------------

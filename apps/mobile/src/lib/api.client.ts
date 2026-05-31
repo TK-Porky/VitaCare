@@ -121,13 +121,20 @@ class ApiClient {
         });
       }
 
-      const data = await response.json();
+      const text = await response.text();
+      let data: any = {};
+      
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (err) {
+        console.warn('[API] Response is not valid JSON:', text);
+      }
 
       return {
         success: response.ok,
         data: response.ok ? data : undefined,
         message: data.message,
-        error: !response.ok ? data.error || data.message : undefined,
+        error: !response.ok ? data.error || data.message || `HTTP Error ${response.status}` : undefined,
         statusCode: response.status,
       };
     } catch (error) {
@@ -153,17 +160,20 @@ class ApiClient {
   // Refresh Token
   // ================================================================================== //
 
-  /**
-   * Handle token refresh
-   * @returns The new access token
-   */
   private async handleTokenRefresh(): Promise<string> {
     const response = await fetch(`${this.baseURL}/auth/patient/refresh`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
     });
-    const data = await response.json();
-    if (response.ok && data.token) return data.token;
+    const text = await response.text();
+    let data: any = {};
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch (err) {
+      console.warn('[API] Refresh response is not valid JSON:', text);
+    }
+    const token = data.token || (data.data && (data.data.accessToken || data.data.token));
+    if (response.ok && token) return token;
     throw new Error('Token refresh failed');
   }
 
@@ -296,13 +306,20 @@ class ApiClient {
         body: formData,
       });
 
-      const data = await response.json();
+      const text = await response.text();
+      let data: any = {};
+      
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (err) {
+        console.warn('[API] Upload response is not valid JSON:', text);
+      }
 
       return {
         success: response.ok,
         data: response.ok ? data : undefined,
         message: data.message,
-        error: !response.ok ? data.error || data.message : undefined,
+        error: !response.ok ? data.error || data.message || `Upload HTTP Error ${response.status}` : undefined,
         statusCode: response.status,
       };
     } catch (error) {
