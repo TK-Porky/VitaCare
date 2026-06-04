@@ -112,6 +112,8 @@ export const StepConfirm = ({ provider, booking, onChangeDate, onChange }: Props
     <ScrollView
       style={styles.scroll}
       showsVerticalScrollIndicator={false}
+      nestedScrollEnabled
+      keyboardShouldPersistTaps="handled"
     >
       {/* ── Appointment summary ─────────────────────────────────────────── */}
       <View style={styles.card}>
