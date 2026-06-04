@@ -63,6 +63,7 @@ export const AppBottomSheet = forwardRef<AppBottomSheetRef, Props>(
         ref={sheetRef}
         index={0}
         snapPoints={defaultSnapPoints}
+        enableDynamicSizing={false}
         onDismiss={onClose}
         enablePanDownToClose={true}
         backdropComponent={renderBackdrop}

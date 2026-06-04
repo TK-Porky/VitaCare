@@ -133,7 +133,11 @@ export const BookingBottomSheet = forwardRef<BookingBottomSheetRef, Props>(
 
     const handleNext = () => {
       if (step < TOTAL_STEPS) {
-        setStep((s) => s + 1);
+        const next = step + 1;
+        setStep(next);
+        // Expand to max snap point when entering the confirmation step
+        // so the full content is immediately accessible without a manual swipe.
+        if (next === TOTAL_STEPS) sheetRef.current?.expand();
       } else {
         sheetRef.current?.close();
         router.push("/booking/bookingSuccess" as never);
