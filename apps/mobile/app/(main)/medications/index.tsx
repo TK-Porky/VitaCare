@@ -5,12 +5,12 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
   Image,
   ImageBackground,
   ActivityIndicator
 } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, fontFamily, fontSize } from "../../../src/themes";
 import { SectionHeader } from "../../../src/components";
 import { AppHeader } from "../../../src/components";

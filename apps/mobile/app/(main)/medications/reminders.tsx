@@ -5,10 +5,10 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  SafeAreaView,
   StatusBar,
   ActivityIndicator
 } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Bell, Plus, ShoppingBag, Pill, Info } from "lucide-react-native";
 import { AppHeader, PrimaryButton } from "../../../src/components";
 import { colors, fontFamily, fontSize } from "../../../src/themes";

@@ -1,14 +1,14 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { 
   View, 
-  FlatList, 
-  StatusBar, 
-  SafeAreaView, 
-  StyleSheet, 
+  FlatList,
+  StatusBar,
+  StyleSheet,
   ActivityIndicator,
   Text,
   ScrollView,
 } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from "expo-router";
 import { AppHeader, ClinicCard, ClinicCardSkeleton } from "../../../src/components";
 import { colors, fontFamily, fontSize } from "../../../src/themes";

@@ -2,11 +2,11 @@ import React, { useMemo, useRef, useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
-  SafeAreaView,
   Platform,
   StatusBar,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { UrlTile, PROVIDER_DEFAULT } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';

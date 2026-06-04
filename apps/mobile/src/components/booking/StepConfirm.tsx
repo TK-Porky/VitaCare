@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
+import { ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fontFamily, fontSize } from '../../themes';
 
