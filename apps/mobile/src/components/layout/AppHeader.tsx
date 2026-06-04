@@ -8,8 +8,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Search, Filter } from "lucide-react-native";
-import { SearchInput } from "../../../src/components";
-import { PrimaryButton } from "../../../src/components";
+import { SearchInput } from '../inputs/SearchInput';
+import { PrimaryButton } from '../buttons/PrimaryButton';
 import { colors, fontFamily, fontSize } from "../../themes";
 
 type Props = {

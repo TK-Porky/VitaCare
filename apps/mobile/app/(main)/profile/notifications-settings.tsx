@@ -3,12 +3,12 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   StatusBar,
   ScrollView,
   Switch,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, fontFamily, fontSize } from '../../../src/themes';
 import { TopBar, HelperText } from '../../../src/components';
 import { useProfile } from '../../../src/hooks';

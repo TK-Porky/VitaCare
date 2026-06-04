@@ -2,10 +2,10 @@ import React, { useRef, useState, useEffect } from "react";
 import {
   StyleSheet,
   ScrollView,
-  SafeAreaView,
   StatusBar,
   View,
 } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from "expo-router";
 import { colors } from "../../../src/themes";
 import {
