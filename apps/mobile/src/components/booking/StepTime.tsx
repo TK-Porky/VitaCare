@@ -1,289 +1,246 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
-  FlatList,
+  ScrollView,
+  TouchableOpacity,
 } from 'react-native';
-import { TouchableOpacity } from 'react-native-gesture-handler';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, fontFamily, fontSize } from '../../themes';
 import { StepLabel } from './StepLabel';
 
-const ITEM_HEIGHT = 48;
-const VISIBLE_ITEMS = 5;
-const PICKER_HEIGHT = ITEM_HEIGHT * VISIBLE_ITEMS;
+// ─── Constants ────────────────────────────────────────────────────────────────
 
+/** Hours 0–23 for 24h format */
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
-const MINUTES = Array.from({ length: 60 }, (_, i) => i);
+
+/** Minutes in 5-minute intervals: 0, 5, 10, …, 55 */
+const MINUTES = Array.from({ length: 12 }, (_, i) => i * 5);
+
+/** Format a number to 2-digit string (e.g. 8 → "08") */
+const pad = (n: number): string => String(n).padStart(2, '0');
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 type Props = {
   selected: string | null;
-  onSelect: (t: string) => void;
+  onSelect: (time: string) => void;
 };
 
-// Reusable drum-roll column
-const PickerColumn = ({
-  items,
-  selectedIndex,
-  onSelect,
-  format,
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+/**
+ * A single selectable chip used in hour/minute grids.
+ */
+const TimeChip = ({
+  label,
+  isSelected,
+  onPress,
 }: {
+  label: string;
+  isSelected: boolean;
+  onPress: () => void;
+}) => (
+  <TouchableOpacity
+    activeOpacity={0.7}
+    onPress={onPress}
+    style={[styles.chip, isSelected && styles.chipSelected]}
+  >
+    <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
+      {label}
+    </Text>
+  </TouchableOpacity>
+);
+
+/**
+ * Grid of chips inside a labelled section.
+ */
+const ChipGrid = ({
+  title,
+  icon,
+  items,
+  selectedValue,
+  onSelect,
+}: {
+  title: string;
+  icon: string;
   items: number[];
-  selectedIndex: number;
-  onSelect: (index: number) => void;
-  format?: (v: number) => string;
-}) => {
-  const scrollRef = useRef<any>(null);
-  const fmt = format ?? ((v: number) => String(v));
-
-  // Sync scroll position only on initial mount or when external index changes
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      scrollRef.current?.scrollToOffset({
-        offset: selectedIndex * ITEM_HEIGHT,
-        animated: false,
-      });
-    }, 0);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const index = Math.round(e.nativeEvent.contentOffset.y / ITEM_HEIGHT);
-    const clamped = Math.max(0, Math.min(index, items.length - 1));
-    if (clamped !== selectedIndex) {
-      onSelect(clamped);
-    }
-  };
-
-  return (
-    <View style={pickerStyles.column}>
-      <View style={pickerStyles.highlight} pointerEvents="none" />
-      <FlatList
-        ref={scrollRef}
-        data={items}
-        keyExtractor={(item) => String(item)}
-        renderItem={({ item, index }) => {
-          const isSelected = index === selectedIndex;
-          return (
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => {
-                onSelect(index);
-                scrollRef.current?.scrollToOffset({
-                  offset: index * ITEM_HEIGHT,
-                  animated: true,
-                });
-              }}
-              style={pickerStyles.item}
-            >
-              <Text
-                style={[
-                  pickerStyles.itemText,
-                  isSelected && pickerStyles.itemTextSelected,
-                ]}
-              >
-                {fmt(item)}
-              </Text>
-            </TouchableOpacity>
-          );
-        }}
-        showsVerticalScrollIndicator={false}
-        snapToInterval={ITEM_HEIGHT}
-        snapToAlignment="center"
-        onMomentumScrollEnd={handleScroll}
-        onScrollEndDrag={handleScroll}
-        nestedScrollEnabled={true}
-        contentContainerStyle={{
-          paddingVertical: ITEM_HEIGHT * 2,
-        }}
-      />
+  selectedValue: number;
+  onSelect: (value: number) => void;
+}) => (
+  <View style={styles.section}>
+    <View style={styles.sectionHeader}>
+      <Ionicons name={icon as never} size={16} color={colors.primary} />
+      <Text style={styles.sectionTitle}>{title}</Text>
     </View>
-  );
-};
+    <View style={styles.chipGrid}>
+      {items.map((value) => (
+        <TimeChip
+          key={value}
+          label={pad(value)}
+          isSelected={value === selectedValue}
+          onPress={() => onSelect(value)}
+        />
+      ))}
+    </View>
+  </View>
+);
+
+// ─── Main component ───────────────────────────────────────────────────────────
 
 export const StepTime = ({ selected, onSelect }: Props) => {
-  // Parse selected back to state if provided
-  const initH = selected ? parseInt(selected.split(':')[0]) : 8;
-  const initM = selected ? parseInt(selected.split(':')[1]) : 0;
-  const initPeriod: 'AM' | 'PM' =
-    selected && parseInt(selected.split(':')[0]) >= 12 ? 'PM' : 'AM';
+  // Parse initial values from the selected string (e.g. "08:30")
+  const parseHour = selected ? parseInt(selected.split(':')[0], 10) : 8;
+  const parseMinute = selected ? parseInt(selected.split(':')[1], 10) : 0;
 
-  const [hourIndex, setHourIndex] = React.useState(HOURS.indexOf(initH));
-  const [minuteIndex, setMinuteIndex] = React.useState(initM);
-  const [period, setPeriod] = React.useState<'AM' | 'PM'>(initPeriod);
+  // Snap parsed minute to nearest 5-minute interval
+  const snappedMinute = Math.round(parseMinute / 5) * 5;
 
-  const confirm = (hIdx: number, mIdx: number) => {
-    const h = HOURS[hIdx];
-    const m = MINUTES[mIdx];
-    onSelect(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
-  };
+  const [hour, setHour] = useState(parseHour);
+  const [minute, setMinute] = useState(snappedMinute >= 60 ? 55 : snappedMinute);
 
-  const displayH = HOURS[hourIndex];
-  const displayM = MINUTES[minuteIndex];
+  const emitTime = useCallback(
+    (h: number, m: number) => {
+      onSelect(`${pad(h)}:${pad(m)}`);
+    },
+    [onSelect],
+  );
+
+  const handleHourSelect = useCallback(
+    (h: number) => {
+      setHour(h);
+      emitTime(h, minute);
+    },
+    [minute, emitTime],
+  );
+
+  const handleMinuteSelect = useCallback(
+    (m: number) => {
+      setMinute(m);
+      emitTime(hour, m);
+    },
+    [hour, emitTime],
+  );
 
   return (
-    <View>
+    <View style={styles.container}>
       <StepLabel number={2} label="Choisissez l'heure" />
 
-      {/* Time display */}
-      <View style={styles.timeDisplay}>
-        <Text style={styles.timeDisplayText}>
-          {String(displayH).padStart(2, '0')}:
-          {String(displayM).padStart(2, '0')}
+      {/* Current selection display */}
+      <View style={styles.displayCard}>
+        <Ionicons name="time-outline" size={22} color={colors.primary} />
+        <Text style={styles.displayTime}>
+          {pad(hour)}:{pad(minute)}
         </Text>
-        {/* <Text style={styles.timePeriodBadge}>{period}</Text> */}
       </View>
 
-      {/* Picker */}
-      <View style={styles.pickerContainer}>
-        <PickerColumn
+      {/* Scrollable grids */}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+        nestedScrollEnabled
+        contentContainerStyle={styles.scrollContent}
+      >
+        <ChipGrid
+          title="Heure"
+          icon="time-outline"
           items={HOURS}
-          selectedIndex={hourIndex}
-          onSelect={(i) => {
-            setHourIndex(i);
-            confirm(i, minuteIndex);
-          }}
-          format={(v) => String(v).padStart(2, '0')}
-        />
-        <Text style={styles.colon}>:</Text>
-        <PickerColumn
-          items={MINUTES}
-          selectedIndex={minuteIndex}
-          onSelect={(i) => {
-            setMinuteIndex(i);
-            confirm(hourIndex, i);
-          }}
-          format={(v) => String(v).padStart(2, '0')}
+          selectedValue={hour}
+          onSelect={handleHourSelect}
         />
 
-        {/* AM / PM 
-        <View style={styles.periodColumn}>
-          {(['AM', 'PM'] as const).map((p) => (
-            <TouchableOpacity
-              key={p}
-              style={[
-                styles.periodBtn,
-                period === p && styles.periodBtnSelected,
-              ]}
-              onPress={() => {
-                setPeriod(p);
-                confirm(hourIndex, minuteIndex);
-              }}
-            >
-              <Text
-                style={[
-                  styles.periodText,
-                  period === p && styles.periodTextSelected,
-                ]}
-              >
-                {p}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-        */}
-      </View>
+        <ChipGrid
+          title="Minutes"
+          icon="timer-outline"
+          items={MINUTES}
+          selectedValue={minute}
+          onSelect={handleMinuteSelect}
+        />
+      </ScrollView>
     </View>
   );
 };
 
-const pickerStyles = StyleSheet.create({
-  column: {
-    width: 72,
-    height: PICKER_HEIGHT,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  highlight: {
-    position: 'absolute',
-    top: ITEM_HEIGHT * 2,
-    left: 0,
-    right: 0,
-    height: ITEM_HEIGHT,
-    backgroundColor: colors.primary + '18', // ~10% opacity
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: colors.primary + '40',
-    zIndex: 1,
-  },
-  item: {
-    height: ITEM_HEIGHT,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  itemText: {
-    fontFamily: fontFamily.semiBold,
-    fontSize: fontSize.xl,
-    color: '#94A3B8',
-  },
-  itemTextSelected: {
-    color: colors.primary,
-    fontFamily: fontFamily.bold,
-    fontSize: fontSize['2xl'],
-  },
-});
+// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  timeDisplay: {
+  container: {
+    flex: 1,
+  },
+
+  // ── Display card ──
+  displayCard: {
     flexDirection: 'row',
-    alignItems: 'baseline',
+    alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    paddingVertical: 20,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    marginBottom: 16,
+    backgroundColor: colors.primary + '0A',
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: colors.primary + '30',
   },
-  timeDisplayText: {
+  displayTime: {
     fontFamily: fontFamily.bold,
     fontSize: fontSize['4xl'],
     color: colors.ink,
-    letterSpacing: 3,
+    letterSpacing: 4,
   },
-  timePeriodBadge: {
-    fontFamily: fontFamily.semiBold,
-    fontSize: fontSize.lg,
-    color: colors.primary,
+
+  // ── Scroll content ──
+  scrollContent: {
+    paddingBottom: 16,
+    gap: 20,
   },
-  pickerContainer: {
+
+  // ── Section (hour / minute) ──
+  section: {
+    gap: 10,
+  },
+  sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 6,
+  },
+  sectionTitle: {
+    fontFamily: fontFamily.semiBold,
+    fontSize: fontSize.sm,
+    color: colors.inkLight,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+
+  // ── Chip grid ──
+  chipGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 16,
-    marginBottom: 8,
   },
-  colon: {
-    fontFamily: fontFamily.bold,
-    fontSize: fontSize['2xl'],
-    color: colors.ink,
-    marginBottom: 4,
-  },
-  periodColumn: {
-    gap: 10,
-    marginLeft: 8,
-  },
-  periodBtn: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+
+  // ── Individual chip ──
+  chip: {
+    width: 52,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
-    backgroundColor: '#FFFFFF',
+    borderColor: colors.border,
+    backgroundColor: colors.white,
   },
-  periodBtnSelected: {
+  chipSelected: {
     backgroundColor: colors.primary,
     borderColor: colors.primary,
   },
-  periodText: {
+  chipText: {
     fontFamily: fontFamily.semiBold,
-    fontSize: fontSize.sm,
-    color: '#94A3B8',
+    fontSize: fontSize.md,
+    color: colors.inkLight,
   },
-  periodTextSelected: {
+  chipTextSelected: {
     color: colors.white,
     fontFamily: fontFamily.bold,
   },
