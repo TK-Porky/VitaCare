@@ -3,11 +3,11 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
-  ScrollView,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  FlatList,
 } from 'react-native';
+import { TouchableOpacity } from 'react-native-gesture-handler';
 import { colors, fontFamily, fontSize } from '../../themes';
 import { StepLabel } from './StepLabel';
 
@@ -35,52 +35,70 @@ const PickerColumn = ({
   onSelect: (index: number) => void;
   format?: (v: number) => string;
 }) => {
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<any>(null);
   const fmt = format ?? ((v: number) => String(v));
 
+  // Sync scroll position only on initial mount or when external index changes
   useEffect(() => {
-    scrollRef.current?.scrollTo({
-      y: selectedIndex * ITEM_HEIGHT,
-      animated: false,
-    });
-  }, [selectedIndex]);
+    const timer = setTimeout(() => {
+      scrollRef.current?.scrollToOffset({
+        offset: selectedIndex * ITEM_HEIGHT,
+        animated: false,
+      });
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
 
-  const handleMomentumEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+  const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const index = Math.round(e.nativeEvent.contentOffset.y / ITEM_HEIGHT);
     const clamped = Math.max(0, Math.min(index, items.length - 1));
-    onSelect(clamped);
+    if (clamped !== selectedIndex) {
+      onSelect(clamped);
+    }
   };
 
   return (
     <View style={pickerStyles.column}>
-      {/* Selection highlight */}
       <View style={pickerStyles.highlight} pointerEvents="none" />
-      <ScrollView
+      <FlatList
         ref={scrollRef}
-        showsVerticalScrollIndicator={false}
-        snapToInterval={ITEM_HEIGHT}
-        decelerationRate="fast"
-        onMomentumScrollEnd={handleMomentumEnd}
-        contentContainerStyle={{
-          paddingVertical: ITEM_HEIGHT * 2, // center first/last items
-        }}
-      >
-        {items.map((val, idx) => {
-          const isSelected = idx === selectedIndex;
+        data={items}
+        keyExtractor={(item) => String(item)}
+        renderItem={({ item, index }) => {
+          const isSelected = index === selectedIndex;
           return (
-            <View key={val} style={pickerStyles.item}>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => {
+                onSelect(index);
+                scrollRef.current?.scrollToOffset({
+                  offset: index * ITEM_HEIGHT,
+                  animated: true,
+                });
+              }}
+              style={pickerStyles.item}
+            >
               <Text
                 style={[
                   pickerStyles.itemText,
                   isSelected && pickerStyles.itemTextSelected,
                 ]}
               >
-                {fmt(val)}
+                {fmt(item)}
               </Text>
-            </View>
+            </TouchableOpacity>
           );
-        })}
-      </ScrollView>
+        }}
+        showsVerticalScrollIndicator={false}
+        snapToInterval={ITEM_HEIGHT}
+        snapToAlignment="center"
+        onMomentumScrollEnd={handleScroll}
+        onScrollEndDrag={handleScroll}
+        nestedScrollEnabled={true}
+        contentContainerStyle={{
+          paddingVertical: ITEM_HEIGHT * 2,
+        }}
+      />
     </View>
   );
 };

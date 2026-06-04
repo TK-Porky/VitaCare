@@ -139,7 +139,7 @@ export default function MedecineScreen({ onReminders }: Props) {
         <TouchableOpacity activeOpacity={0.9} style={styles.heroBannerWrapper}>
           <ImageBackground
             source={{
-              uri: "https://images.unsplash.com/photo-1587854692152-cbe660dbbb88?w=800",
+              uri: "https://www.pharma-gdd.com/media/cache/resolve/slide_original/7508386a20565f5cbc526eee8b3c9f39edeecd576ee90cb3dbb5ce5ac3fe9566b67813d6.jpg",
             }}
             style={styles.heroBanner}
             imageStyle={styles.heroBannerImage}
@@ -148,8 +148,7 @@ export default function MedecineScreen({ onReminders }: Props) {
             <View style={styles.heroBannerOverlay}>
               <Text style={styles.heroTitle}>Espaces Médicaments</Text>
               <Text style={styles.heroSubtitle}>
-                Votre annuaire de médicaments à portée de main. Renseignez-vous
-                gratuitement sur vos produits pharmaceutiques.
+                Découvrez nos médicaments classés par catégorie.
               </Text>
             </View>
           </ImageBackground>
@@ -232,7 +231,7 @@ const styles = StyleSheet.create({
   },
   heroBannerOverlay: {
     backgroundColor: "rgba(10, 30, 20, 0.5)",
-    padding: 20,
+    padding: 8,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
   },

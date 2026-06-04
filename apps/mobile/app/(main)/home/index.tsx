@@ -291,6 +291,8 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.regular,
     fontSize: fontSize.sm,
     color: colors.inkLight,
+    textAlign: "center",
+    paddingVertical: 12,
   },
   statsRow: {
     flexDirection: "row",

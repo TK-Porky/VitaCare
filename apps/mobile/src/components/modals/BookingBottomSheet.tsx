@@ -66,7 +66,7 @@ const DEFAULT_PROVIDER: Provider = {
 
 const DEFAULT_BOOKING: BookingData = {
   date: null,
-  time: null,
+  time: "08:00",
   reason: "",
   paymentMethod: "now",
   paymentProvider: "mobile_money",
@@ -153,7 +153,7 @@ export const BookingBottomSheet = forwardRef<BookingBottomSheetRef, Props>(
         ref={sheetRef}
         snapPoints={["70%", "92%"]}
         onClose={onClose}
-        // pas de `scrollable` — StepConfirm gère son propre scroll
+        scrollable={false}
         containerStyle={styles.sheet}
       >
         {/* Top bar */}
