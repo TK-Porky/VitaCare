@@ -9,6 +9,13 @@ dist/
 web-build/
 expo-env.d.ts
 
+# AI agents
+.agent/
+.cursor/
+.antigravity/
+.gemini/
+.claude/
+
 # Native
 .kotlin/
 *.orig.*

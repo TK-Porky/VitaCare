@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState, useEffect } from 'react';
+import { useMemo, useRef, useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -16,13 +16,11 @@ import {
   FilterBottomSheet,
   FilterBottomSheetRef,
   FilterState,
-  BookingBottomSheet,
-  BookingBottomSheetRef,
 } from '../../../src/components/modals';
 import { SearchBar } from '../../../src/components';
 import { MapMarker } from '../../../src/components';
 import { MapProviderCard } from '../../../src/components';
-import { colors, fontFamily, fontSize } from '../../../src/themes';
+import { colors } from '../../../src/themes';
 import { useMapStore } from '../../../src/store';
 
 // ================================================================================== //
@@ -84,7 +82,6 @@ export default function MapScreen() {
   // ================================================================================== //
   const mapRef = useRef<MapView>(null);
   const filterSheetRef = useRef<FilterBottomSheetRef>(null);
-  const bookingSheetRef = useRef<BookingBottomSheetRef>(null);
 
   // ================================================================================== //
   // States
@@ -205,9 +202,17 @@ export default function MapScreen() {
    * @returns {void}
    */
   const handleReserve = () => {
-    if (selectedClinic) {
-      bookingSheetRef.current?.open();
-    }
+    if (!selectedClinic) return;
+    router.push({
+      pathname: '/booking',
+      params: {
+        providerName: selectedClinic.doctorName,
+        specialty: selectedClinic.specialty,
+        avatarUri: selectedClinic.avatarUri ?? '',
+        priceXCFA: String(selectedClinic.priceXCFA ?? 0),
+        location: `${selectedClinic.clinicName}, ${selectedClinic.location}`,
+      },
+    } as never);
   };
 
   // ================================================================================== //
@@ -304,19 +309,6 @@ export default function MapScreen() {
         onApply={handleApplyFilters}
       />
 
-      {/* ── Booking BottomSheet ── */}
-      {selectedClinic && (
-        <BookingBottomSheet
-          ref={bookingSheetRef}
-          provider={{
-            name: selectedClinic.doctorName,
-            specialty: selectedClinic.specialty,
-            avatarUri: selectedClinic.avatarUri || "",
-            priceXCFA: selectedClinic.priceXCFA || 0,
-            location: selectedClinic.clinicName + ", " + selectedClinic.location,
-          }}
-        />
-      )}
     </View>
   );
 }

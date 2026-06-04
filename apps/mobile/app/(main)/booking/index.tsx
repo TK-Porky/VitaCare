@@ -1,0 +1,345 @@
+import { useState, useCallback } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  StyleSheet,
+  Platform,
+  StatusBar,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+
+import { ProgressBar } from '../../../src/components/booking/ProgressBar';
+import { StepDate } from '../../../src/components/booking/StepDate';
+import { StepTime } from '../../../src/components/booking/StepTime';
+import { StepReason } from '../../../src/components/booking/StepReason';
+import { StepConfirm } from '../../../src/components/booking/StepConfirm';
+import { PrimaryButton } from '../../../src/components/buttons/PrimaryButton';
+import { colors, fontFamily, fontSize } from '../../../src/themes';
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type BookingData = {
+  date: Date | null;
+  time: string | null;
+  reason: string;
+  paymentMethod: 'now' | 'later';
+  paymentProvider: 'mobile_money' | 'orange_money' | 'card';
+};
+
+type Provider = {
+  name: string;
+  specialty: string;
+  avatarUri: string;
+  priceXCFA: number;
+  location: string;
+};
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const TOTAL_STEPS = 4;
+
+const DEFAULT_PROVIDER: Provider = {
+  name: 'Dr. Igriss Kakmo',
+  specialty: 'Gynécologue',
+  avatarUri: 'https://randomuser.me/api/portraits/men/75.jpg',
+  priceXCFA: 5000,
+  location: 'Clinique Wellstar, Bastos, Yaoundé',
+};
+
+const DEFAULT_BOOKING: BookingData = {
+  date: null,
+  time: '08:00',
+  reason: '',
+  paymentMethod: 'now',
+  paymentProvider: 'mobile_money',
+};
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
+export default function BookingScreen() {
+  const router = useRouter();
+  const params = useLocalSearchParams<{
+    providerName?: string;
+    specialty?: string;
+    avatarUri?: string;
+    priceXCFA?: string;
+    location?: string;
+  }>();
+
+  const provider: Provider = {
+    name: params.providerName ?? DEFAULT_PROVIDER.name,
+    specialty: params.specialty ?? DEFAULT_PROVIDER.specialty,
+    avatarUri: params.avatarUri ?? DEFAULT_PROVIDER.avatarUri,
+    priceXCFA: params.priceXCFA ? Number(params.priceXCFA) : DEFAULT_PROVIDER.priceXCFA,
+    location: params.location ?? DEFAULT_PROVIDER.location,
+  };
+
+  const [step, setStep] = useState(1);
+  const [booking, setBooking] = useState<BookingData>(DEFAULT_BOOKING);
+
+  const patchBooking = useCallback((patch: Partial<BookingData>) => {
+    setBooking(prev => ({ ...prev, ...patch }));
+  }, []);
+
+  const canContinue = (): boolean => {
+    if (step === 1) return booking.date !== null;
+    if (step === 2) return booking.time !== null;
+    return true;
+  };
+
+  const handleNext = () => {
+    if (step < TOTAL_STEPS) {
+      setStep(s => s + 1);
+    } else {
+      router.push('/booking/bookingSuccess');
+    }
+  };
+
+  const handleBack = () => {
+    if (step > 1) setStep(s => s - 1);
+    else router.back();
+  };
+
+  const isLastStep = step === TOTAL_STEPS;
+
+  return (
+    <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
+      <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
+
+      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={handleBack}
+          style={styles.headerBack}
+          activeOpacity={0.7}
+          hitSlop={8}
+        >
+          <Ionicons name="chevron-back" size={22} color={colors.ink} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Nouvelle réservation</Text>
+        {/* Spacer to visually center the title */}
+        <View style={styles.headerSpacer} />
+      </View>
+
+      {/* ── Progress ────────────────────────────────────────────────────────── */}
+      <ProgressBar step={step} total={TOTAL_STEPS} />
+
+      {/* ── Provider card ───────────────────────────────────────────────────── */}
+      <View style={styles.providerCard}>
+        <Image source={{ uri: provider.avatarUri }} style={styles.avatar} />
+        <View style={{ flex: 1 }}>
+          <Text style={styles.providerName}>{provider.name}</Text>
+          <Text style={styles.providerSpecialty}>{provider.specialty}</Text>
+        </View>
+      </View>
+
+      {/* ── Date preview (step 1 only, when a date has been selected) ──────── */}
+      {step === 1 && booking.date !== null && (
+        <View style={styles.datePreview}>
+          <Ionicons name="calendar-outline" size={18} color={colors.primary} />
+          <Text style={styles.datePreviewText}>
+            {booking.date.toLocaleDateString('fr-FR', {
+              weekday: 'long',
+              day: 'numeric',
+              month: 'long',
+            })}
+          </Text>
+        </View>
+      )}
+
+      {/* ── Step content ─────────────────────────────────────────────────────
+          flex:1 works correctly on a full page (not inside a BottomSheetView).
+          StepConfirm's ScrollView is naturally bounded by the available height. */}
+      <View style={styles.stepContent}>
+        {step === 1 && (
+          <StepDate
+            selected={booking.date}
+            onSelect={d => patchBooking({ date: d })}
+          />
+        )}
+        {step === 2 && (
+          <StepTime
+            selected={booking.time}
+            onSelect={t => patchBooking({ time: t })}
+          />
+        )}
+        {step === 3 && (
+          <StepReason
+            value={booking.reason}
+            onChange={t => patchBooking({ reason: t })}
+          />
+        )}
+        {step === 4 && (
+          <StepConfirm
+            provider={provider}
+            booking={booking}
+            onChangeDate={() => setStep(1)}
+            onChange={patchBooking}
+          />
+        )}
+      </View>
+
+      {/* ── Footer ──────────────────────────────────────────────────────────── */}
+      <View style={styles.footer}>
+        {step > 1 && !isLastStep && (
+          <TouchableOpacity onPress={handleBack} style={styles.footerBack} hitSlop={8}>
+            <Ionicons name="chevron-back" size={20} color={colors.ink} />
+            <Text style={styles.footerBackText}>Retour</Text>
+          </TouchableOpacity>
+        )}
+        <PrimaryButton
+          label={isLastStep ? 'Confirmer la réservation' : 'Continuer'}
+          variant="solid"
+          size="md"
+          fullWidth={step === 1 || isLastStep}
+          onPress={handleNext}
+          isDisabled={!canContinue()}
+        />
+      </View>
+
+      {isLastStep && (
+        <Text style={styles.terms}>
+          En confirmant, j'accepte les{' '}
+          <Text style={styles.termsLink}>Termes de Réservation.</Text>
+        </Text>
+      )}
+    </SafeAreaView>
+  );
+}
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: colors.white,
+  },
+
+  // ── Header ──
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingBottom: 16,
+  },
+  headerBack: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    fontFamily: fontFamily.bold,
+    fontSize: fontSize.xl,
+    color: colors.ink,
+    letterSpacing: -0.3,
+  },
+  headerSpacer: {
+    width: 36,
+  },
+
+  // ── Provider card ──
+  providerCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.border,
+  },
+  providerName: {
+    fontFamily: fontFamily.bold,
+    fontSize: fontSize.base,
+    color: colors.ink,
+  },
+  providerSpecialty: {
+    fontFamily: fontFamily.regular,
+    fontSize: fontSize.sm,
+    color: colors.inkMuted,
+    marginTop: 2,
+  },
+
+  // ── Date preview ──
+  datePreview: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginHorizontal: 16,
+    marginBottom: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.primary + '40',
+    backgroundColor: colors.primary + '08',
+  },
+  datePreviewText: {
+    fontFamily: fontFamily.medium,
+    fontSize: fontSize.sm,
+    color: colors.primary,
+    textTransform: 'capitalize',
+  },
+
+  // ── Step content ──
+  stepContent: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
+
+  // ── Footer ──
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: Platform.OS === 'ios' ? 0 : 8,
+  },
+  footerBack: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+  },
+  footerBackText: {
+    fontSize: fontSize.md,
+    color: colors.ink,
+    fontFamily: fontFamily.medium,
+  },
+
+  // ── Terms ──
+  terms: {
+    fontFamily: fontFamily.regular,
+    fontSize: fontSize.xs,
+    color: colors.inkMuted,
+    textAlign: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    lineHeight: 18,
+  },
+  termsLink: {
+    color: colors.primary,
+    fontFamily: fontFamily.semiBold,
+  },
+});

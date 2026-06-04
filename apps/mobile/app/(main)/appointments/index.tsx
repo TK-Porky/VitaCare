@@ -1,9 +1,8 @@
-import React, { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import {
   StyleSheet,
   ScrollView,
   StatusBar,
-  View,
 } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from "expo-router";
@@ -13,16 +12,8 @@ import {
   PAST_APPOINTMENTS,
 } from "../../../src/data/mockAppointments";
 import {
-  ProfessionalProviderBottomSheet,
-  ProfessionalProviderBottomSheetRef,
-} from "../../../src/components/modals";
-import {
-  BookingBottomSheet,
-  BookingBottomSheetRef,
-} from "../../../src/components/modals/BookingBottomSheet";
-import {
   AppointmentDetailBottomSheet,
-  AppointmentDetailBottomSheetRef
+  AppointmentDetailBottomSheetRef,
 } from "../../../src/components/modals/";
 import {
   AppHeader,
@@ -36,47 +27,28 @@ import {
 // Main
 // ================================================================================== //
 export default function AppointmentScreen() {
-  // ================================================================================== //
-  // States
-  // ================================================================================== //
-  const [activeTab, setActiveTab] = useState<"upcoming" | "past">("upcoming");
-  const [selectedItem, setSelectedItem] = useState(APPOINTMENTS[0]);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  // ================================================================================== //
-  // Hooks
-  // ================================================================================== //
   const router = useRouter();
-  const profileSheetRef = useRef<ProfessionalProviderBottomSheetRef>(null);
-  const bookingSheetRef = useRef<BookingBottomSheetRef>(null);
   const appointmentRef = useRef<AppointmentDetailBottomSheetRef>(null);
-  
+
+  const [activeTab, setActiveTab] = useState<"upcoming" | "past">("upcoming");
+  const [isLoading, setIsLoading] = useState(true);
+
   const data = activeTab === "upcoming" ? APPOINTMENTS : PAST_APPOINTMENTS;
 
   useEffect(() => {
     setIsLoading(true);
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 800);
+    const timer = setTimeout(() => setIsLoading(false), 800);
     return () => clearTimeout(timer);
   }, [activeTab]);
 
-  // ================================================================================== //
-  // Functions
-  // ================================================================================== //
-  const handleCardPress = (item: typeof APPOINTMENTS[0]) => {
-    setSelectedItem(item);
+  const handleCardPress = (_item: typeof APPOINTMENTS[0]) => {
     appointmentRef.current?.open();
   };
 
   const handleReservation = () => {
-    profileSheetRef.current?.close();
-    setTimeout(() => bookingSheetRef.current?.open(), 300);
+    router.push('/booking' as never);
   };
 
-  // ================================================================================== //
-  // Render
-  // ================================================================================== //
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.primary} />
@@ -114,13 +86,9 @@ export default function AppointmentScreen() {
       <AppointmentDetailBottomSheet
         ref={appointmentRef}
         actionVariant="reschedule"
-        onReschedule={() => console.log('reprogrammer')}
+        onReschedule={handleReservation}
         onCancel={() => console.log('annuler')}
         onShowOnMap={() => console.log('carte')}
-      />
-
-      <BookingBottomSheet
-        ref={bookingSheetRef}
       />
     </SafeAreaView>
   );
