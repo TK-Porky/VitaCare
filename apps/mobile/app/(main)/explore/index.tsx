@@ -16,10 +16,6 @@ import {
   ProfessionalProviderBottomSheet,
   ProfessionalProviderBottomSheetRef,
 } from "../../../src/components/modals/ProfessionalProviderBottomSheet";
-import {
-  BookingBottomSheet,
-  BookingBottomSheetRef,
-} from "../../../src/components/modals/BookingBottomSheet";
 import { useMapStore } from "../../../src/store";
 import { ClinicProviderResponse } from "../../../src/types/api-responses";
 
@@ -45,7 +41,6 @@ export default function ExploreScreen() {
   // Refs
   // ================================================================================== //
   const profileSheetRef = useRef<ProfessionalProviderBottomSheetRef>(null);
-  const bookingSheetRef = useRef<BookingBottomSheetRef>(null);
 
   // ================================================================================== //
   // States
@@ -83,12 +78,19 @@ export default function ExploreScreen() {
    * Handle reservation start
    */
   const handleReservation = (clinic?: ClinicProviderResponse) => {
-    if (clinic) {
-      setSelectedClinic(clinic);
-    }
+    const target = clinic ?? selectedClinic;
+    if (target) setSelectedClinic(target);
     profileSheetRef.current?.close();
-    // Small delay to let the previous sheet close
-    setTimeout(() => bookingSheetRef.current?.open(), 300);
+    router.push({
+      pathname: '/booking',
+      params: target ? {
+        providerName: target.doctorName,
+        specialty: target.specialty,
+        avatarUri: target.avatarUri ?? '',
+        priceXCFA: String(target.priceXCFA ?? 5000),
+        location: `${target.clinicName}, ${target.location}`,
+      } : {},
+    } as never);
   };
 
   /**
@@ -189,19 +191,6 @@ export default function ExploreScreen() {
         />
       )}
 
-      {/* Booking sheet */}
-      {selectedClinic && (
-        <BookingBottomSheet
-          ref={bookingSheetRef}
-          provider={{
-            name: selectedClinic.doctorName,
-            specialty: selectedClinic.specialty,
-            avatarUri: selectedClinic.avatarUri || "",
-            priceXCFA: selectedClinic.priceXCFA || 5000,
-            location: selectedClinic.clinicName + ", " + selectedClinic.location,
-          }}
-        />
-      )}
     </SafeAreaView>
   );
 }

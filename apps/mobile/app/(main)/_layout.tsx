@@ -30,9 +30,15 @@ export default function MainLayout() {
           }}
         />
         <Stack.Screen
+          name="booking/index"
+          options={{
+            animation: "slide_from_right",
+          }}
+        />
+        <Stack.Screen
           name="booking/bookingSuccess"
           options={{
-            presentation: "modal"
+            presentation: "modal",
           }}
         />
       </Stack>
