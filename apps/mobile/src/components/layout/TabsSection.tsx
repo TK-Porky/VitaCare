@@ -54,7 +54,6 @@ export function TabsSection({ activeTab, onTabChange }: TabsSectionProps) {
 const styles = StyleSheet.create({
   tabsContainer: {
     flexDirection: 'row',
-    marginTop: 4,
     backgroundColor: colors.white,
     shadowColor: colors.border,
     shadowOffset: { width: 0, height: 2 },

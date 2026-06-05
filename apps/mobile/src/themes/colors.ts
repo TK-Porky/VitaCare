@@ -19,8 +19,9 @@ export const colors = {
   
     // Backgrounds
     white: '#FFFFFF',
-    surface: '#FAFAFA',
-    border: '#F5F4F5',
+    ltsurface: '#FAFAFA',
+    surface: '#F5F4F5',
+    border: '#E5E4E7',
   
     // Semantic
     error: '#FF3B30',

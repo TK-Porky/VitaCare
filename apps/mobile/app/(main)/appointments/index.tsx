@@ -98,7 +98,7 @@ export default function AppointmentScreen() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
   },
   scrollContent: {
     paddingHorizontal: 12,
