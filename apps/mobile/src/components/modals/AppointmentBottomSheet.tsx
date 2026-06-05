@@ -6,8 +6,9 @@ import {
   Image,
   TouchableOpacity,
   Alert,
-  Share,
 } from 'react-native';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
 import { Ionicons } from '@expo/vector-icons';
 import { AppBottomSheet, AppBottomSheetRef } from '../generics';
 import { PrimaryButton } from '../buttons';
@@ -99,56 +100,195 @@ const formatPrice = (n: number): string =>
     .toString()
     .replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 
-/** Generates a plain-text appointment ticket for sharing. */
-function buildTicketText(appt: Appointment, currency: string): string {
-  const sep = '─────────────────────────────────';
-  const statusLabel = STATUS_CONFIG[appt.status].label;
-
-  const invoiceBlock = appt.invoiceLines
+/** Builds a styled HTML ticket ready for PDF rendering via expo-print. */
+function buildTicketHTML(appt: Appointment, currency: string): string {
+  const statusCfg   = STATUS_CONFIG[appt.status];
+  const invoiceRows = appt.invoiceLines
     .map(l => {
       const sign   = l.isDiscount ? '-' : '';
-      const amount = `${sign}${formatPrice(l.amount)} ${currency}`;
-      return `${l.label.padEnd(20)}${amount.padStart(14)}`;
+      const amount = `${sign}${formatPrice(l.amount)}&nbsp;${currency}`;
+      const style  = l.isDiscount ? 'color:#00C853;font-weight:600;' : '';
+      return `
+        <tr>
+          <td style="padding:6px 0;color:#64748B;font-size:13px;">${l.label}</td>
+          <td style="padding:6px 0;text-align:right;font-size:13px;${style}">${amount}</td>
+        </tr>`;
     })
-    .join('\n');
+    .join('');
 
-  const totalLine = `Total${' '.repeat(15)}${formatPrice(appt.total).padStart(14)} ${currency}`;
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;background:#F1F5F9;padding:24px;}
+    .ticket{
+      max-width:400px;margin:0 auto;
+      background:#FFFFFF;border-radius:24px;
+      overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.10);
+    }
 
-  return [
-    '╔══════════════════════════════════╗',
-    '║      VITACARE — Ticket de RDV    ║',
-    '╚══════════════════════════════════╝',
-    '',
-    `📋  ${appt.title}`,
-    `✅  Statut : ${statusLabel}`,
-    '',
-    sep,
-    `👨‍⚕️  ${appt.doctorName}`,
-    `    ${appt.specialty}`,
-    sep,
-    '',
-    '📝  Motif',
-    `    ${appt.reason}`,
-    '',
-    '📅  Date & Heure',
-    `    ${appt.dateTime}`,
-    '',
-    '📍  Lieu',
-    `    ${appt.clinicName} ${appt.locationSuffix}`,
-    '',
-    '💳  Méthode de paiement',
-    `    ${appt.paymentMethod}`,
-    '',
-    sep,
-    'FACTURE',
-    sep,
-    invoiceBlock,
-    sep,
-    totalLine,
-    sep,
-    '',
-    `Généré le ${new Date().toLocaleDateString('fr-FR')} via VitaCare`,
-  ].join('\n');
+    /* ── Header gradient ── */
+    .header{
+      background:linear-gradient(135deg,#43F04A 0%,#2ADB6F 40%,#11C793 100%);
+      padding:28px 24px 24px;color:#fff;
+    }
+    .logo{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;opacity:.85;}
+    .visit-title{font-size:28px;font-weight:800;letter-spacing:-0.5px;margin-top:8px;}
+    .status-pill{
+      display:inline-flex;align-items:center;gap:6px;
+      background:rgba(255,255,255,.25);border-radius:999px;
+      padding:5px 14px;font-size:12px;font-weight:600;margin-top:12px;
+    }
+    .status-dot{width:7px;height:7px;border-radius:50%;background:#fff;display:inline-block;}
+    .total-row{
+      display:flex;justify-content:space-between;align-items:flex-end;
+      margin-top:16px;
+    }
+    .total-label{font-size:11px;opacity:.75;}
+    .total-amount{font-size:22px;font-weight:800;letter-spacing:-0.3px;}
+
+    /* ── Doctor card ── */
+    .doctor{
+      display:flex;align-items:center;gap:14px;
+      padding:18px 24px;border-bottom:1px solid #F1F5F9;
+    }
+    .doctor-avatar{
+      width:52px;height:52px;border-radius:26px;
+      background:#E2E8F0;border:2px solid #F1F5F9;
+      object-fit:cover;
+    }
+    .doctor-name{font-size:15px;font-weight:700;color:#1B181B;}
+    .doctor-specialty{font-size:13px;color:#8896B0;margin-top:3px;}
+
+    /* ── Perforation ── */
+    .perf{
+      display:flex;align-items:center;
+      padding:0;margin:0;height:24px;overflow:hidden;
+    }
+    .perf-circle{
+      width:24px;height:24px;border-radius:50%;
+      background:#F1F5F9;flex-shrink:0;margin:-12px;
+    }
+    .perf-line{
+      flex:1;border-top:2px dashed #E2E8F0;margin:0 12px;
+    }
+
+    /* ── Detail sections ── */
+    .details{padding:20px 24px 8px;}
+    .detail-item{margin-bottom:16px;}
+    .detail-label{
+      font-size:10px;font-weight:600;color:#94A3B8;
+      text-transform:uppercase;letter-spacing:0.7px;margin-bottom:5px;
+    }
+    .detail-value{font-size:14px;font-weight:500;color:#1B181B;line-height:1.5;}
+
+    /* ── Invoice ── */
+    .invoice{
+      background:#F8FAFC;margin:4px 16px 16px;
+      border-radius:16px;padding:18px;
+    }
+    .invoice-title{
+      font-size:10px;font-weight:700;color:#94A3B8;
+      text-transform:uppercase;letter-spacing:0.7px;margin-bottom:12px;
+    }
+    table{width:100%;border-collapse:collapse;}
+    .total-sep{height:1px;background:#E2E8F0;margin:10px 0;}
+    .total-tr td{padding:8px 0;font-size:16px;font-weight:800;}
+    .total-tr .td-label{color:#1B181B;}
+    .total-tr .td-amount{color:#11C793;text-align:right;}
+
+    /* ── Footer ── */
+    .footer{
+      text-align:center;padding:16px 24px;
+      font-size:11px;color:#94A3B8;
+      border-top:1px solid #F1F5F9;line-height:1.7;
+    }
+    .footer strong{color:#11C793;}
+  </style>
+</head>
+<body>
+  <div class="ticket">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="logo">VitaCare</div>
+      <div class="visit-title">${appt.title}</div>
+      <div class="status-pill">
+        <span class="status-dot" style="background:${statusCfg.color};"></span>
+        ${statusCfg.label}
+      </div>
+      <div class="total-row">
+        <div>
+          <div class="total-label">Total estimé</div>
+          <div class="total-amount">${formatPrice(appt.total)}&nbsp;${currency}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Doctor -->
+    <div class="doctor">
+      <img class="doctor-avatar" src="${appt.doctorAvatarUri}" alt="avatar"/>
+      <div>
+        <div class="doctor-name">${appt.doctorName}</div>
+        <div class="doctor-specialty">${appt.specialty}</div>
+      </div>
+    </div>
+
+    <!-- Perforation -->
+    <div class="perf">
+      <div class="perf-circle"></div>
+      <div class="perf-line"></div>
+      <div class="perf-circle"></div>
+    </div>
+
+    <!-- Details -->
+    <div class="details">
+      <div class="detail-item">
+        <div class="detail-label">📝 Motif</div>
+        <div class="detail-value">${appt.reason}</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">📅 Date &amp; Heure</div>
+        <div class="detail-value">${appt.dateTime}</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">📍 Lieu</div>
+        <div class="detail-value"><strong>${appt.clinicName}</strong> ${appt.locationSuffix}</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">💳 Méthode de paiement</div>
+        <div class="detail-value">${appt.paymentMethod}</div>
+      </div>
+    </div>
+
+    <!-- Invoice -->
+    <div class="invoice">
+      <div class="invoice-title">Facture</div>
+      <table>
+        <tbody>
+          ${invoiceRows}
+          <tr><td colspan="2"><div class="total-sep"></div></td></tr>
+          <tr class="total-tr">
+            <td class="td-label">Total</td>
+            <td class="td-amount">${formatPrice(appt.total)}&nbsp;${currency}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <strong>VitaCare</strong> — Santé Intelligente au Cameroun<br/>
+      Généré le ${new Date().toLocaleDateString('fr-FR')}<br/>
+      Ce ticket fait foi pour votre rendez-vous médical.
+    </div>
+
+  </div>
+</body>
+</html>`;
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -167,8 +307,21 @@ const InfoRow = ({
   children: React.ReactNode;
 }) => (
   <View style={styles.infoRow}>
-    <Ionicons name={icon} size={16} color={colors.primary} />
+    <Ionicons name={icon} size={20} color={colors.ink} />
     <View style={styles.infoRowContent}>{children}</View>
+  </View>
+);
+
+const PaymentRow = ({
+  icon,
+  label,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+}) => (
+  <View style={styles.paymentMethod}>
+    <Ionicons name={icon} size={22} color={colors.ink} />
+    <Text style={styles.paymentMethodText}>{label}</Text>
   </View>
 );
 
@@ -236,15 +389,20 @@ export const AppointmentDetailBottomSheet = forwardRef<AppointmentDetailBottomSh
     };
 
     const handleDownload = async () => {
-      const text = buildTicketText(appointment, currency);
       try {
-        await Share.share({
-          title: `${appointment.title} — VitaCare`,
-          message: text,
-        });
+        const html = buildTicketHTML(appointment, currency);
+        const { uri } = await Print.printToFileAsync({ html, base64: false });
+        const canShare = await Sharing.isAvailableAsync();
+        if (canShare) {
+          await Sharing.shareAsync(uri, {
+            mimeType: 'application/pdf',
+            dialogTitle: `Ticket — ${appointment.title}`,
+            UTI: 'com.adobe.pdf',
+          });
+        }
         onDownload?.();
       } catch {
-        // User dismissed the share sheet — no action needed
+        Alert.alert('Erreur', 'Impossible de générer le ticket PDF.');
       }
     };
 
@@ -338,11 +496,12 @@ export const AppointmentDetailBottomSheet = forwardRef<AppointmentDetailBottomSh
 
         {/* ── Méthodes de paiements ─────────────────────────────────────── */}
         <SectionTitle>Méthodes de paiements</SectionTitle>
-        <InfoRow icon="card-outline">
-          <Text style={styles.bodyText}>{appointment.paymentMethod}</Text>
-        </InfoRow>
 
-        <Divider />
+        {appointment.paymentMethod === 'Espèces' ? (
+          <PaymentRow icon="cash-outline" label={appointment.paymentMethod} />
+        ) : (
+          <PaymentRow icon="card-outline" label={appointment.paymentMethod} />
+        )}
 
         {/* ── Facture ───────────────────────────────────────────────────── */}
         <SectionTitle>Facture</SectionTitle>
@@ -377,21 +536,21 @@ export const AppointmentDetailBottomSheet = forwardRef<AppointmentDetailBottomSh
                 variant="solid"
                 size="md"
                 onPress={handleReschedule}
-                style={styles.mainActionBtn}
               />
               <GrayButton
                 label="Annuler"
                 onPress={handleCancel}
-                style={styles.cancelBtn}
+                style={{ flex: 0.75  }}
               />
             </>
           ) : (
             <PrimaryButton
               label="Réserver à nouveau"
               variant="solid"
+              fullWidth
               size="md"
               onPress={handleBookAgain}
-              style={styles.mainActionBtn}
+              style={{ flex: 0.95 }}
             />
           )}
 
@@ -428,12 +587,9 @@ const styles = StyleSheet.create({
 
   // ── Doctor & Status Card ──
   doctorStatusCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.ltsurface,
     borderRadius: 16,
     padding: 16,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   cardDivider: {
     height: 1,
@@ -513,13 +669,35 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
 
+  // ── Payment method ──
+  paymentMethod: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 14,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 10,
+  },
+  paymentMethodIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.border,
+  },
+  paymentMethodText: {
+    fontFamily: fontFamily.semiBold,
+    fontSize: fontSize.md,
+    color: colors.ink,
+  },
+
   // ── Section title ──
   sectionTitle: {
-    fontFamily: fontFamily.semiBold,
-    fontSize: fontSize.sm,
-    color: colors.inkMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    fontFamily: fontFamily.bold,
+    fontSize: fontSize.base,
+    color: colors.ink,
+    textTransform: 'capitalize',
     marginTop: 20,
     marginBottom: 10,
   },
@@ -527,9 +705,8 @@ const styles = StyleSheet.create({
   // ── Body text ──
   bodyText: {
     fontFamily: fontFamily.regular,
-    fontSize: fontSize.base,
+    fontSize: fontSize.md,
     color: colors.ink,
-    lineHeight: 22,
   },
   boldInline: {
     fontFamily: fontFamily.semiBold,
@@ -541,7 +718,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 10,
-    marginBottom: 6,
+    marginVertical: 6,
   },
   infoRowContent: {
     flex: 1,
@@ -570,13 +747,13 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   invoiceLabel: {
-    fontFamily: fontFamily.regular,
-    fontSize: fontSize.sm,
-    color: colors.inkMuted,
+    fontFamily: fontFamily.medium,
+    fontSize: fontSize.md,
+    color: colors.ink,
   },
   invoiceAmount: {
-    fontFamily: fontFamily.medium,
-    fontSize: fontSize.sm,
+    fontFamily: fontFamily.bold,
+    fontSize: fontSize.md,
     color: colors.ink,
   },
   invoiceAmountDiscount: {
@@ -606,21 +783,15 @@ const styles = StyleSheet.create({
   // ── Actions ──
   actionsRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 10,
     marginTop: 28,
     marginBottom: 8,
-  },
-  mainActionBtn: {
-    flex: 1,
-  },
-  cancelBtn: {
-    flex: 1,
   },
   downloadBtn: {
     width: 50,
     height: 50,
-    borderRadius: 14,
+    borderRadius: 999,
     paddingHorizontal: 0,
     paddingVertical: 0,
   },

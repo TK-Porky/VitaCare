@@ -16,12 +16,36 @@ interface AppointmentCardProps {
   onPress?: () => void;
 }
 
+const getStatusIconAndColor = (status: Appointment['status']): { icon: keyof typeof Ionicons.glyphMap; color: string } | null => {
+  switch (status) {
+    case 'confirmed':
+      return { icon: 'checkmark', color: colors.success };
+    case 'paid':
+      return { icon: 'checkmark', color: colors.info };
+    case 'pending':
+      return { icon: 'time', color: colors.warning };
+    case 'cancelled':
+      return { icon: 'close', color: colors.error };
+    default:
+      return null;
+  }
+};
+
 export function AppointmentCard({ item, onPress }: AppointmentCardProps) {
+  const statusInfo = getStatusIconAndColor(item.status);
+
   return (
     <TouchableOpacity style={styles.card} onPress={onPress}>
       {/* Header: avatar + name + badge */}
       <View style={styles.cardHeader}>
-        <Image source={{ uri: item.doctorAvatarUri || item.avatarUri }} style={styles.avatar} />
+        <View style={styles.avatarContainer}>
+          <Image source={{ uri: item.doctorAvatarUri || item.avatarUri }} style={styles.avatar} />
+          {statusInfo && (
+            <View style={[styles.statusDot, { backgroundColor: statusInfo.color }]}>
+              <Ionicons name={statusInfo.icon} size={10} color={colors.white} />
+            </View>
+          )}
+        </View>
         <View style={styles.cardHeaderText}>
           <Text style={styles.doctorName}>{item.doctorName}</Text>
           <Text style={styles.motif} numberOfLines={1}>{item.motif}</Text>
@@ -32,9 +56,6 @@ export function AppointmentCard({ item, onPress }: AppointmentCardProps) {
           </View>
         )}
       </View>
-
-      {/* Divider */}
-      <View style={styles.cardDivider} />
 
       {/* Clinic info */}
       <View style={styles.clinicRow}>
@@ -75,9 +96,6 @@ export function AppointmentCardSkeleton() {
         <Skeleton width={70} height={24} borderRadius={12} />
       </View>
 
-      {/* Divider */}
-      <View style={styles.cardDivider} />
-
       {/* Clinic info */}
       <View style={{ gap: 6 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -108,7 +126,7 @@ export function AppointmentCardSkeleton() {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.white,
     borderRadius: 18,
     padding: 16,
     marginBottom: 12,
@@ -122,12 +140,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    marginBottom: 12,
+    marginBottom: 16,
+  },
+  avatarContainer: {
+    position: 'relative',
   },
   avatar: {
     width: 42,
     height: 42,
     borderRadius: 21,
+  },
+  statusDot: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: colors.white,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   cardHeaderText: {
     flex: 1,
