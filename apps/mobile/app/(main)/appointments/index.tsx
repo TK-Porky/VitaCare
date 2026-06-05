@@ -85,10 +85,11 @@ export default function AppointmentScreen() {
 
       <AppointmentDetailBottomSheet
         ref={appointmentRef}
-        actionVariant="reschedule"
+        actionVariant={activeTab === 'upcoming' ? 'reschedule' : 'book_again'}
         onReschedule={handleReservation}
-        onCancel={() => console.log('annuler')}
-        onShowOnMap={() => console.log('carte')}
+        onBookAgain={handleReservation}
+        onCancel={() => console.log('RDV annulé')}
+        onShowOnMap={() => router.push('/home/map' as never)}
       />
     </SafeAreaView>
   );
