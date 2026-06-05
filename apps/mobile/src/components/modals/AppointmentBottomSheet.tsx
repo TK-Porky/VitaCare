@@ -5,6 +5,8 @@ import {
   StyleSheet,
   Image,
   TouchableOpacity,
+  Alert,
+  Share,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppBottomSheet, AppBottomSheetRef } from '../generics';
@@ -74,20 +76,20 @@ const DEFAULT_APPOINTMENT: Appointment = {
     'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?w=600',
   paymentMethod: 'Payer à la consultation',
   invoiceLines: [
-    { label: 'Consultation',  amount: 5000 },
+    { label: 'Consultation',    amount: 5000 },
     { label: 'Paiement In-app', amount: -150, isDiscount: true },
-    { label: 'Prix Estimé',   amount: 5000 },
-    { label: 'Taxes',         amount: 100  },
+    { label: 'Prix Estimé',     amount: 5000 },
+    { label: 'Taxes',           amount: 100 },
   ],
   total: 4950,
   currency: 'XCFA',
 };
 
-const STATUS_CONFIG: Record<AppointmentStatus,{ label: string; color: string }> = {
-  confirmed: { label: 'Confirmé',   color: '#1A7F3C' },
-  pending:   { label: 'En attente', color: '#B45309' },
-  paid:      { label: 'Payé',       color: '#1A7F3C' },
-  cancelled: { label: 'Annulé',     color: '#B91C1C' },
+const STATUS_CONFIG: Record<AppointmentStatus, { label: string; bg: string; color: string }> = {
+  confirmed: { label: 'Confirmé',   bg: '#E8FFF0', color: '#1A7F3C' },
+  pending:   { label: 'En attente', bg: '#FFF8ED', color: '#B45309' },
+  paid:      { label: 'Payé',       bg: '#E8FFF0', color: '#1A7F3C' },
+  cancelled: { label: 'Annulé',     bg: '#FFF0F0', color: '#B91C1C' },
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -95,7 +97,59 @@ const STATUS_CONFIG: Record<AppointmentStatus,{ label: string; color: string }> 
 const formatPrice = (n: number): string =>
   Math.abs(n)
     .toString()
-    .replace(/\B(?=(\d{3})+(?!\d))/g, '\u202F');
+    .replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+
+/** Generates a plain-text appointment ticket for sharing. */
+function buildTicketText(appt: Appointment, currency: string): string {
+  const sep = '─────────────────────────────────';
+  const statusLabel = STATUS_CONFIG[appt.status].label;
+
+  const invoiceBlock = appt.invoiceLines
+    .map(l => {
+      const sign   = l.isDiscount ? '-' : '';
+      const amount = `${sign}${formatPrice(l.amount)} ${currency}`;
+      return `${l.label.padEnd(20)}${amount.padStart(14)}`;
+    })
+    .join('\n');
+
+  const totalLine = `Total${' '.repeat(15)}${formatPrice(appt.total).padStart(14)} ${currency}`;
+
+  return [
+    '╔══════════════════════════════════╗',
+    '║      VITACARE — Ticket de RDV    ║',
+    '╚══════════════════════════════════╝',
+    '',
+    `📋  ${appt.title}`,
+    `✅  Statut : ${statusLabel}`,
+    '',
+    sep,
+    `👨‍⚕️  ${appt.doctorName}`,
+    `    ${appt.specialty}`,
+    sep,
+    '',
+    '📝  Motif',
+    `    ${appt.reason}`,
+    '',
+    '📅  Date & Heure',
+    `    ${appt.dateTime}`,
+    '',
+    '📍  Lieu',
+    `    ${appt.clinicName} ${appt.locationSuffix}`,
+    '',
+    '💳  Méthode de paiement',
+    `    ${appt.paymentMethod}`,
+    '',
+    sep,
+    'FACTURE',
+    sep,
+    invoiceBlock,
+    sep,
+    totalLine,
+    sep,
+    '',
+    `Généré le ${new Date().toLocaleDateString('fr-FR')} via VitaCare`,
+  ].join('\n');
+}
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -113,14 +167,14 @@ const InfoRow = ({
   children: React.ReactNode;
 }) => (
   <View style={styles.infoRow}>
-    <Ionicons name={icon} size={16} color={colors.inkMuted} />
+    <Ionicons name={icon} size={16} color={colors.primary} />
     <View style={styles.infoRowContent}>{children}</View>
   </View>
 );
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export const AppointmentDetailBottomSheet = forwardRef<AppointmentDetailBottomSheetRef,Props>(
+export const AppointmentDetailBottomSheet = forwardRef<AppointmentDetailBottomSheetRef, Props>(
   (
     {
       appointment = DEFAULT_APPOINTMENT,
@@ -142,11 +196,59 @@ export const AppointmentDetailBottomSheet = forwardRef<AppointmentDetailBottomSh
       close: () => sheetRef.current?.close(),
     }));
 
-    const currency = appointment.currency ?? 'XCFA';
-    const fmt = (n: number) =>
-      `${formatPrice(n)} ${currency}`;
+    const currency   = appointment.currency ?? 'XCFA';
+    const fmt        = (n: number) => `${formatPrice(n)} ${currency}`;
+    const statusCfg  = STATUS_CONFIG[appointment.status];
 
-    const statusCfg = STATUS_CONFIG[appointment.status];
+    // ── Action handlers (always close sheet first) ───────────────────────────
+
+    const handleReschedule = () => {
+      sheetRef.current?.close();
+      onReschedule?.();
+    };
+
+    const handleCancel = () => {
+      Alert.alert(
+        'Annuler le rendez-vous',
+        'Êtes-vous sûr de vouloir annuler ce rendez-vous ? Cette action est irréversible.',
+        [
+          { text: 'Garder le RDV', style: 'cancel' },
+          {
+            text: 'Confirmer l\'annulation',
+            style: 'destructive',
+            onPress: () => {
+              sheetRef.current?.close();
+              onCancel?.();
+            },
+          },
+        ],
+      );
+    };
+
+    const handleBookAgain = () => {
+      sheetRef.current?.close();
+      onBookAgain?.();
+    };
+
+    const handleShowOnMap = () => {
+      sheetRef.current?.close();
+      onShowOnMap?.();
+    };
+
+    const handleDownload = async () => {
+      const text = buildTicketText(appointment, currency);
+      try {
+        await Share.share({
+          title: `${appointment.title} — VitaCare`,
+          message: text,
+        });
+        onDownload?.();
+      } catch {
+        // User dismissed the share sheet — no action needed
+      }
+    };
+
+    // ── Render ───────────────────────────────────────────────────────────────
 
     return (
       <AppBottomSheet
@@ -165,7 +267,7 @@ export const AppointmentDetailBottomSheet = forwardRef<AppointmentDetailBottomSh
           <TouchableOpacity
             style={styles.doctorRow}
             onPress={onDoctorPress}
-            activeOpacity={0.7}
+            activeOpacity={0.75}
           >
             <Image
               source={{ uri: appointment.doctorAvatarUri }}
@@ -180,16 +282,19 @@ export const AppointmentDetailBottomSheet = forwardRef<AppointmentDetailBottomSh
 
           <View style={styles.cardDivider} />
 
-          {/* Status + Total */}
+          {/* Status badge + Total */}
           <View style={styles.statusTotalRow}>
-            <View>
-              <Text style={styles.metaLabel}>Statut</Text>
-              <Text style={[styles.statusValue, { color: statusCfg.color }]}>
+            <View
+              style={[styles.statusBadge, { backgroundColor: statusCfg.bg }]}
+            >
+              <View style={[styles.statusDot, { backgroundColor: statusCfg.color }]} />
+              <Text style={[styles.statusLabel, { color: statusCfg.color }]}>
                 {statusCfg.label}
               </Text>
             </View>
+
             <View style={styles.totalBlock}>
-              <Text style={styles.metaLabel}>Total</Text>
+              <Text style={styles.totalCaption}>Total estimé</Text>
               <Text style={styles.totalValue}>{fmt(appointment.total)}</Text>
             </View>
           </View>
@@ -215,25 +320,25 @@ export const AppointmentDetailBottomSheet = forwardRef<AppointmentDetailBottomSh
         </InfoRow>
 
         {/* Clinic image */}
-        {appointment.clinicImageUri && (
+        {appointment.clinicImageUri ? (
           <Image
             source={{ uri: appointment.clinicImageUri }}
             style={styles.clinicImage}
             resizeMode="cover"
           />
-        )}
+        ) : null}
 
         {/* Map button */}
         <GrayButton
           label="Montrer sur la Carte"
           icon="map-outline"
-          onPress={onShowOnMap}
+          onPress={handleShowOnMap}
           style={styles.mapBtn}
         />
 
         {/* ── Méthodes de paiements ─────────────────────────────────────── */}
         <SectionTitle>Méthodes de paiements</SectionTitle>
-        <InfoRow icon="person-circle-outline">
+        <InfoRow icon="card-outline">
           <Text style={styles.bodyText}>{appointment.paymentMethod}</Text>
         </InfoRow>
 
@@ -271,13 +376,12 @@ export const AppointmentDetailBottomSheet = forwardRef<AppointmentDetailBottomSh
                 label="Réprogrammer"
                 variant="solid"
                 size="md"
-                onPress={onReschedule}
-                style={styles.rescheduleBtn}
+                onPress={handleReschedule}
+                style={styles.mainActionBtn}
               />
-
               <GrayButton
                 label="Annuler"
-                onPress={onCancel}
+                onPress={handleCancel}
                 style={styles.cancelBtn}
               />
             </>
@@ -286,19 +390,18 @@ export const AppointmentDetailBottomSheet = forwardRef<AppointmentDetailBottomSh
               label="Réserver à nouveau"
               variant="solid"
               size="md"
-              onPress={onBookAgain}
-              style={styles.bookAgainBtn}
+              onPress={handleBookAgain}
+              style={styles.mainActionBtn}
             />
           )}
 
           <GrayButton
             label=""
             icon="download-outline"
-            onPress={onDownload}
+            onPress={handleDownload}
             style={styles.downloadBtn}
           />
         </View>
-
       </AppBottomSheet>
     );
   },
@@ -313,26 +416,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
 
-  // Title
+  // ── Title ──
   visitTitle: {
     fontFamily: fontFamily.bold,
     fontSize: fontSize['2xl'],
     color: colors.ink,
     marginTop: 4,
-    marginBottom: 16,
+    marginBottom: 20,
+    letterSpacing: -0.3,
   },
 
-  // Doctor & Status Card
+  // ── Doctor & Status Card ──
   doctorStatusCard: {
     backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
-    marginBottom: 16,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   cardDivider: {
     height: 1,
     backgroundColor: colors.border,
-    marginVertical: 12,
+    marginVertical: 14,
   },
 
   // Doctor row
@@ -342,23 +448,23 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     backgroundColor: colors.border,
   },
   doctorInfo: {
     flex: 1,
-    gap: 2,
+    gap: 3,
   },
   doctorName: {
-    fontFamily: fontFamily.semiBold,
-    fontSize: fontSize.sm,
+    fontFamily: fontFamily.bold,
+    fontSize: fontSize.base,
     color: colors.ink,
   },
   specialty: {
     fontFamily: fontFamily.regular,
-    fontSize: fontSize.xs,
+    fontSize: fontSize.sm,
     color: colors.inkMuted,
   },
 
@@ -366,85 +472,102 @@ const styles = StyleSheet.create({
   statusTotalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
   },
-  metaLabel: {
-    fontFamily: fontFamily.regular,
-    fontSize: fontSize.xs,
-    color: colors.inkMuted,
-    marginBottom: 2,
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 999,
   },
-  statusValue: {
+  statusDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+  },
+  statusLabel: {
     fontFamily: fontFamily.semiBold,
     fontSize: fontSize.sm,
   },
   totalBlock: {
     alignItems: 'flex-end',
+    gap: 2,
+  },
+  totalCaption: {
+    fontFamily: fontFamily.regular,
+    fontSize: fontSize.xs,
+    color: colors.inkMuted,
   },
   totalValue: {
-    fontFamily: fontFamily.semiBold,
-    fontSize: fontSize.sm,
-    color: colors.ink,
+    fontFamily: fontFamily.bold,
+    fontSize: fontSize.md,
+    color: colors.primary,
   },
 
-  // Divider
+  // ── Divider ──
   divider: {
     height: 1,
     backgroundColor: colors.border,
-    marginVertical: 16,
+    marginVertical: 20,
   },
 
-  // Section title
+  // ── Section title ──
   sectionTitle: {
-    fontFamily: fontFamily.bold,
-    fontSize: fontSize.md,
-    color: colors.ink,
+    fontFamily: fontFamily.semiBold,
+    fontSize: fontSize.sm,
+    color: colors.inkMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    marginTop: 20,
     marginBottom: 10,
   },
 
-  // Body text
+  // ── Body text ──
   bodyText: {
     fontFamily: fontFamily.regular,
-    fontSize: fontSize.sm,
-    color: colors.inkMuted,
-    lineHeight: 20,
+    fontSize: fontSize.base,
+    color: colors.ink,
+    lineHeight: 22,
   },
   boldInline: {
     fontFamily: fontFamily.semiBold,
     color: colors.ink,
   },
 
-  // Info row
+  // ── Info row ──
   infoRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 8,
-    marginBottom: 4,
+    gap: 10,
+    marginBottom: 6,
   },
   infoRowContent: {
     flex: 1,
   },
 
-  // Clinic image
+  // ── Clinic image ──
   clinicImage: {
     width: '100%',
     height: 180,
-    borderRadius: 12,
-    marginTop: 16,
+    borderRadius: 14,
+    marginTop: 14,
     backgroundColor: colors.border,
   },
 
-  // Map button
+  // ── Map button ──
   mapBtn: {
-    marginTop: 16,
+    marginTop: 12,
+    borderRadius: 12,
   },
 
-  // Invoice
+  // ── Invoice ──
   invoiceLine: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    paddingVertical: 5,
   },
   invoiceLabel: {
     fontFamily: fontFamily.regular,
@@ -452,52 +575,53 @@ const styles = StyleSheet.create({
     color: colors.inkMuted,
   },
   invoiceAmount: {
-    fontFamily: fontFamily.regular,
+    fontFamily: fontFamily.medium,
     fontSize: fontSize.sm,
-    color: colors.inkMuted,
+    color: colors.ink,
   },
   invoiceAmountDiscount: {
-    color: colors.inkMuted,
+    color: colors.primary,
+    fontFamily: fontFamily.semiBold,
   },
   totalLine: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 8,
-    paddingTop: 12,
+    marginTop: 10,
+    paddingTop: 14,
     borderTopWidth: 1,
     borderTopColor: colors.border,
   },
   totalLineLabel: {
     fontFamily: fontFamily.bold,
-    fontSize: fontSize.md,
+    fontSize: fontSize.base,
     color: colors.ink,
   },
   totalLineAmount: {
     fontFamily: fontFamily.bold,
-    fontSize: fontSize.md,
-    color: '#1A7F3C',
+    fontSize: fontSize.base,
+    color: colors.primary,
   },
 
-  // Actions
+  // ── Actions ──
   actionsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     gap: 10,
-    marginTop: 24,
-    marginBottom: 16,
+    marginTop: 28,
+    marginBottom: 8,
   },
-  rescheduleBtn: {
-    minWidth: 100,
+  mainActionBtn: {
+    flex: 1,
   },
   cancelBtn: {
     flex: 1,
   },
-  bookAgainBtn: {
-    flex: 1,
-  },
   downloadBtn: {
-    width: 48,
+    width: 50,
+    height: 50,
+    borderRadius: 14,
+    paddingHorizontal: 0,
+    paddingVertical: 0,
   },
 });
