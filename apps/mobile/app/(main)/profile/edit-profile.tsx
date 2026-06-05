@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -10,9 +10,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Camera, User, MapPin } from 'lucide-react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { colors, fontFamily, fontSize } from '../../../src/themes';
@@ -24,7 +26,8 @@ import { updateProfileSchema, UpdateProfileInput } from '../../../src/schemas';
 
 export default function EditProfileScreen() {
   const user = useAuthStore(s => s.user);
-  const { updateProfile, isUpdatingProfile, error, clearState, success } = useProfile();
+  const { updateProfile, isUpdatingProfile, uploadAvatar, isUploadingAvatar, error, clearState, success } = useProfile();
+  const [localAvatarUri, setLocalAvatarUri] = useState<string | null>(null);
 
   const { control, handleSubmit, formState: { errors } } = useForm<UpdateProfileInput>({
     resolver: zodResolver(updateProfileSchema),
@@ -43,6 +46,38 @@ export default function EditProfileScreen() {
       router.back();
     }
   }, [success]);
+
+  const handleAvatarPress = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(
+        'Permission requise',
+        'Autorisez l\'accès à votre galerie dans les réglages pour changer votre photo.',
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.85,
+    });
+
+    if (result.canceled || !result.assets[0]) return;
+
+    const asset    = result.assets[0];
+    const fileName = asset.fileName ?? `avatar-${Date.now()}.jpg`;
+    const fileType = asset.mimeType ?? 'image/jpeg';
+
+    setLocalAvatarUri(asset.uri);
+    try {
+      await uploadAvatar({ fileUri: asset.uri, fileName, fileType });
+    } catch {
+      Alert.alert('Erreur', 'Impossible d\'envoyer la photo.');
+      setLocalAvatarUri(null);
+    }
+  };
 
   const onSave = async (data: UpdateProfileInput) => {
     await updateProfile(data);
@@ -63,16 +98,27 @@ export default function EditProfileScreen() {
         >
           {/* ── Avatar Section ── */}
           <View style={styles.avatarContainer}>
-            <View style={styles.avatarWrapper}>
+            <TouchableOpacity
+              style={styles.avatarWrapper}
+              onPress={handleAvatarPress}
+              activeOpacity={0.8}
+              disabled={isUploadingAvatar}
+            >
               <Image
-                source={{ uri: user?.avatarUrl || 'https://randomuser.me/api/portraits/men/75.jpg' }}
+                source={{ uri: localAvatarUri ?? user?.avatarUrl ?? 'https://randomuser.me/api/portraits/men/75.jpg' }}
                 style={styles.avatar}
               />
-              <TouchableOpacity style={styles.cameraBtn} activeOpacity={0.8}>
-                <Camera size={18} color={colors.white} />
-              </TouchableOpacity>
-            </View>
-            <Text style={styles.avatarHint}>Appuyez pour changer la photo</Text>
+              <View style={styles.cameraBtn}>
+                {isUploadingAvatar ? (
+                  <ActivityIndicator size="small" color={colors.white} />
+                ) : (
+                  <Camera size={18} color={colors.white} />
+                )}
+              </View>
+            </TouchableOpacity>
+            <Text style={styles.avatarHint}>
+              {isUploadingAvatar ? 'Envoi en cours…' : 'Appuyez pour changer la photo'}
+            </Text>
           </View>
 
           {/* ── Form Section ── */}

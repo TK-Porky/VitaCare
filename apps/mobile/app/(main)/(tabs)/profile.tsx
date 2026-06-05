@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -36,13 +36,14 @@ const MENU_SECTIONS: MenuSection[] = [
   {
     title: 'Généraux',
     items: [
-      { id: 'info',      icon: 'person-outline',        label: 'Mes Informations' },
-      { id: 'activity',  icon: 'time-outline',           label: 'Mon activité' },
-      { id: 'downloads', icon: 'download-outline',       label: 'Mes Téléchargements' },
+      { id: 'info',      icon: 'person-outline',    label: 'Mes Informations' },
+      { id: 'activity',  icon: 'time-outline',       label: 'Mon activité' },
+      { id: 'location',  icon: 'location-outline',   label: 'Ma localisation' },
+      { id: 'downloads', icon: 'download-outline',   label: 'Mes Téléchargements' },
     ],
   },
   {
-    title: 'Accessiblité',
+    title: 'Accessibilité',
     items: [
       { id: 'lang', icon: 'globe-outline', label: 'Changer la langue' },
     ],
@@ -50,15 +51,15 @@ const MENU_SECTIONS: MenuSection[] = [
   {
     title: 'Sécurité',
     items: [
-      { id: 'password',      icon: 'lock-closed-outline', label: 'Modifier son mot de passe' },
-      { id: 'notifications', icon: 'notifications-outline', label: 'Notifications' },
+      { id: 'password',      icon: 'lock-closed-outline',   label: 'Modifier son mot de passe' },
+      { id: 'notifications', icon: 'notifications-outline',  label: 'Notifications' },
     ],
   },
   {
     title: 'Assistance',
     items: [
-      { id: 'help',  icon: 'help-circle-outline',    label: 'Aide' },
-      { id: 'terms', icon: 'document-text-outline',  label: "Termes et Conditions d'utilisation" },
+      { id: 'help',  icon: 'help-circle-outline',   label: 'Aide' },
+      { id: 'terms', icon: 'document-text-outline', label: "Termes et Conditions d'utilisation" },
     ],
   },
 ];
@@ -110,20 +111,15 @@ function MenuItem({
 function MenuSection({ title, items }: { title: string; items: typeof MENU_SECTIONS[0]['items'] }) {
   const handlePress = (id: string) => {
     switch (id) {
-      case 'info':
-        router.push('/(main)/profile/edit-profile');
-        break;
-      case 'password':
-        router.push('/(main)/profile/change-password');
-        break;
-      case 'notifications':
-        router.push('/(main)/profile/notifications-settings');
-        break;
-      case 'lang':
-        router.push('/(main)/profile/language-settings');
-        break;
-      default:
-        console.log('Navigate to:', id);
+      case 'info':          router.push('/(main)/profile/edit-profile');          break;
+      case 'activity':      router.push('/(main)/profile/activity');              break;
+      case 'location':      router.push('/(main)/profile/location');              break;
+      case 'downloads':     router.push('/(main)/profile/downloads');             break;
+      case 'password':      router.push('/(main)/profile/change-password');       break;
+      case 'notifications': router.push('/(main)/profile/notifications-settings'); break;
+      case 'lang':          router.push('/(main)/profile/language-settings');     break;
+      case 'help':          router.push('/(main)/profile/help');                  break;
+      case 'terms':         router.push('/(main)/profile/terms');                 break;
     }
   };
 
@@ -270,7 +266,11 @@ export default function ProfileScreen() {
           <Text style={styles.userName}>{user?.fullName ?? 'Utilisateur'}</Text>
           <Text style={styles.userPhone}>{user?.phone ?? 'Non renseigné'}</Text>
 
-          <TouchableOpacity style={styles.locationBtn} activeOpacity={0.85}>
+          <TouchableOpacity
+            style={styles.locationBtn}
+            activeOpacity={0.85}
+            onPress={() => router.push('/(main)/profile/location')}
+          >
             <Ionicons name="location-outline" size={16} color="#fff" />
             <Text style={styles.locationBtnText}>{address ?? 'Localisation non renseignée'}</Text>
           </TouchableOpacity>

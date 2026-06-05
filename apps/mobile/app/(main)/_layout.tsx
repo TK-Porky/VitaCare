@@ -31,10 +31,15 @@ export default function MainLayout() {
         />
         <Stack.Screen
           name="booking/index"
-          options={{
-            animation: "slide_from_right",
-          }}
+          options={{ animation: "slide_from_right" }}
         />
+
+        {/* Profile sub-screens */}
+        <Stack.Screen name="profile/activity"      options={{ animation: "slide_from_right" }} />
+        <Stack.Screen name="profile/location"      options={{ animation: "slide_from_right" }} />
+        <Stack.Screen name="profile/downloads"     options={{ animation: "slide_from_right" }} />
+        <Stack.Screen name="profile/help"          options={{ animation: "slide_from_right" }} />
+        <Stack.Screen name="profile/terms"         options={{ animation: "slide_from_right" }} />
         <Stack.Screen
           name="booking/bookingSuccess"
           options={{
