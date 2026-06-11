@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,10 @@ import { StepTime } from '../../../src/components/booking/StepTime';
 import { StepReason } from '../../../src/components/booking/StepReason';
 import { StepConfirm } from '../../../src/components/booking/StepConfirm';
 import { PrimaryButton } from '../../../src/components/buttons/PrimaryButton';
+import { MomoPaymentSheet } from '../../../src/components/payment/MomoPaymentSheet';
+import { OrangePaymentSheet } from '../../../src/components/payment/OrangePaymentSheet';
+import { CardPaymentSheet } from '../../../src/components/payment/CardPaymentSheet';
+import type { PaymentSheetRef } from '../../../src/components/payment/MomoPaymentSheet';
 import { colors, fontFamily, fontSize } from '../../../src/themes';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -41,6 +45,10 @@ type Provider = {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const TOTAL_STEPS = 4;
+
+const DAYS   = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+const MONTHS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+                'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
 
 const DEFAULT_PROVIDER: Provider = {
   name: 'Dr. Igriss Kakmo',
@@ -81,6 +89,11 @@ export default function BookingScreen() {
   const [step, setStep] = useState(1);
   const [booking, setBooking] = useState<BookingData>(DEFAULT_BOOKING);
 
+  // Payment sheet refs
+  const momoSheetRef   = useRef<PaymentSheetRef>(null);
+  const orangeSheetRef = useRef<PaymentSheetRef>(null);
+  const cardSheetRef   = useRef<PaymentSheetRef>(null);
+
   const patchBooking = useCallback((patch: Partial<BookingData>) => {
     setBooking(prev => ({ ...prev, ...patch }));
   }, []);
@@ -91,18 +104,64 @@ export default function BookingScreen() {
     return true;
   };
 
+  // Navigate to booking-success after a successful payment (or "pay later")
+  const handlePaymentSuccess = useCallback(() => {
+    const dateLabel = booking.date
+      ? `${DAYS[booking.date.getDay()]}, ${booking.date.getDate()} ${MONTHS[booking.date.getMonth()]} ${booking.date.getFullYear()}`
+      : '';
+    const timeLabel = booking.time?.replace(':', 'h') ?? '';
+
+    const PAYMENT_LABELS: Record<string, string> = {
+      now_mobile_money: 'Payé via Mobile Money (MTN)',
+      now_orange_money: 'Payé via Orange Money',
+      now_card:         'Payé par carte bancaire',
+      later:            'Paiement à la consultation',
+    };
+    const key = booking.paymentMethod === 'later'
+      ? 'later'
+      : `now_${booking.paymentProvider}`;
+
+    router.push({
+      pathname: '/(main)/booking/booking-success',
+      params: {
+        doctorName:   provider.name,
+        specialty:    provider.specialty,
+        avatarUri:    provider.avatarUri,
+        date:         dateLabel,
+        time:         timeLabel,
+        paymentLabel: PAYMENT_LABELS[key],
+        location:     provider.location,
+      },
+    } as never);
+  }, [booking, provider, router]);
+
   const handleNext = () => {
     if (step < TOTAL_STEPS) {
       setStep(s => s + 1);
-    } else {
-      router.push('/(main)/booking/booking-success' as never);
+      return;
     }
+    // Last step — open the correct payment sheet or go direct for "pay later"
+    if (booking.paymentMethod === 'later') {
+      handlePaymentSuccess();
+      return;
+    }
+    if (booking.paymentProvider === 'mobile_money') momoSheetRef.current?.open();
+    else if (booking.paymentProvider === 'orange_money') orangeSheetRef.current?.open();
+    else cardSheetRef.current?.open();
   };
 
   const handleBack = () => {
     if (step > 1) setStep(s => s - 1);
     else router.back();
   };
+
+  // Computed total (same formula as StepConfirm)
+  const paymentTotal = (() => {
+    const fee      = provider.priceXCFA;
+    const discount = Math.round(fee * 0.03);
+    const taxes    = Math.round(fee * 0.02);
+    return fee - discount + taxes;
+  })();
 
   const isLastStep = step === TOTAL_STEPS;
 
@@ -218,10 +277,27 @@ export default function BookingScreen() {
 
       {isLastStep && (
         <Text style={styles.terms}>
-          En confirmant, j'accepte les{' '}
+          En confirmant, j'ai lu et approuvé les{' '}
           <Text style={styles.termsLink}>Termes de Réservation.</Text>
         </Text>
       )}
+
+      {/* ── Payment sheets (rendered outside SafeAreaView so they overlay correctly) ── */}
+      <MomoPaymentSheet
+        ref={momoSheetRef}
+        amount={paymentTotal}
+        onSuccess={handlePaymentSuccess}
+      />
+      <OrangePaymentSheet
+        ref={orangeSheetRef}
+        amount={paymentTotal}
+        onSuccess={handlePaymentSuccess}
+      />
+      <CardPaymentSheet
+        ref={cardSheetRef}
+        amount={paymentTotal}
+        onSuccess={handlePaymentSuccess}
+      />
     </SafeAreaView>
   );
 }
