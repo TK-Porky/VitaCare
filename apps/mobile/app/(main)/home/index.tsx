@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { ScrollView, View, Text, StyleSheet, StatusBar, ActivityIndicator, RefreshControl, Alert } from "react-native";
 import { router } from "expo-router";
 import { Flame, Pill, TrendingUp } from "lucide-react-native";
@@ -19,12 +19,13 @@ import { useDashboardStore, useAuthStore } from "../../../src/store";
 // ================================================================================== //
 type BoardProps = {
   onMap: () => void;
+  notificationBell?: React.ReactNode;
 };
 
 // ================================================================================== //
 // Main
 // ================================================================================== //
-export default function DashboardScreen({ onMap }: BoardProps) {
+export default function DashboardScreen({ onMap, notificationBell }: BoardProps) {
   // ================================================================================== //
   // Hooks
   // ================================================================================== //
@@ -144,7 +145,7 @@ export default function DashboardScreen({ onMap }: BoardProps) {
         backgroundColor={colors.primary}
         barStyle="dark-content"
       />
-      <AppHeader onSearch={handleSearch} onMap={onMap} />
+      <AppHeader onSearch={handleSearch} onMap={onMap} notificationBell={notificationBell} />
 
       <ScrollView
         contentContainerStyle={styles.content}

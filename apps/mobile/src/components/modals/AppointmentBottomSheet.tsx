@@ -25,7 +25,7 @@ type InvoiceLine = {
   isDiscount?: boolean;
 };
 
-type Appointment = {
+export type AppointmentSheetData = {
   title: string;
   doctorName: string;
   doctorAvatarUri: string;
@@ -41,6 +41,8 @@ type Appointment = {
   total: number;
   currency?: string;
 };
+
+type Appointment = AppointmentSheetData;
 
 export type AppointmentDetailBottomSheetRef = {
   open: () => void;

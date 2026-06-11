@@ -21,6 +21,7 @@ type Props = {
   onReminders?: () => void;
   onFilter?: () => void;
   rightActions?: React.ReactNode;
+  notificationBell?: React.ReactNode;
 };
 
 export function AppHeader({
@@ -32,6 +33,7 @@ export function AppHeader({
   onReminders,
   onFilter,
   rightActions,
+  notificationBell,
 }: Props) {
   const statusBarHeight = StatusBar.currentHeight ?? 50;
   const hideLogo = !!title;
@@ -82,6 +84,7 @@ export function AppHeader({
                 style={styles.mapButton}
               />
             )}
+            {notificationBell}
           </View>
         )}
       </View>

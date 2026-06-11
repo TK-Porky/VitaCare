@@ -1,75 +1,114 @@
-import { useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
-  StatusBar,
-  TextInput,
+  KeyboardAvoidingView,
+  Platform,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { MapPin } from 'lucide-react-native';
+import MapView, { UrlTile, Marker, PROVIDER_DEFAULT } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { colors, fontFamily, fontSize } from '../../../src/themes';
-import { TopBar, PrimaryButton } from '../../../src/components';
+import { TopBar, PrimaryButton, SearchInput } from '../../../src/components';
 import { useProfile } from '../../../src/hooks';
 import { useAuthStore } from '../../../src/store';
 
-// ─── Main screen ──────────────────────────────────────────────────────────────
+const INITIAL_REGION = {
+  latitude: 3.848,
+  longitude: 11.502,
+  latitudeDelta: 0.05,
+  longitudeDelta: 0.05,
+};
 
 export default function LocationScreen() {
   const user = useAuthStore((s) => s.user);
   const { updateProfile, isUpdatingProfile } = useProfile();
 
-  const [address, setAddress] = useState('');
-  const [isDetecting, setIsDetecting] = useState(false);
-  const [detectedAddress, setDetectedAddress] = useState<string | null>(null);
+  const [location, setLocation] = useState('Recherche de votre position...');
+  const [region, setRegion] = useState(INITIAL_REGION);
+  const [markerCoords, setMarkerCoords] = useState({
+    latitude: INITIAL_REGION.latitude,
+    longitude: INITIAL_REGION.longitude,
+  });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isMapReady, setIsMapReady] = useState(false);
 
-  const detectLocation = useCallback(async () => {
-    setIsDetecting(true);
-    try {
+  useEffect(() => {
+    (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert(
-          'Permission refusée',
-          'Veuillez autoriser l\'accès à votre localisation dans les paramètres de l\'application.',
-        );
+        setLocation('Permission de localisation refusée');
         return;
       }
 
-      const pos = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
+      const currentLoc = await Location.getCurrentPositionAsync({});
+      const newRegion = {
+        latitude: currentLoc.coords.latitude,
+        longitude: currentLoc.coords.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      };
+      setRegion(newRegion);
+      setMarkerCoords({
+        latitude: currentLoc.coords.latitude,
+        longitude: currentLoc.coords.longitude,
       });
 
-      const [geo] = await Location.reverseGeocodeAsync(pos.coords);
-      if (geo) {
-        const parts = [geo.street, geo.district, geo.subregion, geo.city]
-          .filter(Boolean)
-          .join(', ');
-        setDetectedAddress(parts);
-        setAddress(parts);
+      const reverse = await Location.reverseGeocodeAsync({
+        latitude: currentLoc.coords.latitude,
+        longitude: currentLoc.coords.longitude,
+      });
+      if (reverse.length > 0) {
+        const item = reverse[0];
+        const parts = [item.street, item.district, item.city].filter(Boolean).join(', ');
+        setLocation(parts || 'Position détectée');
+      }
+    })();
+  }, []);
+
+  const handleMapPress = useCallback(async (coords: { latitude: number; longitude: number }) => {
+    setMarkerCoords(coords);
+    try {
+      const reverse = await Location.reverseGeocodeAsync(coords);
+      if (reverse.length > 0) {
+        const item = reverse[0];
+        const parts = [item.street, item.district, item.city].filter(Boolean).join(', ');
+        setLocation(parts || 'Position sélectionnée');
       }
     } catch {
-      Alert.alert('Erreur', 'Impossible de détecter votre position.');
-    } finally {
-      setIsDetecting(false);
+      // keep previous location text
     }
   }, []);
 
-  const handleSave = async () => {
-    if (!address.trim()) {
-      Alert.alert('Champ requis', 'Veuillez saisir ou détecter votre adresse.');
-      return;
+  const handleSearch = useCallback(async () => {
+    if (!searchQuery.trim()) return;
+    try {
+      const results = await Location.geocodeAsync(searchQuery.trim());
+      if (results.length > 0) {
+        const { latitude, longitude } = results[0];
+        setRegion({ latitude, longitude, latitudeDelta: 0.01, longitudeDelta: 0.01 });
+        setMarkerCoords({ latitude, longitude });
+        setLocation(searchQuery.trim());
+      } else {
+        Alert.alert('Introuvable', 'Aucun résultat pour cette adresse.');
+      }
+    } catch {
+      Alert.alert('Erreur', 'Impossible de géolocaliser cette adresse.');
     }
+  }, [searchQuery]);
+
+  const handleSave = async () => {
     try {
       await updateProfile({
         fullName: user?.fullName ?? '',
         email: user?.email ?? '',
         phone: user?.phone ?? '',
-        location: address.trim(),
+        location,
       });
       Alert.alert('Succès', 'Votre localisation a été mise à jour.');
     } catch {
@@ -79,237 +118,125 @@ export default function LocationScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
-      <StatusBar barStyle="dark-content" />
       <TopBar title="Ma localisation" />
 
-      <ScrollView
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        {/* Illustration */}
-        <View style={styles.illustrationBox}>
-          <Ionicons name="location" size={48} color={colors.primary} />
-          <Text style={styles.illustrationTitle}>Votre adresse</Text>
-          <Text style={styles.illustrationSubtitle}>
-            Renseignez votre adresse pour personnaliser votre expérience
-            et trouver des professionnels de santé près de chez vous.
-          </Text>
-        </View>
+        <View style={styles.content}>
+          <SearchInput
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            onSubmitEditing={handleSearch}
+            placeholder="Rechercher une adresse..."
+            returnKeyType="search"
+          />
 
-        {/* Detect button */}
-        <TouchableOpacity
-          style={styles.detectBtn}
-          onPress={detectLocation}
-          disabled={isDetecting}
-          activeOpacity={0.75}
-        >
-          {isDetecting ? (
-            <ActivityIndicator size="small" color={colors.primary} />
-          ) : (
-            <Ionicons name="navigate-outline" size={20} color={colors.primary} />
-          )}
-          <Text style={styles.detectBtnLabel}>
-            {isDetecting ? 'Détection en cours…' : 'Détecter ma position automatiquement'}
-          </Text>
-        </TouchableOpacity>
-
-        {/* Detected feedback */}
-        {detectedAddress && (
-          <View style={styles.detectedBadge}>
-            <Ionicons name="checkmark-circle" size={16} color={colors.success} />
-            <Text style={styles.detectedText}>Position détectée</Text>
-          </View>
-        )}
-
-        {/* Divider */}
-        <View style={styles.dividerRow}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerLabel}>ou saisir manuellement</Text>
-          <View style={styles.dividerLine} />
-        </View>
-
-        {/* Manual input */}
-        <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Adresse complète</Text>
-          <View style={styles.inputWrapper}>
-            <Ionicons name="location-outline" size={18} color={colors.inkMuted} />
-            <TextInput
-              style={styles.input}
-              placeholder="Quartier, Ville (ex : Bastos, Yaoundé)"
-              placeholderTextColor={colors.inkMuted}
-              value={address}
-              onChangeText={setAddress}
-              autoCapitalize="words"
-              returnKeyType="done"
-            />
-          </View>
-        </View>
-
-        {/* Cameroon cities hint */}
-        <View style={styles.hintRow}>
-          <Text style={styles.hintLabel}>Villes fréquentes :</Text>
-          {['Yaoundé', 'Douala', 'Bafoussam'].map((city) => (
-            <TouchableOpacity
-              key={city}
-              style={styles.cityChip}
-              onPress={() => setAddress((prev) => prev ? `${prev}, ${city}` : city)}
+          <View style={styles.mapContainer}>
+            <MapView
+              style={styles.map}
+              provider={PROVIDER_DEFAULT}
+              region={region}
+              onRegionChangeComplete={setRegion}
+              onPress={(e) => handleMapPress(e.nativeEvent.coordinate)}
+              onMapReady={() => setIsMapReady(true)}
             >
-              <Text style={styles.cityChipText}>{city}</Text>
-            </TouchableOpacity>
-          ))}
+              <UrlTile
+                urlTemplate="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+                maximumZ={19}
+                flipY={false}
+                tileSize={256}
+              />
+              <Marker coordinate={markerCoords}>
+                <View style={styles.customMarker}>
+                  <MapPin size={24} color={colors.primary} fill={colors.white} />
+                </View>
+              </Marker>
+            </MapView>
+            {!isMapReady && (
+              <View style={styles.loaderOverlay}>
+                <ActivityIndicator color={colors.primary} />
+              </View>
+            )}
+          </View>
+
+          <TouchableOpacity style={styles.locationRow} activeOpacity={0.7}>
+            <MapPin size={16} color={colors.inkMuted} />
+            <Text style={styles.locationText} numberOfLines={1}>{location}</Text>
+          </TouchableOpacity>
         </View>
 
-        <PrimaryButton
-          label="Enregistrer la localisation"
-          fullWidth
-          isLoading={isUpdatingProfile}
-          onPress={handleSave}
-          style={styles.saveBtn}
-        />
-      </ScrollView>
+        <View style={styles.footer}>
+          <PrimaryButton
+            label="Enregistrer la localisation"
+            fullWidth
+            isLoading={isUpdatingProfile}
+            onPress={handleSave}
+          />
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.white },
+  flex: { flex: 1 },
 
   content: {
-    padding: 20,
-    paddingBottom: 40,
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    gap: 16,
   },
 
-  // Illustration
-  illustrationBox: {
-    alignItems: 'center',
-    paddingVertical: 24,
-    gap: 10,
-    marginBottom: 8,
+  mapContainer: {
+    flex: 1,
+    borderRadius: 20,
+    overflow: 'hidden',
+    backgroundColor: colors.surface,
   },
-  illustrationTitle: {
-    fontFamily: fontFamily.bold,
-    fontSize: fontSize.xl,
-    color: colors.ink,
+  map: {
+    ...StyleSheet.absoluteFill,
   },
-  illustrationSubtitle: {
-    fontFamily: fontFamily.regular,
-    fontSize: fontSize.sm,
-    color: colors.inkMuted,
-    textAlign: 'center',
-    lineHeight: 20,
-    paddingHorizontal: 8,
-  },
-
-  // Detect button
-  detectBtn: {
-    flexDirection: 'row',
+  loaderOverlay: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
-    backgroundColor: colors.primary + '12',
-    borderWidth: 1.5,
-    borderColor: colors.primary + '40',
-    borderRadius: 14,
-    paddingVertical: 16,
-    marginBottom: 12,
   },
-  detectBtnLabel: {
-    fontFamily: fontFamily.semiBold,
-    fontSize: fontSize.sm,
-    color: colors.primary,
-  },
-
-  // Detected badge
-  detectedBadge: {
-    flexDirection: 'row',
+  customMarker: {
+    width: 40,
+    height: 40,
+    backgroundColor: colors.white,
+    borderRadius: 20,
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: colors.successLight,
-    borderRadius: 999,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    alignSelf: 'center',
-    marginBottom: 16,
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  detectedText: {
-    fontFamily: fontFamily.semiBold,
-    fontSize: fontSize.xs,
-    color: colors.success,
-  },
-
-  // Divider
-  dividerRow: {
+  locationRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginVertical: 20,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.border,
-  },
-  dividerLabel: {
-    fontFamily: fontFamily.regular,
-    fontSize: fontSize.xs,
-    color: colors.inkMuted,
-  },
-
-  // Input
-  inputGroup: { gap: 8, marginBottom: 16 },
-  inputLabel: {
-    fontFamily: fontFamily.semiBold,
-    fontSize: fontSize.sm,
-    color: colors.ink,
-    marginLeft: 4,
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: colors.surface,
-  },
-  input: {
-    flex: 1,
-    fontFamily: fontFamily.regular,
-    fontSize: fontSize.base,
-    color: colors.ink,
-  },
-
-  // City chips
-  hintRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 28,
-  },
-  hintLabel: {
-    fontFamily: fontFamily.regular,
-    fontSize: fontSize.xs,
-    color: colors.inkMuted,
-  },
-  cityChip: {
     backgroundColor: colors.surface,
-    borderRadius: 999,
-    paddingVertical: 5,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
+    padding: 14,
+    borderRadius: 12,
   },
-  cityChipText: {
-    fontFamily: fontFamily.medium,
-    fontSize: fontSize.xs,
-    color: colors.ink,
+  locationText: {
+    flex: 1,
+    fontFamily: fontFamily.regular,
+    fontSize: fontSize.md,
+    color: colors.inkLight,
   },
 
-  saveBtn: { marginTop: 4 },
+  footer: {
+    paddingHorizontal: 16,
+    paddingBottom: 24,
+    paddingTop: 12,
+  },
 });

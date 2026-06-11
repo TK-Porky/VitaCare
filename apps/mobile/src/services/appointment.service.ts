@@ -88,5 +88,14 @@ export const appointmentService = {
     const res = await apiClient.get<AppointmentResponse[]>(API_ENDPOINTS.APPOINTMENTS.TODAY);
     if (!res.success) throw new Error(res.error ?? "Failed to fetch today's appointments");
     return res.data!;
+  },
+
+  /**
+   * Get past appointments
+   */
+  async getPastAppointments(): Promise<AppointmentResponse[]> {
+    const res = await apiClient.get<AppointmentResponse[]>(API_ENDPOINTS.APPOINTMENTS.PAST);
+    if (!res.success) throw new Error(res.error ?? "Failed to fetch past appointments");
+    return res.data!;
   }
 };

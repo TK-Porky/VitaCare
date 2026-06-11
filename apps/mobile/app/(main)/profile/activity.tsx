@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fontFamily, fontSize } from '../../../src/themes';
 import { TopBar } from '../../../src/components';
-import { APPOINTMENTS, PAST_APPOINTMENTS } from '../../../src/data/mockAppointments';
+import { appointmentService } from '../../../src/services';
+import { Appointment } from '../../../src/types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -27,7 +28,7 @@ const STATUS_STYLE: Record<string, { label: string; color: string; bg: string }>
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function ActivityCard({ item }: { item: typeof APPOINTMENTS[0] }) {
+function ActivityCard({ item }: { item: Appointment }) {
   const statusStyle = STATUS_STYLE[item.status] ?? STATUS_STYLE.pending;
 
   return (
@@ -72,7 +73,26 @@ function EmptyState() {
 
 export default function ActivityScreen() {
   const [tab, setTab] = useState<Tab>('upcoming');
-  const data = tab === 'upcoming' ? APPOINTMENTS : PAST_APPOINTMENTS;
+  const [data, setData] = useState<Appointment[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    const fetch = async () => {
+      try {
+        const res = tab === 'upcoming'
+          ? await appointmentService.getUpcomingAppointments()
+          : await appointmentService.getPastAppointments();
+        if (!mounted) return;
+        setData(res as Appointment[]);
+      } catch (err) {
+        console.warn('Failed to fetch activity appointments', err);
+        if (mounted) setData([]);
+      }
+    };
+
+    fetch();
+    return () => { mounted = false; };
+  }, [tab]);
 
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
@@ -144,7 +164,7 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     fontFamily: fontFamily.medium,
-    fontSize: fontSize.sm,
+    fontSize: fontSize.base,
     color: colors.inkMuted,
   },
   tabLabelActive: {
@@ -160,7 +180,7 @@ const styles = StyleSheet.create({
   },
   countLabel: {
     fontFamily: fontFamily.medium,
-    fontSize: fontSize.xs,
+    fontSize: fontSize.sm,
     color: colors.inkMuted,
     marginBottom: 4,
     textTransform: 'uppercase',
@@ -239,7 +259,7 @@ const styles = StyleSheet.create({
   },
   emptySubtitle: {
     fontFamily: fontFamily.regular,
-    fontSize: fontSize.sm,
+    fontSize: fontSize.md,
     color: colors.inkMuted,
     textAlign: 'center',
   },

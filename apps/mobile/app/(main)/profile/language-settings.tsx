@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontFamily: fontFamily.regular,
-    fontSize: fontSize.sm,
+    fontSize: fontSize.md,
     color: colors.inkLight,
     lineHeight: 20,
   },
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
   },
   nativeLabel: {
     fontFamily: fontFamily.regular,
-    fontSize: fontSize.xs,
+    fontSize: fontSize.md,
     color: colors.inkLight,
   },
 });

@@ -1,14 +1,15 @@
-import React from 'react';
+import React from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
+  Image,
   Alert,
-} from 'react-native';
-import { ScrollView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { colors, fontFamily, fontSize } from '../../themes';
+} from "react-native";
+import { ScrollView } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { colors, fontFamily, fontSize } from "../../themes";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -24,8 +25,8 @@ type BookingData = {
   date: Date | null;
   time: string | null;
   reason: string;
-  paymentMethod: 'now' | 'later';
-  paymentProvider: 'mobile_money' | 'orange_money' | 'card';
+  paymentMethod: "now" | "later";
+  paymentProvider: "mobile_money" | "orange_money" | "card";
 };
 
 type Props = {
@@ -37,76 +38,130 @@ type Props = {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const DAYS_SHORT = ['DIM', 'LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM'];
-const MONTHS = [
-  'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-  'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
+const DAYS = [
+  "Dimanche",
+  "Lundi",
+  "Mardi",
+  "Mercredi",
+  "Jeudi",
+  "Vendredi",
+  "Samedi",
 ];
-
-const PAYMENT_PROVIDERS: {
-  id: BookingData['paymentProvider'];
-  name: string;
-  icon: React.ComponentProps<typeof Ionicons>['name'];
-}[] = [
-  { id: 'mobile_money', name: 'Mobile Money', icon: 'phone-portrait-outline' },
-  { id: 'orange_money', name: 'Orange Money',  icon: 'cellular-outline' },
-  { id: 'card',         name: 'Carte bancaire', icon: 'card-outline' },
+const MONTHS = [
+  "Janvier",
+  "Février",
+  "Mars",
+  "Avril",
+  "Mai",
+  "Juin",
+  "Juillet",
+  "Août",
+  "Septembre",
+  "Octobre",
+  "Novembre",
+  "Décembre",
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const formatDate = (date: Date) =>
-  `${DAYS_SHORT[date.getDay()]}, ${date.getDate()} ${MONTHS[date.getMonth()]} ${date.getFullYear()}`;
+const formatDateTime = (date: Date, time: string | null): string => {
+  const day = DAYS[date.getDay()];
+  const d = date.getDate();
+  const month = MONTHS[date.getMonth()];
+  const year = date.getFullYear();
+  const t = time ? time.replace(":", "h") : "";
+  return t
+    ? `${day}, ${d} ${month} ${year} • ${t}`
+    : `${day}, ${d} ${month} ${year}`;
+};
 
-/** Formats a number as "12 500 XCFA" — locale-independent */
-const formatPrice = (n: number) => {
-  const parts = Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '\u202F');
-  return `${parts} XCFA`;
+const formatPrice = (n: number): string => {
+  const s = Math.round(n)
+    .toString()
+    .replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  return `${s} XCFA`;
 };
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-const SectionTitle = ({ children }: { children: string }) => (
-  <Text style={styles.sectionTitle}>{children}</Text>
-);
+const Divider = () => <View style={styles.divider} />;
 
-const RadioCard = ({
-  selected,
-  onPress,
-  title,
-  subtitle,
-  right,
-}: {
+type OptionCardProps = {
   selected: boolean;
   onPress: () => void;
+  iconSlot: React.ReactNode;
   title: string;
-  subtitle: string;
-  right?: React.ReactNode;
-}) => (
+  subtitle?: string;
+};
+
+const OptionCard = ({
+  selected,
+  onPress,
+  iconSlot,
+  title,
+  subtitle,
+}: OptionCardProps) => (
   <TouchableOpacity
-    style={[styles.radioCard, selected && styles.radioCardSelected]}
+    style={[styles.optionCard, selected && styles.optionCardSelected]}
     onPress={onPress}
-    activeOpacity={0.7}
+    activeOpacity={1}
   >
-    <View style={[styles.radioCircle, selected && styles.radioCircleSelected]}>
-      {selected && <View style={styles.radioCircleInner} />}
-    </View>
-    <View style={styles.radioBody}>
-      <Text style={[styles.radioTitle, selected && styles.radioTitleSelected]}>
+    <View style={styles.optionIconBox}>{iconSlot}</View>
+    <View style={styles.optionBody}>
+      <Text
+        style={[styles.optionTitle, selected && styles.optionTitleSelected]}
+      >
         {title}
       </Text>
-      <Text style={styles.radioSubtitle}>{subtitle}</Text>
+      {subtitle ? <Text style={styles.optionSubtitle}>{subtitle}</Text> : null}
     </View>
-    {right}
+    <View style={[styles.radio, selected && styles.radioSelected]}>
+      {selected && <View style={styles.radioInner} />}
+    </View>
   </TouchableOpacity>
+);
+
+// ─── Payment provider icon boxes ──────────────────────────────────────────────
+
+const MtnIcon = () => (
+  <View style={styles.logoBox}>
+    <Image source={require("../../../assets/MomoIcon.png")} style={styles.logoImage} resizeMode="contain" />
+  </View>
+);
+
+const OrangeIcon = () => (
+  <View style={styles.logoBox}>
+    <Image source={require("../../../assets/OMIcon.png")} style={styles.logoImage} resizeMode="contain" />
+  </View>
+);
+
+const CardIcon = ({ active }: { active: boolean }) => (
+  <View
+    style={[
+      styles.logoBox,
+      { backgroundColor: active ? colors.primary + "18" : colors.surface },
+    ]}
+  >
+    <Ionicons
+      name="business-outline"
+      size={20}
+      color={active ? colors.primary : colors.inkMuted}
+    />
+  </View>
 );
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export const StepConfirm = ({ provider, booking, onChangeDate, onChange }: Props) => {
+export const StepConfirm = ({
+  provider,
+  booking,
+  onChangeDate,
+  onChange,
+}: Props) => {
   const consultationFee = provider.priceXCFA;
-  const platformFee     = Math.round(consultationFee * 0.05);
-  const total           = consultationFee + platformFee;
+  const inAppDiscount = Math.round(consultationFee * 0.03);
+  const taxes = Math.round(consultationFee * 0.03);
+  const total = consultationFee - inAppDiscount + taxes;
 
   return (
     <ScrollView
@@ -115,139 +170,187 @@ export const StepConfirm = ({ provider, booking, onChangeDate, onChange }: Props
       nestedScrollEnabled
       keyboardShouldPersistTaps="handled"
     >
-      {/* ── Appointment summary ─────────────────────────────────────────── */}
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Résumé du rendez-vous</Text>
-          <TouchableOpacity onPress={onChangeDate} style={styles.editBtn} hitSlop={8}>
-            <Ionicons name="create-outline" size={16} color={colors.primary} />
-            <Text style={styles.editBtnText}>Modifier</Text>
-          </TouchableOpacity>
+      {/* ── Page title ──────────────────────────────────────────────────── */}
+      <Text style={styles.pageTitle}>Confirmation de réservation</Text>
+
+      {/* ── Provider card ───────────────────────────────────────────────── */}
+      <View style={styles.providerCard}>
+        
+        <View style={styles.providerSection}>
+          <Image source={{ uri: provider.avatarUri }} style={styles.avatar} />
+          <View>
+            <Text style={styles.providerName}>{provider.name}</Text>
+            <Text style={styles.providerSpecialty}>{provider.specialty}</Text>
+          </View>
         </View>
 
-        <View style={styles.divider} />
+        <View style={styles.detailsSection}>
 
-        <View style={styles.summaryRows}>
-          {[
-            {
-              icon: 'calendar-outline' as const,
-              value: booking.date ? formatDate(booking.date) : 'Date à sélectionner',
-            },
-            {
-              icon: 'time-outline' as const,
-              value: booking.time ?? 'Heure à sélectionner',
-            },
-            {
-              icon: 'location-outline' as const,
-              value: provider.location,
-            },
-          ].map(({ icon, value }) => (
-            <View key={icon} style={styles.summaryRow}>
-              <View style={styles.summaryIconWrap}>
-                <Ionicons name={icon} size={18} color={colors.primary} />
-              </View>
-              <Text style={styles.summaryText}>{value}</Text>
+          <Divider />
+
+          <View style={styles.details}>
+            <View style={styles.detailsLeft}>
+              <Text style={styles.detailsTitle}>Détails du Rendez-vous</Text>
+              <Text style={styles.dateTimeText}>
+                {booking.date
+                  ? formatDateTime(booking.date, booking.time)
+                  : "Date à sélectionner"}
+              </Text>
             </View>
-          ))}
+            
+            <View style={styles.detailsRight}>
+              <TouchableOpacity
+                style={styles.changerBtn}
+                onPress={onChangeDate}
+                activeOpacity={0.75}
+              >
+                <Text style={styles.changerBtnText}>Changer</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <Divider />
+
+          <View style={styles.detailCol}>
+            <Text style={styles.detailLabel}>Prix</Text>
+            <Text style={styles.detailValue}>
+              {formatPrice(consultationFee)}
+            </Text>
+          </View>
+
+          <Divider />
+
+          <View style={styles.detailCol}>
+            <Text style={styles.detailLabel}>Location</Text>
+            <Text
+              style={[styles.detailValue]}
+              numberOfLines={1}
+            >
+              {provider.location}
+            </Text>
+          </View>
+
+          <Divider />
+
+          <View style={styles.detailCol}>
+            <Text style={styles.cancelTitle}>Annulation Gratuite</Text>
+            <Text style={styles.cancelBody}>
+              Annuler avant le *** pour un remboursement totale.{" "}
+              <Text
+              style={styles.cancelLink}
+              onPress={() =>
+                Alert.alert(
+                  "Politique d'utilisation",
+                  "Les conditions d'annulation complètes s'appliquent selon les termes de réservation VitaCare.",
+                )
+              }
+            >
+              Politique d'utilisation
+            </Text>
+          </Text>
+          </View>
         </View>
       </View>
 
       {/* ── Payment method ──────────────────────────────────────────────── */}
-      <View style={[styles.section, { marginTop: 24 }]}>
-        <SectionTitle>Méthode de paiement</SectionTitle>
-
-        <View style={styles.gap12}>
-          <RadioCard
-            selected={booking.paymentMethod === 'now'}
-            onPress={() => onChange({ paymentMethod: 'now' })}
-            title="Payer maintenant"
-            subtitle="Sécurisé et prioritaire"
-            right={
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{formatPrice(total)}</Text>
-              </View>
-            }
-          />
-          <RadioCard
-            selected={booking.paymentMethod === 'later'}
-            onPress={() => onChange({ paymentMethod: 'later' })}
-            title="Payer sur place"
-            subtitle="Espèces ou carte à l'arrivée"
-            right={
-              <View style={[styles.badge, styles.badgeMuted]}>
-                <Text style={styles.badgeTextMuted}>{formatPrice(total)}</Text>
-              </View>
-            }
-          />
-        </View>
-
-        {/* Provider picker — visible only when paying now */}
-        {booking.paymentMethod === 'now' && (
-          <View style={styles.providerSection}>
-            <Text style={styles.providerSectionLabel}>Via quel moyen ?</Text>
-            <View style={styles.providerRow}>
-              {PAYMENT_PROVIDERS.map((p) => {
-                const active = booking.paymentProvider === p.id;
-                return (
-                  <TouchableOpacity
-                    key={p.id}
-                    style={[styles.providerChip, active && styles.providerChipSelected]}
-                    onPress={() => onChange({ paymentProvider: p.id })}
-                    activeOpacity={0.7}
-                  >
-                    <Ionicons
-                      name={p.icon}
-                      size={20}
-                      color={active ? colors.primary : colors.inkMuted}
-                    />
-                    <Text style={[styles.providerChipText, active && styles.providerChipTextSelected]}>
-                      {p.name}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
+      <Text style={styles.sectionTitle}>Méthodes de paiements</Text>
+      <View style={styles.cardGroup}>
+        <OptionCard
+          selected={booking.paymentMethod === "now"}
+          onPress={() => onChange({ paymentMethod: "now" })}
+          iconSlot={
+            <View style={styles.logoBox}>
+              <Ionicons
+                name="shield-checkmark-outline"
+                size={20}
+                color={colors.ink}
+              />
             </View>
-          </View>
-        )}
+          }
+          title={`Payer ${formatPrice(total)} dès maintenant`}
+          subtitle="Améliore vos chances d'être prioritaire"
+        />
+        <OptionCard
+          selected={booking.paymentMethod === "later"}
+          onPress={() => onChange({ paymentMethod: "later" })}
+          iconSlot={
+            <View style={styles.logoBox}>
+              <Ionicons
+                name="person-outline"
+                size={20}
+                color={colors.ink}
+              />
+            </View>
+          }
+          title="Payer à la consultation"
+        />
       </View>
 
-      {/* ── Price breakdown ─────────────────────────────────────────────── */}
-      <View style={styles.section}>
-        <SectionTitle>Détail du prix</SectionTitle>
-        <View style={styles.card}>
-          <View style={styles.priceRow}>
-            <Text style={styles.priceLabel}>Consultation</Text>
-            <Text style={styles.priceValue}>{formatPrice(consultationFee)}</Text>
-          </View>
-          <View style={styles.priceRow}>
-            <Text style={styles.priceLabel}>Frais de service (5 %)</Text>
-            <Text style={styles.priceValue}>{formatPrice(platformFee)}</Text>
-          </View>
-          <View style={styles.divider} />
-          <View style={styles.priceRow}>
-            <Text style={styles.totalLabel}>Total</Text>
-            <Text style={styles.totalValue}>{formatPrice(total)}</Text>
-          </View>
+      {/* ── Payment provider ────────────────────────────────────────────── */}
+      {booking.paymentMethod === "now" && (
+      <>
+        <Text style={styles.sectionTitle}>Moyens de paiements</Text>
+        <View style={styles.cardGroup}>
+          <OptionCard
+            selected={booking.paymentProvider === "mobile_money"}
+            onPress={() => onChange({ paymentProvider: "mobile_money" })}
+            iconSlot={<MtnIcon />}
+            title="Mobile Money"
+          />
+          <OptionCard
+            selected={booking.paymentProvider === "orange_money"}
+            onPress={() => onChange({ paymentProvider: "orange_money" })}
+            iconSlot={<OrangeIcon />}
+            title="Orange Money"
+          />
+          {/*
+          <OptionCard
+            selected={booking.paymentProvider === "card"}
+            onPress={() => onChange({ paymentProvider: "card" })}
+            iconSlot={<CardIcon active={booking.paymentProvider === "card"} />}
+            title="Carte bancaire"
+            subtitle="Numéro de compte *2456"
+            />
+          */}
+        </View>
+      </>)}
+
+      {/* ── Invoice ─────────────────────────────────────────────────────── */}
+      <Text style={styles.sectionTitle}>Facture</Text>
+      <View style={styles.invoiceSection}>
+        <View style={styles.invoiceRow}>
+          <Text style={styles.invoiceLabel}>Consultation</Text>
+          <Text style={styles.invoiceValue}>
+            {formatPrice(consultationFee)}
+          </Text>
+        </View>
+        <View style={styles.invoiceRow}>
+          <Text style={styles.invoiceLabel}>Code de réduction</Text>
+          <Text style={styles.invoiceDiscount}>
+            -{formatPrice(inAppDiscount)}
+          </Text>
+        </View>
+
+        <Divider />
+
+        <View style={styles.invoiceRow}>
+          <Text style={styles.invoiceSubLabel}>Prix Estimé</Text>
+          <Text style={styles.invoiceSubValue}>
+            {formatPrice(consultationFee)}
+          </Text>
+        </View>
+        <View style={styles.invoiceRow}>
+          <Text style={styles.invoiceSubLabel}>Taxes</Text>
+          <Text style={styles.invoiceSubValue}>{formatPrice(taxes)}</Text>
+        </View>
+
+        <View style={styles.invoiceTotalRow}>
+          <Text style={styles.invoiceTotalLabel}>Total</Text>
+          <Text style={styles.invoiceTotalValue}>{formatPrice(total)}</Text>
         </View>
       </View>
 
-      {/* ── Cancellation policy ─────────────────────────────────────────── */}
-      <View style={[styles.section, styles.policyCard]}>
-        <View style={styles.policyHeader}>
-          <Ionicons name="shield-checkmark-outline" size={22} color={colors.primary} />
-          <Text style={styles.policyTitle}>Politique d'annulation</Text>
-        </View>
-        <Text style={styles.policyText}>
-          Annulation gratuite jusqu'à 24h avant le rendez-vous. Passé ce délai,
-          des frais de 50 % peuvent s'appliquer.
-        </Text>
-        <TouchableOpacity
-          onPress={() => Alert.alert("Conditions d'annulation", "Texte complet des conditions…")}
-          hitSlop={8}
-        >
-          <Text style={styles.policyLink}>Voir les conditions complètes →</Text>
-        </TouchableOpacity>
-      </View>
+      <View style={{ height: 32 }} />
     </ScrollView>
   );
 };
@@ -257,238 +360,265 @@ export const StepConfirm = ({ provider, booking, onChangeDate, onChange }: Props
 const styles = StyleSheet.create({
   scroll: { flex: 1 },
 
-  // Layout
-  section:  { marginBottom: 24 },
-  gap12:    { gap: 12 },
-
-  sectionTitle: {
-    fontFamily: fontFamily.semiBold,
-    fontSize: fontSize.lg,
+  // ── Page title ──
+  pageTitle: {
+    fontFamily: fontFamily.bold,
+    fontSize: fontSize["2xl"],
     color: colors.ink,
-    marginBottom: 14,
+    marginBottom: 20,
+    lineHeight: 32,
   },
 
-  // Card
-  card: {
-    backgroundColor: colors.surface,
+  // ── Provider card ──
+  providerCard: {
+    flexDirection: "column",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 16,
+    backgroundColor: colors.ltsurface,
     borderRadius: 16,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: colors.border,
+    marginBottom: 24,
   },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 14,
+  providerSection: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 16,
   },
-  cardTitle: {
-    fontFamily: fontFamily.semiBold,
+  avatar: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: colors.border,
+  },
+  providerName: {
+    width: '100%',
+    fontFamily: fontFamily.bold,
     fontSize: fontSize.lg,
     color: colors.ink,
   },
-  editBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 20,
-    backgroundColor: colors.primary + '12',
+  providerSpecialty: {
+    fontFamily: fontFamily.regular,
+    fontSize: fontSize.sm,
+    color: colors.inkMuted,
   },
-  editBtnText: {
+
+  // ── Appointment details ──
+  detailsSection: {
+    flexDirection: "column",
+    gap: 12,
+    marginBottom: 28,
+  },
+  details: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  detailsLeft: {
+    flexDirection: "column",
+    gap: 12,
+  },
+  detailsRight: {
+    flexDirection: "column",
+    gap: 4,
+    alignItems: "flex-end",
+  },
+  detailsHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  detailsTitle: {
+    fontFamily: fontFamily.bold,
+    fontSize: fontSize.base,
+    color: colors.ink,
+  },
+  changerBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+  },
+  changerBtnText: {
     fontFamily: fontFamily.semiBold,
     fontSize: fontSize.sm,
-    color: colors.primary,
+    color: colors.white,
   },
-
+  dateTimeText: {
+    fontFamily: fontFamily.regular,
+    fontSize: fontSize.md,
+    color: colors.ink,
+  },
   divider: {
     height: 1,
     backgroundColor: colors.border,
-    marginVertical: 12,
   },
-
-  // Summary rows
-  summaryRows: { 
-    gap: 12,
+  detailCol: {
+    flexDirection: "column",
+    gap: 4,
+    alignItems: "flex-start",
   },
-  summaryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  summaryIconWrap: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    backgroundColor: colors.primary + '12',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  summaryText: {
-    fontFamily: fontFamily.medium,
+  detailLabel: {
+    fontFamily: fontFamily.bold,
     fontSize: fontSize.md,
     color: colors.ink,
-    flex: 1,
+  },
+  detailValue: {
+    fontFamily: fontFamily.regular,
+    fontSize: fontSize.md,
+    color: colors.ink,
+  },
+  cancelTitle: {
+    fontFamily: fontFamily.bold,
+    fontSize: fontSize.md,
+    color: colors.ink,
+    marginBottom: 4,
+  },
+  cancelBody: {
+    fontFamily: fontFamily.regular,
+    fontSize: fontSize.md,
+    color: colors.ink,
+    lineHeight: 16,
+  },
+  cancelLink: {
+    fontFamily: fontFamily.bold,
+    fontSize: fontSize.md,
+    color: colors.ink,
+    textDecorationLine: "underline",
   },
 
-  // Radio card
-  radioCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  // ── Section title ──
+  sectionTitle: {
+    fontFamily: fontFamily.bold,
+    fontSize: fontSize.lg,
+    color: colors.ink,
+    marginBottom: 14,
+    marginTop: 8,
+  },
+
+  // ── Option cards ──
+  cardGroup: {
+    gap: 12,
+    marginBottom: 28,
+  },
+  optionCard: {
+    flexDirection: "row",
+    alignItems: "center",
     gap: 14,
-    backgroundColor: colors.surface,
-    borderRadius: 14,
     padding: 16,
+    borderRadius: 16,
     borderWidth: 1.5,
     borderColor: colors.border,
+    backgroundColor: colors.white,
   },
-  radioCardSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary + '06',
+  optionCardSelected: {
+    borderColor: colors.ink,
   },
-  radioCircle: {
+  optionIconBox: {
+    // icon slot renders its own box
+  },
+  logoBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  logoImage: {
+    width: 28,
+    height: 28,
+  },
+  logoText: {
+    fontFamily: fontFamily.bold,
+    fontSize: fontSize.xs,
+  },
+  optionBody: {
+    flex: 1,
+    gap: 3,
+  },
+  optionTitle: {
+    fontFamily: fontFamily.bold,
+    fontSize: fontSize.base,
+    color: colors.ink,
+  },
+  optionTitleSelected: {
+    color: colors.ink,
+  },
+  optionSubtitle: {
+    fontFamily: fontFamily.regular,
+    fontSize: fontSize.sm,
+    color: colors.ink,
+  },
+  radio: {
     width: 22,
     height: 22,
-    borderRadius: 11,
+    borderRadius: 12,
     borderWidth: 2,
     borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
-  radioCircleSelected: { borderColor: colors.primary },
-  radioCircleInner: {
-    width: 11,
-    height: 11,
-    borderRadius: 6,
-    backgroundColor: colors.primary,
-  },
-  radioBody:  { flex: 1 },
-  radioTitle: {
-    fontFamily: fontFamily.semiBold,
-    fontSize: fontSize.md,
-    color: colors.ink,
-    marginBottom: 2,
-  },
-  radioTitleSelected: { color: colors.primary },
-  radioSubtitle: {
-    fontFamily: fontFamily.regular,
-    fontSize: fontSize.sm,
-    color: colors.inkMuted,
-  },
-
-  // Badge (price pill on radio card)
-  badge: {
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 20,
-    backgroundColor: colors.primary + '15',
-  },
-  badgeText: {
-    fontFamily: fontFamily.bold,
-    fontSize: fontSize.sm,
-    color: colors.primary,
-  },
-  badgeMuted: { backgroundColor: colors.border },
-  badgeTextMuted: {
-    fontFamily: fontFamily.bold,
-    fontSize: fontSize.sm,
-    color: colors.inkMuted,
-  },
-
-  // Payment providers
-  providerSection: { marginTop: 16 },
-  providerSectionLabel: {
-    fontFamily: fontFamily.medium,
-    fontSize: fontSize.sm,
-    color: colors.inkMuted,
-    marginBottom: 10,
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-  },
-  providerRow: { flexDirection: 'row', gap: 10 },
-  providerChip: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  providerChipSelected: {
+  radioSelected: {
+    borderWidth: 6,
     borderColor: colors.primary,
-    backgroundColor: colors.primary + '08',
   },
-  providerChipText: {
-    fontFamily: fontFamily.medium,
-    fontSize: fontSize.xs,
-    color: colors.inkMuted,
-    textAlign: 'center',
-  },
-  providerChipTextSelected: {
-    color: colors.primary,
-    fontFamily: fontFamily.semiBold,
+  radioInner: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
   },
 
-  // Price breakdown
-  priceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 6,
+  // ── Invoice ──
+  invoiceSection: {
+    flexDirection: "column",
+    gap: 8,
   },
-  priceLabel: {
+  invoiceRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 5,
+  },
+  invoiceLabel: {
     fontFamily: fontFamily.regular,
-    fontSize: fontSize.md,
-    color: colors.inkMuted,
-  },
-  priceValue: {
-    fontFamily: fontFamily.medium,
-    fontSize: fontSize.md,
+    fontSize: fontSize.base,
     color: colors.ink,
   },
-  totalLabel: {
+  invoiceValue: {
+    fontFamily: fontFamily.regular,
+    fontSize: fontSize.base,
+    color: colors.ink,
+  },
+  invoiceDiscount: {
+    fontFamily: fontFamily.regular,
+    fontSize: fontSize.base,
+    color: colors.primary,
+  },
+  invoiceSubLabel: {
+    fontFamily: fontFamily.regular,
+    fontSize: fontSize.base,
+    color: colors.ink,
+  },
+  invoiceSubValue: {
+    fontFamily: fontFamily.bold,
+    fontSize: fontSize.base,
+    color: colors.ink,
+  },
+  invoiceTotalRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  invoiceTotalLabel: {
     fontFamily: fontFamily.bold,
     fontSize: fontSize.lg,
     color: colors.ink,
   },
-  totalValue: {
+  invoiceTotalValue: {
     fontFamily: fontFamily.bold,
     fontSize: fontSize.lg,
-    color: colors.primary,
-  },
-
-  // Policy
-  policyCard: {
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  policyHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 10,
-  },
-  policyTitle: {
-    fontFamily: fontFamily.semiBold,
-    fontSize: fontSize.md,
-    color: colors.ink,
-  },
-  policyText: {
-    fontFamily: fontFamily.regular,
-    fontSize: fontSize.sm,
-    color: colors.inkMuted,
-    lineHeight: 20,
-    marginBottom: 10,
-  },
-  policyLink: {
-    fontFamily: fontFamily.semiBold,
-    fontSize: fontSize.sm,
     color: colors.primary,
   },
 });

@@ -74,8 +74,8 @@ L'application mobile est construite avec :
 ## 🛠️ Stack Technique
 
 - **Frontend Mobile** : React Native, Expo, TypeScript
-- **Frontend Web** : (À définir)
-- **Backend** : (À définir)
+- **Frontend Web** : ReactJS, Typescript
+- **Backend** : SpringBoot
 - **Monorepo** : pnpm, Turbo
 - **Styling** : NativeWind, Tailwind CSS
 - **Language** : TypeScript

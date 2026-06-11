@@ -18,7 +18,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { colors, fontFamily, fontSize } from '../../../src/themes';
-import { TopBar, CustomInput, PrimaryButton, EmailInput, PhoneInput, HelperText } from '../../../src/components';
+import { TopBar, NameInput, PrimaryButton, EmailInput, PhoneInput, HelperText} from '../../../src/components';
 import { router } from 'expo-router';
 import { useProfile } from '../../../src/hooks';
 import { useAuthStore } from '../../../src/store';
@@ -35,7 +35,6 @@ export default function EditProfileScreen() {
       fullName: user?.fullName || '',
       email: user?.email || '',
       phone: user?.phone || '',
-      location: '', // Initial value if not in user profile
     }
   });
 
@@ -129,13 +128,12 @@ export default function EditProfileScreen() {
                 control={control}
                 name="fullName"
                 render={({ field: { onChange, onBlur, value } }) => (
-                  <CustomInput
+                  <NameInput
                     placeholder="Votre nom"
                     value={value}
                     onBlur={onBlur}
                     onChangeText={onChange}
-                    error={errors.fullName ? errors.fullName.message : undefined}
-                    leftIcon={<User size={18} color={colors.inkLight} />}
+                    error={!!errors.fullName?.message}
                   />
                 )}
               />
@@ -174,25 +172,6 @@ export default function EditProfileScreen() {
                 )}
               />
               {errors.phone && <HelperText message={errors.phone.message || ""} type="error" />}
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Localisation</Text>
-              <Controller
-                control={control}
-                name="location"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <CustomInput
-                    placeholder="Ville, Quartier"
-                    value={value}
-                    onBlur={onBlur}
-                    onChangeText={onChange}
-                    error={errors.location ? errors.location.message : undefined}
-                    leftIcon={<MapPin size={18} color={colors.inkLight} />}
-                  />
-                )}
-              />
-              {errors.location && <HelperText message={errors.location.message || ""} type="error" />}
             </View>
 
             {error && <HelperText message={error as string} type="error" />}

@@ -8,5 +8,5 @@ export default function HomeScreen() {
     router.push('/home/map' as never);
   };
 
-  return <DashboardScreen onMap={handleMapPress}/>;
+  return <DashboardScreen onMap={handleMapPress} />;
 }

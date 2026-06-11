@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontFamily: fontFamily.regular,
-    fontSize: fontSize.sm,
+    fontSize: fontSize.md,
     color: colors.inkLight,
     lineHeight: 20,
   },
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: fontFamily.semiBold,
-    fontSize: fontSize.sm,
+    fontSize: fontSize.md,
     color: colors.ink,
     marginLeft: 4,
   },

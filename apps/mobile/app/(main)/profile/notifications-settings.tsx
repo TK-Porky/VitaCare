@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -10,8 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, fontFamily, fontSize } from '../../../src/themes';
-import { TopBar, HelperText } from '../../../src/components';
-import { useProfile } from '../../../src/hooks';
+import { TopBar } from '../../../src/components';
 
 type ToggleItemProps = {
   label: string;
@@ -44,25 +43,20 @@ function ToggleItem({ label, description, isEnabled, onToggle, isLoading }: Togg
 }
 
 export default function NotificationsSettingsScreen() {
-  const { updatePreferences, isUpdatingPreferences, error } = useProfile();
-  
-  // Local states (would normally come from a user preferences store/auth user)
-  const [reminders, setReminders] = useState(true);
+  const [reminders, setReminders]       = useState(true);
   const [appointments, setAppointments] = useState(true);
-  const [offers, setOffers] = useState(false);
+  const [healthTips, setHealthTips]     = useState(true);
+  const [isSaving, setIsSaving]         = useState(false);
 
-  const handleToggle = async (key: string, value: boolean) => {
-    // Update local UI immediately for responsiveness
-    if (key === 'reminders') setReminders(value);
-    if (key === 'appointments') setAppointments(value);
-    if (key === 'offers') setOffers(value);
-
-    // Persist to backend
-    await updatePreferences({
-      medicationReminders: key === 'reminders' ? value : undefined,
-      appointmentReminders: key === 'appointments' ? value : undefined,
-      promotions: key === 'offers' ? value : undefined,
-    });
+  // Simulate saving to server
+  const handleToggle = (setter: React.Dispatch<React.SetStateAction<boolean>>) => {
+    return async (value: boolean) => {
+      setter(value);
+      setIsSaving(true);
+      // Simulate network request
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setIsSaving(false);
+    };
   };
 
   return (
@@ -72,42 +66,31 @@ export default function NotificationsSettingsScreen() {
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Préférences de réception</Text>
           <View style={styles.card}>
             <ToggleItem
               label="Rappels de médicaments"
               description="Recevoir une notification pour chaque prise prévue."
               isEnabled={reminders}
-              onToggle={(v) => handleToggle('reminders', v)}
-              isLoading={isUpdatingPreferences}
+              onToggle={handleToggle(setReminders)}
             />
-            <View style={styles.divider} />
             <ToggleItem
               label="Alertes de rendez-vous"
-              description="Rappels 24h et 1h avant vos rendez-vous médicaux."
+              description="Rappels avant vos rendez-vous médicaux."
               isEnabled={appointments}
-              onToggle={(v) => handleToggle('appointments', v)}
-              isLoading={isUpdatingPreferences}
+              onToggle={handleToggle(setAppointments)}
             />
-            <View style={styles.divider} />
             <ToggleItem
-              label="Offres et nouveautés"
-              description="Informations sur les pharmacies et services proches."
-              isEnabled={offers}
-              onToggle={(v) => handleToggle('offers', v)}
-              isLoading={isUpdatingPreferences}
+              label="Conseils santé"
+              description="Conseils et actualités santé de VitaCare."
+              isEnabled={healthTips}
+              onToggle={handleToggle(setHealthTips)}
             />
           </View>
-          {error && (
-            <View style={{ marginTop: 12 }}>
-              <HelperText message={error as string} type="error" />
-            </View>
-          )}
         </View>
 
-        <View style={styles.infoBox}>
+        <View>
           <Text style={styles.infoText}>
-            Note: Vous pouvez également gérer ces permissions dans les réglages système de votre téléphone.
+            Note : Vous pouvez également gérer ces permissions dans les réglages système de votre téléphone.
           </Text>
         </View>
       </ScrollView>
@@ -129,14 +112,14 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontFamily: fontFamily.bold,
-    fontSize: fontSize.md,
+    fontSize: fontSize.lg,
     color: colors.ink,
     marginBottom: 16,
   },
   card: {
-    backgroundColor: colors.surface,
-    borderRadius: 20,
-    paddingHorizontal: 16,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 12,
   },
   toggleItem: {
     flexDirection: 'row',
@@ -150,14 +133,14 @@ const styles = StyleSheet.create({
   },
   toggleLabel: {
     fontFamily: fontFamily.semiBold,
-    fontSize: fontSize.md,
+    fontSize: fontSize.base,
     color: colors.ink,
   },
   toggleDesc: {
     fontFamily: fontFamily.regular,
-    fontSize: fontSize.xs,
+    fontSize: fontSize.md,
     color: colors.inkLight,
-    lineHeight: 16,
+    lineHeight: 20,
   },
   divider: {
     height: 1,
@@ -172,8 +155,8 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontFamily: fontFamily.regular,
-    fontSize: fontSize.xs,
-    color: colors.inkMuted,
-    lineHeight: 18,
+    fontSize: fontSize.sm,
+    color: colors.ink,
+    lineHeight: 20,
   },
 });

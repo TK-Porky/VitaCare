@@ -248,13 +248,13 @@ const styles = StyleSheet.create({
   },
   fileName: {
     fontFamily: fontFamily.semiBold,
-    fontSize: fontSize.sm,
+    fontSize: fontSize.md,
     color: colors.ink,
     textTransform: 'capitalize',
   },
   fileMeta: {
     fontFamily: fontFamily.regular,
-    fontSize: fontSize.xs,
+    fontSize: fontSize.md,
     color: colors.inkMuted,
   },
   cardActions: {
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
   },
   emptySubtitle: {
     fontFamily: fontFamily.regular,
-    fontSize: fontSize.sm,
+    fontSize: fontSize.md,
     color: colors.inkMuted,
     textAlign: 'center',
     lineHeight: 20,

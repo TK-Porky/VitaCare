@@ -140,7 +140,7 @@ export const BookingBottomSheet = forwardRef<BookingBottomSheetRef, Props>(
         if (next === TOTAL_STEPS) sheetRef.current?.expand();
       } else {
         sheetRef.current?.close();
-        router.push("/booking/bookingSuccess" as never);
+        router.push("/(main)/booking/booking-success" as never);
       }
     };
 

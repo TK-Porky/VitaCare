@@ -95,7 +95,7 @@ export default function BookingScreen() {
     if (step < TOTAL_STEPS) {
       setStep(s => s + 1);
     } else {
-      router.push('/booking/bookingSuccess');
+      router.push('/(main)/booking/booking-success' as never);
     }
   };
 
@@ -120,22 +120,37 @@ export default function BookingScreen() {
         >
           <Ionicons name="chevron-back" size={22} color={colors.ink} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Nouvelle réservation</Text>
-        {/* Spacer to visually center the title */}
-        <View style={styles.headerSpacer} />
+        {!isLastStep && (
+          <Text style={styles.headerTitle}>Nouvelle réservation</Text>
+        )}
+        {isLastStep
+          ? (
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={styles.headerBack}
+              activeOpacity={1}
+              hitSlop={8}
+            >
+              <Ionicons name="close" size={22} color={colors.ink} />
+            </TouchableOpacity>
+          )
+          : <View style={styles.headerSpacer} />
+        }
       </View>
 
       {/* ── Progress ────────────────────────────────────────────────────────── */}
-      <ProgressBar step={step} total={TOTAL_STEPS} />
+      {!isLastStep && <ProgressBar step={step} total={TOTAL_STEPS} />}
 
-      {/* ── Provider card ───────────────────────────────────────────────────── */}
-      <View style={styles.providerCard}>
-        <Image source={{ uri: provider.avatarUri }} style={styles.avatar} />
-        <View style={{ flex: 1 }}>
-          <Text style={styles.providerName}>{provider.name}</Text>
-          <Text style={styles.providerSpecialty}>{provider.specialty}</Text>
+      {/* ── Provider card (steps 1–3 only; step 4 renders it inside StepConfirm) ── */}
+      {!isLastStep && (
+        <View style={styles.providerCard}>
+          <Image source={{ uri: provider.avatarUri }} style={styles.avatar} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.providerName}>{provider.name}</Text>
+            <Text style={styles.providerSpecialty}>{provider.specialty}</Text>
+          </View>
         </View>
-      </View>
+      )}
 
       {/* ── Date preview (step 1 only, when a date has been selected) ──────── */}
       {step === 1 && booking.date !== null && (
@@ -230,10 +245,6 @@ const styles = StyleSheet.create({
   headerBack: {
     width: 36,
     height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -331,11 +342,11 @@ const styles = StyleSheet.create({
   // ── Terms ──
   terms: {
     fontFamily: fontFamily.regular,
-    fontSize: fontSize.xs,
-    color: colors.inkMuted,
+    fontSize: fontSize.sm,
+    color: colors.ink,
     textAlign: 'center',
     paddingHorizontal: 24,
-    paddingVertical: 12,
+    marginBottom: 8,
     lineHeight: 18,
   },
   termsLink: {

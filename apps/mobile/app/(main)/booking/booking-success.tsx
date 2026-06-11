@@ -57,8 +57,8 @@ export default function BookingSuccessScreen() {
         </View>
 
         {/* ── Title ── */}
-        <Text style={styles.title}>Félicitations !</Text>
-        <Text style={styles.subtitle}>Votre réservation a été envoyé !</Text>
+        <Text style={styles.title}>Merci pour votre réservation !</Text>
+        <Text style={styles.subtitle}>Votre réservation est en attente de confirmation.</Text>
 
         {/* ── Summary card ── */}
         <View style={styles.card}>
@@ -73,8 +73,8 @@ export default function BookingSuccessScreen() {
 
           {/* Date */}
           <View style={styles.infoRow}>
-            <Ionicons name="calendar-outline" size={16} color={colors.ink} />
-            <Text style={styles.infoText}>
+            <Ionicons name="calendar-outline" size={20} color={colors.ink} />
+            <Text style={[styles.infoText, { fontFamily: fontFamily.semiBold }]}>
               {date} à {time}
             </Text>
           </View>
@@ -118,14 +118,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: fontFamily.bold,
-    fontSize: fontSize['3xl'],
+    fontSize: fontSize.xl,
     color: colors.ink,
     textAlign: 'center',
   },
   subtitle: {
-    fontFamily: fontFamily.semiBold,
+    fontFamily: fontFamily.regular,
     fontSize: fontSize.base,
-    color: colors.inkMuted,
+    color: colors.ink,
     textAlign: 'center',
     marginBottom: 32,
     marginTop: 4,
@@ -134,9 +134,7 @@ const styles = StyleSheet.create({
   // Card
   card: {
     width: '100%',
-    borderWidth: 1,
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
+    backgroundColor: colors.ltsurface,
     borderRadius: 16,
     padding: 20,
     gap: 12,

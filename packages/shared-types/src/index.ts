@@ -1,3 +1,6 @@
+export * from './notifications';
+export * from './updates';
+
 // Patient
 export interface Patient {
   id: string;

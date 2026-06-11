@@ -35,13 +35,14 @@ export default function MainLayout() {
         />
 
         {/* Profile sub-screens */}
-        <Stack.Screen name="profile/activity"      options={{ animation: "slide_from_right" }} />
-        <Stack.Screen name="profile/location"      options={{ animation: "slide_from_right" }} />
-        <Stack.Screen name="profile/downloads"     options={{ animation: "slide_from_right" }} />
-        <Stack.Screen name="profile/help"          options={{ animation: "slide_from_right" }} />
-        <Stack.Screen name="profile/terms"         options={{ animation: "slide_from_right" }} />
+        <Stack.Screen name="profile/activity"               options={{ animation: "slide_from_right" }} />
+        <Stack.Screen name="profile/location"               options={{ animation: "slide_from_right" }} />
+        <Stack.Screen name="profile/downloads"              options={{ animation: "slide_from_right" }} />
+        <Stack.Screen name="profile/help"                   options={{ animation: "slide_from_right" }} />
+        <Stack.Screen name="profile/terms"                  options={{ animation: "slide_from_right" }} />
+        <Stack.Screen name="profile/notifications-settings" options={{ animation: "slide_from_right" }} />
         <Stack.Screen
-          name="booking/bookingSuccess"
+          name="booking/booking-success"
           options={{
             presentation: "modal",
           }}
