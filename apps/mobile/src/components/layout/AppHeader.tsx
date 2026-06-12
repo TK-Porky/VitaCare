@@ -17,6 +17,7 @@ type Props = {
   searchBar?: boolean;
   searchValue?: string;
   onSearch?: () => void;
+  onSearchFocus?: () => void;
   onMap?: () => void;
   onReminders?: () => void;
   onFilter?: () => void;
@@ -29,6 +30,7 @@ export function AppHeader({
   searchBar,
   searchValue,
   onSearch,
+  onSearchFocus,
   onMap,
   onReminders,
   onFilter,
@@ -92,7 +94,20 @@ export function AppHeader({
       {(title || searchBar) && (
         <View style={styles.bottomContainer}>
           {title && <Text style={styles.title}>{title}</Text>}
-          {searchBar && <SearchInput value={searchValue || ""} onChangeText={() => {}} />}
+          {searchBar && (
+              <View style={styles.searchWrap}>
+                <View pointerEvents={onSearchFocus ? 'none' : 'auto'}>
+                  <SearchInput value={searchValue || ""} onChangeText={() => {}} />
+                </View>
+                {onSearchFocus && (
+                  <TouchableOpacity
+                    style={StyleSheet.absoluteFill}
+                    onPress={onSearchFocus}
+                    activeOpacity={0.7}
+                  />
+                )}
+              </View>
+            )}
         </View>
       )}
     </View>
@@ -140,6 +155,9 @@ const styles = StyleSheet.create({
   bottomContainer: {
     width: "100%",
     paddingTop: 8,
+  },
+  searchWrap: {
+    position: 'relative',
   },
   title: {
     fontFamily: fontFamily.bold,

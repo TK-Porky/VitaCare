@@ -137,10 +137,11 @@ export default function ExploreScreen() {
   return (
     <SafeAreaView style={styles.root}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.primary} />
-      <AppHeader 
-        onSearch={() => handleSearch(search)} 
-        searchBar={true} 
+      <AppHeader
+        onSearch={() => handleSearch(search)}
+        searchBar={true}
         searchValue={search}
+        onSearchFocus={() => router.push('/(main)/explore/search' as never)}
       />
 
       {isLoading && clinics.length === 0 ? (

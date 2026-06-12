@@ -15,6 +15,16 @@ export default function MainLayout() {
         {/* Tabs group - main navigation */}
         <Stack.Screen name="(tabs)" />
 
+        {/* Search screens */}
+        <Stack.Screen
+          name="explore/search"
+          options={{ animation: 'fade' }}
+        />
+        <Stack.Screen
+          name="medications/search"
+          options={{ animation: 'fade' }}
+        />
+
         {/* Modal screens */}
         <Stack.Screen
           name="home/map"

@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { useRouter } from "expo-router";
 import {
   View,
   Text,
@@ -87,6 +88,7 @@ export default function MedecineScreen({ onReminders }: Props) {
   // ================================================================================== //
   // States & Refs
   // ================================================================================== //
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState<Boolean>(false);
   const [search, setSearch] = useState("");
   const [selectedDrug, setSelectedDrug] = useState<Drug | null>(null);
@@ -129,6 +131,7 @@ export default function MedecineScreen({ onReminders }: Props) {
         searchValue={search}
         onFilter={() => {}}
         onReminders={onReminders}
+        onSearchFocus={() => router.push('/(main)/medications/search' as never)}
       />
 
       <ScrollView
