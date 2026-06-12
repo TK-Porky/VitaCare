@@ -96,7 +96,7 @@ export default function BookingScreen() {
   const [step, setStep] = useState(1);
   const [booking, setBooking] = useState<BookingData>(DEFAULT_BOOKING);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  const [availableSlots, setAvailableSlots] = useState<string[] | undefined>(undefined);
   const [slotsLoading, setSlotsLoading] = useState(false);
 
   // Payment sheet refs
@@ -120,7 +120,7 @@ export default function BookingScreen() {
   // Fetch available slots when date changes
   useEffect(() => {
     if (!booking.date || !provider.id) {
-      setAvailableSlots([]);
+      setAvailableSlots(undefined);
       return;
     }
     let cancelled = false;
@@ -131,15 +131,15 @@ export default function BookingScreen() {
     apiClient.get<any>(API_ENDPOINTS.CLINICS.AVAILABLE_SLOTS(provider.id), { weekStart })
       .then(res => {
         if (cancelled) return;
-        if (!res.success) { setAvailableSlots([]); return; }
+        if (!res.success) { setAvailableSlots(undefined); return; }
         const body = res.data;
         const raw: any[] = body?.data ?? body ?? [];
         const times = raw
           .filter((s: any) => s.startTime?.startsWith(dateStr) && !s.isBooked)
           .map((s: any) => s.startTime.split('T')[1].slice(0, 5));
-        setAvailableSlots(times);
+        setAvailableSlots(times.length > 0 ? times : undefined);
       })
-      .catch(() => { if (!cancelled) setAvailableSlots([]); })
+      .catch(() => { if (!cancelled) setAvailableSlots(undefined); })
       .finally(() => { if (!cancelled) setSlotsLoading(false); });
 
     return () => { cancelled = true; };
@@ -147,7 +147,7 @@ export default function BookingScreen() {
 
   const canContinue = (): boolean => {
     if (step === 1) return booking.date !== null;
-    if (step === 2) return booking.time !== null && availableSlots.length > 0;
+    if (step === 2) return booking.time !== null;
     return true;
   };
 
