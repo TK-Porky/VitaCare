@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Platform,
   StatusBar,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -23,6 +24,7 @@ import { OrangePaymentSheet } from '../../../src/components/payment/OrangePaymen
 import { CardPaymentSheet } from '../../../src/components/payment/CardPaymentSheet';
 import type { PaymentSheetRef } from '../../../src/components/payment/MomoPaymentSheet';
 import { colors, fontFamily, fontSize } from '../../../src/themes';
+import { appointmentService } from '../../../src/services/appointment.service';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -35,6 +37,7 @@ type BookingData = {
 };
 
 type Provider = {
+  id?: number;
   name: string;
   specialty: string;
   avatarUri: string;
@@ -71,6 +74,7 @@ const DEFAULT_BOOKING: BookingData = {
 export default function BookingScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{
+    providerId?: string;
     providerName?: string;
     specialty?: string;
     avatarUri?: string;
@@ -79,6 +83,7 @@ export default function BookingScreen() {
   }>();
 
   const provider: Provider = {
+    id: params.providerId ? Number(params.providerId) : undefined,
     name: params.providerName ?? DEFAULT_PROVIDER.name,
     specialty: params.specialty ?? DEFAULT_PROVIDER.specialty,
     avatarUri: params.avatarUri ?? DEFAULT_PROVIDER.avatarUri,
@@ -88,11 +93,15 @@ export default function BookingScreen() {
 
   const [step, setStep] = useState(1);
   const [booking, setBooking] = useState<BookingData>(DEFAULT_BOOKING);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Payment sheet refs
   const momoSheetRef   = useRef<PaymentSheetRef>(null);
   const orangeSheetRef = useRef<PaymentSheetRef>(null);
   const cardSheetRef   = useRef<PaymentSheetRef>(null);
+
+  // Store created appointment ID for payment
+  const createdAppointmentId = useRef<number | null>(null);
 
   const patchBooking = useCallback((patch: Partial<BookingData>) => {
     setBooking(prev => ({ ...prev, ...patch }));
@@ -104,8 +113,7 @@ export default function BookingScreen() {
     return true;
   };
 
-  // Navigate to booking-success after a successful payment (or "pay later")
-  const handlePaymentSuccess = useCallback(() => {
+  const navigateToSuccess = useCallback((appointmentId: number) => {
     const dateLabel = booking.date
       ? `${DAYS[booking.date.getDay()]}, ${booking.date.getDate()} ${MONTHS[booking.date.getMonth()]} ${booking.date.getFullYear()}`
       : '';
@@ -124,6 +132,7 @@ export default function BookingScreen() {
     router.push({
       pathname: '/(main)/booking/booking-success',
       params: {
+        appointmentId: String(appointmentId),
         doctorName:   provider.name,
         specialty:    provider.specialty,
         avatarUri:    provider.avatarUri,
@@ -135,20 +144,44 @@ export default function BookingScreen() {
     } as never);
   }, [booking, provider, router]);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step < TOTAL_STEPS) {
       setStep(s => s + 1);
       return;
     }
-    // Last step — open the correct payment sheet or go direct for "pay later"
-    if (booking.paymentMethod === 'later') {
-      handlePaymentSuccess();
-      return;
+
+    if (!booking.date || !booking.time) return;
+
+    setIsSubmitting(true);
+    try {
+      const appointment = await appointmentService.create({
+        providerId: provider.id ?? 0,
+        date: booking.date.toISOString().split('T')[0],
+        time: booking.time,
+        reason: booking.reason || 'Consultation générale',
+        paymentMethod: booking.paymentMethod === 'now' ? booking.paymentProvider : 'later',
+      });
+      createdAppointmentId.current = appointment.id;
+      setIsSubmitting(false);
+
+      if (booking.paymentMethod === 'later') {
+        navigateToSuccess(appointment.id);
+      } else {
+        if (booking.paymentProvider === 'mobile_money') momoSheetRef.current?.open();
+        else if (booking.paymentProvider === 'orange_money') orangeSheetRef.current?.open();
+        else cardSheetRef.current?.open();
+      }
+    } catch (err: any) {
+      setIsSubmitting(false);
+      Alert.alert('Erreur', err?.message || 'Impossible de créer le rendez-vous.');
     }
-    if (booking.paymentProvider === 'mobile_money') momoSheetRef.current?.open();
-    else if (booking.paymentProvider === 'orange_money') orangeSheetRef.current?.open();
-    else cardSheetRef.current?.open();
   };
+
+  const handlePaymentSuccess = useCallback(() => {
+    if (createdAppointmentId.current) {
+      navigateToSuccess(createdAppointmentId.current);
+    }
+  }, [navigateToSuccess]);
 
   const handleBack = () => {
     if (step > 1) setStep(s => s - 1);
@@ -225,9 +258,7 @@ export default function BookingScreen() {
         </View>
       )}
 
-      {/* ── Step content ─────────────────────────────────────────────────────
-          flex:1 works correctly on a full page (not inside a BottomSheetView).
-          StepConfirm's ScrollView is naturally bounded by the available height. */}
+      {/* ── Step content ───────────────────────────────────────────────────── */}
       <View style={styles.stepContent}>
         {step === 1 && (
           <StepDate
@@ -266,12 +297,14 @@ export default function BookingScreen() {
           </TouchableOpacity>
         )}
         <PrimaryButton
-          label={isLastStep ? 'Confirmer la réservation' : 'Continuer'}
+          label={isLastStep
+            ? (isSubmitting ? 'Création en cours...' : 'Confirmer la réservation')
+            : 'Continuer'}
           variant="solid"
           size="md"
           fullWidth={step === 1 || isLastStep}
           onPress={handleNext}
-          isDisabled={!canContinue()}
+          isDisabled={!canContinue() || isSubmitting}
         />
       </View>
 
@@ -282,7 +315,7 @@ export default function BookingScreen() {
         </Text>
       )}
 
-      {/* ── Payment sheets (rendered outside SafeAreaView so they overlay correctly) ── */}
+      {/* ── Payment sheets ──────────────────────────────────────────────────── */}
       <MomoPaymentSheet
         ref={momoSheetRef}
         amount={paymentTotal}
