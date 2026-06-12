@@ -100,16 +100,11 @@ export const API_ENDPOINTS = {
   // Paiements
   // ---------------------------------------------------------------------------
   PAYMENTS: {
-    CREATE: '/payments',
-    DETAIL: (id: string) => `/payments/${id}`,
-    VALIDATE: (id: string) => `/payments/${id}/validate`,
-    CANCEL: (id: string) => `/payments/${id}/cancel`,
-    REFUND: '/payments/refund',
-    HISTORY: '/payments/history',
-    METHODS: '/payments/methods',
-    SAVED_CARDS: '/payments/cards',
-    ADD_CARD: '/payments/cards',
-    DELETE_CARD: (id: string) => `/payments/cards/${id}`,
+    INITIATE: '/payments/initiate',
+    DETAIL: (id: string | number) => `/payments/${id}`,
+    APPOINTMENT: (id: string | number) => `/payments/appointment/${id}`,
+    WEBHOOK: '/payments/webhook',
+    REFUND: (id: string | number) => `/payments/appointment/${id}/refund`,
   },
 
   // ---------------------------------------------------------------------------

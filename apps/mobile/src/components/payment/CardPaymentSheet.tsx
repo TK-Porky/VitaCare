@@ -2,14 +2,17 @@ import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react'
 import { View, Text, StyleSheet, TextInput, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppBottomSheet, AppBottomSheetRef } from '../generics/AppBottomSheet';
+import { PhoneInput } from '../inputs/PhoneInput';
 import { PrimaryButton } from '../buttons/PrimaryButton';
 import { PaymentResultModal } from './PaymentResultModal';
 import { colors, fontFamily, fontSize } from '../../themes';
+import { paymentService } from '../../services/payment.service';
 import type { PaymentSheetRef } from './MomoPaymentSheet';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Props = {
+  appointmentId: number;
   amount: number;
   onSuccess: () => void;
 };
@@ -87,12 +90,13 @@ function CardField({
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export const CardPaymentSheet = forwardRef<PaymentSheetRef, Props>(
-  ({ amount, onSuccess }, ref) => {
+  ({ appointmentId, amount, onSuccess }, ref) => {
     const sheetRef = useRef<AppBottomSheetRef>(null);
     const [cardNumber,   setCardNumber]   = useState('');
     const [expiry,       setExpiry]       = useState('');
     const [cvv,          setCvv]          = useState('');
     const [cardHolder,   setCardHolder]   = useState('');
+    const [phone,        setPhone]        = useState('');
     const [processing,   setProcessing]   = useState(false);
     const [modal,        setModal]        = useState<ModalState>({ visible: false });
 
@@ -110,23 +114,36 @@ export const CardPaymentSheet = forwardRef<PaymentSheetRef, Props>(
       setExpiry('');
       setCvv('');
       setCardHolder('');
+      setPhone('');
       setModal({ visible: false });
     };
 
     const handlePay = async () => {
       setProcessing(true);
-      await new Promise(r => setTimeout(r, 2500));
-      setProcessing(false);
-
-      // Demo: CVV "000" → simulate decline
-      if (cvv === '000') {
+      try {
+        const result = await paymentService.initiatePayment({
+          appointmentId,
+          amount,
+          paymentMethod: 'CARD_VISA',
+          phoneNumber: phone,
+        });
+        setProcessing(false);
+        if (result.paymentStatus === 'SUCCESS' || result.paymentStatus === 'PROCESSING') {
+          setModal({ visible: true, type: 'success' });
+        } else {
+          setModal({
+            visible: true,
+            type: 'error',
+            message: result.failureReason || 'Carte refusée. Vérifiez les informations et réessayez.',
+          });
+        }
+      } catch (err: any) {
+        setProcessing(false);
         setModal({
           visible: true,
           type: 'error',
-          message: 'Carte refusée. Vérifiez les informations de votre carte et réessayez.',
+          message: err?.message || 'Erreur de paiement. Veuillez réessayer.',
         });
-      } else {
-        setModal({ visible: true, type: 'success' });
       }
     };
 
@@ -145,9 +162,10 @@ export const CardPaymentSheet = forwardRef<PaymentSheetRef, Props>(
       sheetRef.current?.close();
     };
 
-    const rawDigits   = cardNumber.replace(/\D/g, '');
-    const expiryValid = /^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry);
-    const isValid     = rawDigits.length === 16 && expiryValid && cvv.length === 3 && cardHolder.trim().length > 2;
+    const rawDigits    = cardNumber.replace(/\D/g, '');
+    const expiryValid  = /^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry);
+    const phoneValid   = phone.replace(/\D/g, '').length >= 9;
+    const isValid      = rawDigits.length === 16 && expiryValid && cvv.length === 3 && cardHolder.trim().length > 2 && phoneValid;
 
     return (
       <>
@@ -211,6 +229,16 @@ export const CardPaymentSheet = forwardRef<PaymentSheetRef, Props>(
             onChangeText={setCardHolder}
             placeholder="PRÉNOM NOM"
           />
+
+          {/* ── Phone (required by backend) ── */}
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>Téléphone de contact</Text>
+            <PhoneInput
+              value={phone}
+              onChangeText={setPhone}
+              placeholder="6XX XXX XXX"
+            />
+          </View>
 
           {/* ── Security badge ── */}
           <View style={styles.securityBadge}>

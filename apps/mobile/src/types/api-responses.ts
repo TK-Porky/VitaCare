@@ -205,37 +205,20 @@ export interface DashboardResponse extends ApiResponse<{
 // Paiements
 // ---------------------------------------------------------------------------
 
-export interface PaymentRequest {
-  appointmentId: string;
-  method: 'mobile_money' | 'orange_money' | 'card';
-  amount: number;
-  currency: string;
-  phone?: string;
-  cardToken?: string;
-}
-
 export interface PaymentResponse {
-  id: string;
-  appointmentId: string;
-  status: 'pending' | 'completed' | 'failed' | 'cancelled';
+  id: number;
+  appointmentId: number;
   amount: number;
   currency: string;
-  method: string;
-  transactionId?: string;
+  paymentMethod: string;
+  paymentStatus: 'PENDING' | 'PROCESSING' | 'SUCCESS' | 'FAILED' | 'CANCELLED' | 'REFUNDED';
+  sharepayReference: string | null;
+  sharepayTransactionId: string | null;
+  phoneNumber: string;
+  description: string | null;
+  failureReason: string | null;
+  paidAt: string | null;
   createdAt: string;
-  completedAt?: string;
-}
-
-export interface PaymentMethodsResponse {
-  availableMethods: ('mobile_money' | 'orange_money' | 'card')[];
-  defaultMethod?: string;
-  savedCards?: {
-    id: string;
-    last4: string;
-    brand: string;
-    expiryMonth: number;
-    expiryYear: number;
-  }[];
 }
 
 // ---------------------------------------------------------------------------

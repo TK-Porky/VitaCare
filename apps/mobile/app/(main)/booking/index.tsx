@@ -318,16 +318,19 @@ export default function BookingScreen() {
       {/* ── Payment sheets ──────────────────────────────────────────────────── */}
       <MomoPaymentSheet
         ref={momoSheetRef}
+        appointmentId={createdAppointmentId.current ?? 0}
         amount={paymentTotal}
         onSuccess={handlePaymentSuccess}
       />
       <OrangePaymentSheet
         ref={orangeSheetRef}
+        appointmentId={createdAppointmentId.current ?? 0}
         amount={paymentTotal}
         onSuccess={handlePaymentSuccess}
       />
       <CardPaymentSheet
         ref={cardSheetRef}
+        appointmentId={createdAppointmentId.current ?? 0}
         amount={paymentTotal}
         onSuccess={handlePaymentSuccess}
       />

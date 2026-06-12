@@ -185,34 +185,11 @@ export interface UpdateObservanceRequest {
 // Paiements
 // ---------------------------------------------------------------------------
 
-export interface CreatePaymentRequest {
-  appointmentId: string;
-  method: 'mobile_money' | 'orange_money' | 'card';
+export interface InitiatePaymentRequest {
+  appointmentId: number;
   amount: number;
-  currency: string;
-  phone?: string;
-  cardToken?: string;
-  saveCard?: boolean;
-}
-
-export interface ValidatePaymentRequest {
-  paymentId: string;
-  otp?: string;
-  transactionId?: string;
-}
-
-export interface RefundRequest {
-  appointmentId: string;
-  reason: string;
-  amount?: number; // si remboursement partiel
-}
-
-export interface GetPaymentHistoryQuery {
-  page?: number;
-  limit?: number;
-  startDate?: string;
-  endDate?: string;
-  status?: 'completed' | 'pending' | 'failed';
+  paymentMethod: 'MTN_MOMO_CM' | 'ORANGE_MONEY_CM' | 'CARD_VISA' | 'CARD_MASTERCARD';
+  phoneNumber: string;
 }
 
 // ---------------------------------------------------------------------------

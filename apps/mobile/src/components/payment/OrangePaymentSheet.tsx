@@ -5,11 +5,13 @@ import { PhoneInput } from '../inputs/PhoneInput';
 import { PrimaryButton } from '../buttons/PrimaryButton';
 import { PaymentResultModal } from './PaymentResultModal';
 import { colors, fontFamily, fontSize } from '../../themes';
+import { paymentService } from '../../services/payment.service';
 import type { PaymentSheetRef } from './MomoPaymentSheet';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Props = {
+  appointmentId: number;
   amount: number;
   onSuccess: () => void;
 };
@@ -27,7 +29,7 @@ const fmt = (n: number) =>
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export const OrangePaymentSheet = forwardRef<PaymentSheetRef, Props>(
-  ({ amount, onSuccess }, ref) => {
+  ({ appointmentId, amount, onSuccess }, ref) => {
     const sheetRef = useRef<AppBottomSheetRef>(null);
     const [phone, setPhone]           = useState('');
     const [processing, setProcessing] = useState(false);
@@ -40,18 +42,30 @@ export const OrangePaymentSheet = forwardRef<PaymentSheetRef, Props>(
 
     const handlePay = async () => {
       setProcessing(true);
-      await new Promise(r => setTimeout(r, 2200));
-      setProcessing(false);
-
-      // Demo: numbers starting with "0" → simulate error
-      if (phone.startsWith('0')) {
+      try {
+        const result = await paymentService.initiatePayment({
+          appointmentId,
+          amount,
+          paymentMethod: 'ORANGE_MONEY_CM',
+          phoneNumber: phone,
+        });
+        setProcessing(false);
+        if (result.paymentStatus === 'SUCCESS' || result.paymentStatus === 'PROCESSING') {
+          setModal({ visible: true, type: 'success' });
+        } else {
+          setModal({
+            visible: true,
+            type: 'error',
+            message: result.failureReason || 'Paiement refusé. Veuillez réessayer.',
+          });
+        }
+      } catch (err: any) {
+        setProcessing(false);
         setModal({
           visible: true,
           type: 'error',
-          message: 'Solde insuffisant ou numéro Orange Money invalide. Vérifiez votre numéro et réessayez.',
+          message: err?.message || 'Erreur de paiement. Veuillez réessayer.',
         });
-      } else {
-        setModal({ visible: true, type: 'success' });
       }
     };
 
