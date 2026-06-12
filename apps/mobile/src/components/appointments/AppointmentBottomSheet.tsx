@@ -13,7 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { AppBottomSheet, AppBottomSheetRef } from '../generics';
 import { PrimaryButton } from '../buttons';
 import { GrayButton } from '../buttons/GrayButton';
-import { colors, fontFamily, fontSize } from '../../../src/themes';
+import { colors, fontFamily, fontSize } from '../../themes';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -100,7 +100,7 @@ const STATUS_CONFIG: Record<AppointmentStatus, { label: string; bg: string; colo
 const formatPrice = (n: number): string =>
   Math.abs(n)
     .toString()
-    .replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    .replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 
 /** Builds a styled HTML ticket ready for PDF rendering via expo-print. */
 function buildTicketHTML(appt: Appointment, currency: string): string {
@@ -131,8 +131,6 @@ function buildTicketHTML(appt: Appointment, currency: string): string {
       background:#FFFFFF;border-radius:24px;
       overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.10);
     }
-
-    /* ── Header gradient ── */
     .header{
       background:linear-gradient(135deg,#43F04A 0%,#2ADB6F 40%,#11C793 100%);
       padding:28px 24px 24px;color:#fff;
@@ -151,8 +149,6 @@ function buildTicketHTML(appt: Appointment, currency: string): string {
     }
     .total-label{font-size:11px;opacity:.75;}
     .total-amount{font-size:22px;font-weight:800;letter-spacing:-0.3px;}
-
-    /* ── Doctor card ── */
     .doctor{
       display:flex;align-items:center;gap:14px;
       padding:18px 24px;border-bottom:1px solid #F1F5F9;
@@ -164,8 +160,6 @@ function buildTicketHTML(appt: Appointment, currency: string): string {
     }
     .doctor-name{font-size:15px;font-weight:700;color:#1B181B;}
     .doctor-specialty{font-size:13px;color:#8896B0;margin-top:3px;}
-
-    /* ── Perforation ── */
     .perf{
       display:flex;align-items:center;
       padding:0;margin:0;height:24px;overflow:hidden;
@@ -177,8 +171,6 @@ function buildTicketHTML(appt: Appointment, currency: string): string {
     .perf-line{
       flex:1;border-top:2px dashed #E2E8F0;margin:0 12px;
     }
-
-    /* ── Detail sections ── */
     .details{padding:20px 24px 8px;}
     .detail-item{margin-bottom:16px;}
     .detail-label{
@@ -186,8 +178,6 @@ function buildTicketHTML(appt: Appointment, currency: string): string {
       text-transform:uppercase;letter-spacing:0.7px;margin-bottom:5px;
     }
     .detail-value{font-size:14px;font-weight:500;color:#1B181B;line-height:1.5;}
-
-    /* ── Invoice ── */
     .invoice{
       background:#F8FAFC;margin:4px 16px 16px;
       border-radius:16px;padding:18px;
@@ -201,8 +191,6 @@ function buildTicketHTML(appt: Appointment, currency: string): string {
     .total-tr td{padding:8px 0;font-size:16px;font-weight:800;}
     .total-tr .td-label{color:#1B181B;}
     .total-tr .td-amount{color:#11C793;text-align:right;}
-
-    /* ── Footer ── */
     .footer{
       text-align:center;padding:16px 24px;
       font-size:11px;color:#94A3B8;
@@ -213,8 +201,6 @@ function buildTicketHTML(appt: Appointment, currency: string): string {
 </head>
 <body>
   <div class="ticket">
-
-    <!-- Header -->
     <div class="header">
       <div class="logo">VitaCare</div>
       <div class="visit-title">${appt.title}</div>
@@ -229,8 +215,6 @@ function buildTicketHTML(appt: Appointment, currency: string): string {
         </div>
       </div>
     </div>
-
-    <!-- Doctor -->
     <div class="doctor">
       <img class="doctor-avatar" src="${appt.doctorAvatarUri}" alt="avatar"/>
       <div>
@@ -238,15 +222,11 @@ function buildTicketHTML(appt: Appointment, currency: string): string {
         <div class="doctor-specialty">${appt.specialty}</div>
       </div>
     </div>
-
-    <!-- Perforation -->
     <div class="perf">
       <div class="perf-circle"></div>
       <div class="perf-line"></div>
       <div class="perf-circle"></div>
     </div>
-
-    <!-- Details -->
     <div class="details">
       <div class="detail-item">
         <div class="detail-label">📝 Motif</div>
@@ -265,8 +245,6 @@ function buildTicketHTML(appt: Appointment, currency: string): string {
         <div class="detail-value">${appt.paymentMethod}</div>
       </div>
     </div>
-
-    <!-- Invoice -->
     <div class="invoice">
       <div class="invoice-title">Facture</div>
       <table>
@@ -280,14 +258,11 @@ function buildTicketHTML(appt: Appointment, currency: string): string {
         </tbody>
       </table>
     </div>
-
-    <!-- Footer -->
     <div class="footer">
       <strong>VitaCare</strong> — Santé Intelligente au Cameroun<br/>
       Généré le ${new Date().toLocaleDateString('fr-FR')}<br/>
       Ce ticket fait foi pour votre rendez-vous médical.
     </div>
-
   </div>
 </body>
 </html>`;
@@ -355,8 +330,6 @@ export const AppointmentDetailBottomSheet = forwardRef<AppointmentDetailBottomSh
     const fmt        = (n: number) => `${formatPrice(n)} ${currency}`;
     const statusCfg  = STATUS_CONFIG[appointment.status];
 
-    // ── Action handlers (always close sheet first) ───────────────────────────
-
     const handleReschedule = () => {
       sheetRef.current?.close();
       onReschedule?.();
@@ -408,8 +381,6 @@ export const AppointmentDetailBottomSheet = forwardRef<AppointmentDetailBottomSh
       }
     };
 
-    // ── Render ───────────────────────────────────────────────────────────────
-
     return (
       <AppBottomSheet
         ref={sheetRef}
@@ -418,12 +389,9 @@ export const AppointmentDetailBottomSheet = forwardRef<AppointmentDetailBottomSh
         scrollable
         containerStyle={styles.sheet}
       >
-        {/* ── Title ─────────────────────────────────────────────────────── */}
         <Text style={styles.visitTitle}>{appointment.title}</Text>
 
-        {/* ── Doctor & Status Card ─────────────────────────────────────── */}
         <View style={styles.doctorStatusCard}>
-          {/* Doctor row */}
           <TouchableOpacity
             style={styles.doctorRow}
             onPress={onDoctorPress}
@@ -442,7 +410,6 @@ export const AppointmentDetailBottomSheet = forwardRef<AppointmentDetailBottomSh
 
           <View style={styles.cardDivider} />
 
-          {/* Status badge + Total */}
           <View style={styles.statusTotalRow}>
             <View
               style={[styles.statusBadge, { backgroundColor: statusCfg.bg }]}
@@ -460,17 +427,14 @@ export const AppointmentDetailBottomSheet = forwardRef<AppointmentDetailBottomSh
           </View>
         </View>
 
-        {/* ── Motif ─────────────────────────────────────────────────────── */}
         <SectionTitle>Motif</SectionTitle>
         <Text style={styles.bodyText}>{appointment.reason}</Text>
 
-        {/* ── Date & Heure ──────────────────────────────────────────────── */}
         <SectionTitle>Date & Heure</SectionTitle>
         <InfoRow icon="calendar-outline">
           <Text style={styles.bodyText}>{appointment.dateTime}</Text>
         </InfoRow>
 
-        {/* ── Lieux ─────────────────────────────────────────────────────── */}
         <SectionTitle>Lieux</SectionTitle>
         <InfoRow icon="location-outline">
           <Text style={styles.bodyText}>
@@ -479,7 +443,6 @@ export const AppointmentDetailBottomSheet = forwardRef<AppointmentDetailBottomSh
           </Text>
         </InfoRow>
 
-        {/* Clinic image */}
         {appointment.clinicImageUri ? (
           <Image
             source={{ uri: appointment.clinicImageUri }}
@@ -488,7 +451,6 @@ export const AppointmentDetailBottomSheet = forwardRef<AppointmentDetailBottomSh
           />
         ) : null}
 
-        {/* Map button */}
         <GrayButton
           label="Montrer sur la Carte"
           icon="map-outline"
@@ -496,7 +458,6 @@ export const AppointmentDetailBottomSheet = forwardRef<AppointmentDetailBottomSh
           style={styles.mapBtn}
         />
 
-        {/* ── Méthodes de paiements ─────────────────────────────────────── */}
         <SectionTitle>Méthodes de paiements</SectionTitle>
 
         {appointment.paymentMethod === 'Espèces' ? (
@@ -505,7 +466,6 @@ export const AppointmentDetailBottomSheet = forwardRef<AppointmentDetailBottomSh
           <PaymentRow icon="card-outline" label={appointment.paymentMethod} />
         )}
 
-        {/* ── Facture ───────────────────────────────────────────────────── */}
         <SectionTitle>Facture</SectionTitle>
 
         {appointment.invoiceLines.map((line) => (
@@ -529,7 +489,6 @@ export const AppointmentDetailBottomSheet = forwardRef<AppointmentDetailBottomSh
           <Text style={styles.totalLineAmount}>{fmt(appointment.total)}</Text>
         </View>
 
-        {/* ── Footer actions ────────────────────────────────────────────── */}
         <View style={styles.actionsRow}>
           {actionVariant === 'reschedule' ? (
             <>
@@ -542,7 +501,7 @@ export const AppointmentDetailBottomSheet = forwardRef<AppointmentDetailBottomSh
               <GrayButton
                 label="Annuler"
                 onPress={handleCancel}
-                style={{ flex: 0.75  }}
+                style={{ flex: 0.75 }}
               />
             </>
           ) : (
@@ -576,8 +535,6 @@ const styles = StyleSheet.create({
   sheet: {
     paddingHorizontal: 20,
   },
-
-  // ── Title ──
   visitTitle: {
     fontFamily: fontFamily.bold,
     fontSize: fontSize['2xl'],
@@ -586,8 +543,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     letterSpacing: -0.3,
   },
-
-  // ── Doctor & Status Card ──
   doctorStatusCard: {
     backgroundColor: colors.ltsurface,
     borderRadius: 16,
@@ -598,8 +553,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.border,
     marginVertical: 14,
   },
-
-  // Doctor row
   doctorRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -625,8 +578,6 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     color: colors.inkMuted,
   },
-
-  // Status + Total
   statusTotalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -663,15 +614,11 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md,
     color: colors.primary,
   },
-
-  // ── Divider ──
   divider: {
     height: 1,
     backgroundColor: colors.border,
     marginVertical: 20,
   },
-
-  // ── Payment method ──
   paymentMethod: {
     borderWidth: 1,
     borderColor: colors.border,
@@ -682,19 +629,11 @@ const styles = StyleSheet.create({
     gap: 10,
     marginTop: 10,
   },
-  paymentMethodIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: colors.border,
-  },
   paymentMethodText: {
     fontFamily: fontFamily.semiBold,
     fontSize: fontSize.md,
     color: colors.ink,
   },
-
-  // ── Section title ──
   sectionTitle: {
     fontFamily: fontFamily.bold,
     fontSize: fontSize.base,
@@ -703,8 +642,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 10,
   },
-
-  // ── Body text ──
   bodyText: {
     fontFamily: fontFamily.regular,
     fontSize: fontSize.md,
@@ -714,8 +651,6 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.semiBold,
     color: colors.ink,
   },
-
-  // ── Info row ──
   infoRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -725,8 +660,6 @@ const styles = StyleSheet.create({
   infoRowContent: {
     flex: 1,
   },
-
-  // ── Clinic image ──
   clinicImage: {
     width: '100%',
     height: 180,
@@ -734,14 +667,10 @@ const styles = StyleSheet.create({
     marginTop: 14,
     backgroundColor: colors.border,
   },
-
-  // ── Map button ──
   mapBtn: {
     marginTop: 12,
     borderRadius: 12,
   },
-
-  // ── Invoice ──
   invoiceLine: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -781,8 +710,6 @@ const styles = StyleSheet.create({
     fontSize: fontSize.base,
     color: colors.primary,
   },
-
-  // ── Actions ──
   actionsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

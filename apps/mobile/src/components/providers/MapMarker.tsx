@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Image, StyleSheet } from 'react-native';
 import { Marker } from 'react-native-maps';
-import { colors } from '../../../src/themes';
+import { colors } from '../../themes';
 
 type Props = {
   coordinate: {

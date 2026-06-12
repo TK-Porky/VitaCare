@@ -187,11 +187,6 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.semiBold,
     color: colors.success,
   },
-  cardDivider: {
-    height: 1,
-    backgroundColor: colors.border,
-    marginBottom: 12,
-  },
   clinicRow: {
     flexDirection: 'row',
     alignItems: 'center',

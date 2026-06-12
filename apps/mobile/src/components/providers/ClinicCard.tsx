@@ -2,7 +2,7 @@ import { useState } from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { MoreHorizontal } from "lucide-react-native";
-import { colors, fontFamily, fontSize } from "../../../src/themes";
+import { colors, fontFamily, fontSize } from "../../themes";
 import { PrimaryButton } from "../buttons";
 import { ClinicProvider } from "../../types";
 import { Skeleton } from "../generics";
@@ -31,7 +31,7 @@ function DoctorRow({
             style={styles.avatarImage}
             resizeMode="cover"
           />
-        ):(
+        ) : (
           <Text style={styles.avatarInitial}>{name[0]}</Text>
         )}
       </TouchableOpacity>
@@ -156,7 +156,6 @@ export function ClinicCard({ data, onReserve, onMore, onProfile }: ClinicCardPro
 export function ClinicCardSkeleton() {
   return (
     <View style={styles.card}>
-      {/* DoctorRow Skeleton */}
       <View style={styles.doctorRow}>
         <Skeleton width={44} height={44} borderRadius={22} />
         <View style={[styles.doctorInfo, { gap: 6, marginLeft: 10 }]}>
@@ -167,11 +166,7 @@ export function ClinicCardSkeleton() {
           </View>
         </View>
       </View>
-
-      {/* ClinicImage Skeleton */}
       <Skeleton width="100%" height={200} borderRadius={0} />
-
-      {/* ClinicInfo Skeleton */}
       <View style={styles.infoContainer}>
         <View style={styles.titleRow}>
           <Skeleton width="50%" height={20} />
@@ -202,8 +197,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.07,
     shadowRadius: 8,
   },
-
-  // DoctorRow
   doctorRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -218,7 +211,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  avatarImage:{
+  avatarImage: {
     width: "100%",
     height: "100%",
     borderRadius: 22,
@@ -260,14 +253,10 @@ const styles = StyleSheet.create({
   moreBtn: {
     padding: 4,
   },
-
-  // ClinicImage
   image: {
     width: "100%",
     height: 200,
   },
-
-  // ClinicInfo
   infoContainer: {
     paddingVertical: 14,
     gap: 8,
@@ -282,17 +271,6 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.bold,
     color: colors.ink,
     flex: 1,
-  },
-  reserveBtn: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  reserveText: {
-    color: colors.white,
-    fontSize: fontSize.sm,
-    fontFamily: fontFamily.semiBold,
   },
   description: {
     fontSize: fontSize.md,

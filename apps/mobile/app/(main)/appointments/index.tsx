@@ -13,7 +13,7 @@ import {
   AppointmentDetailBottomSheet,
   AppointmentDetailBottomSheetRef,
   AppointmentSheetData,
-} from "../../../src/components/modals/";
+} from "../../../src/components/appointments/";
 import {
   AppHeader,
   TabsSection,

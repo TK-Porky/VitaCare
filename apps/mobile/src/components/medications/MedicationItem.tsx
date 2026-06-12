@@ -22,9 +22,9 @@ export function MedicationItem({ name, dose, status, time, onPress }: Props) {
   const config = STATUS_CONFIG[status];
 
   return (
-    <TouchableOpacity 
-      style={styles.container} 
-      onPress={onPress} 
+    <TouchableOpacity
+      style={styles.container}
+      onPress={onPress}
       activeOpacity={onPress ? 0.7 : 1}
       disabled={!onPress}
     >

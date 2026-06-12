@@ -2,7 +2,7 @@ import React, { useCallback } from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fontFamily, fontSize } from '../../../../src/themes';
+import { colors, fontFamily, fontSize } from '../../../themes';
 
 type Props = {
   value: number;
@@ -30,14 +30,12 @@ export const FilterRangeSlider = ({
 
   return (
     <View style={[styles.container, style]}>
-      {/* Value bubble above thumb */}
       <View style={styles.bubbleRow}>
         <View style={styles.bubble}>
           <Text style={styles.bubbleText}>{value}km</Text>
         </View>
       </View>
 
-      {/* Track + icons */}
       <View style={styles.trackRow}>
         <Ionicons name="person-outline" size={16} color={colors.inkMuted} />
         <Slider

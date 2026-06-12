@@ -4,12 +4,11 @@ import {
   Text,
   StyleSheet,
   Image,
-  ScrollView,
 } from 'react-native';
 import { AppBottomSheet, AppBottomSheetRef } from '../generics';
 import { PrimaryButton } from '../buttons';
 import { GrayButton } from '../buttons/GrayButton';
-import { colors, fontFamily, fontSize } from '../../../src/themes';
+import { colors, fontFamily, fontSize } from '../../themes';
 import { Drug } from '../../types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -44,7 +43,6 @@ export const DrugDetailBottomSheet = forwardRef<DrugDetailBottomSheetRef, Props>
         snapPoints={['55%', '85%']}
         onClose={onClose}
         scrollable
-        containerStyle={styles.sheet}
       >
         <View style={styles.content}>
           {/* ── Drug Image ── */}
@@ -52,7 +50,7 @@ export const DrugDetailBottomSheet = forwardRef<DrugDetailBottomSheetRef, Props>
             <Image
               source={{ uri: drug.imageUri }}
               style={styles.image}
-              resizeMode="contain"
+              resizeMode="fill"
             />
           </View>
 
@@ -67,8 +65,8 @@ export const DrugDetailBottomSheet = forwardRef<DrugDetailBottomSheetRef, Props>
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Description</Text>
             <Text style={styles.description}>
-              Ce médicament est utilisé pour traiter les symptômes de la douleur et de la fièvre. 
-              Veuillez lire attentivement la notice avant utilisation. Si les symptômes persistent, 
+              Ce médicament est utilisé pour traiter les symptômes de la douleur et de la fièvre.
+              Veuillez lire attentivement la notice avant utilisation. Si les symptômes persistent,
               consultez votre médecin ou votre pharmacien.
             </Text>
           </View>
@@ -110,9 +108,6 @@ DrugDetailBottomSheet.displayName = 'DrugDetailBottomSheet';
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  sheet: {
-    paddingHorizontal: 20,
-  },
   content: {
     paddingBottom: 24,
   },

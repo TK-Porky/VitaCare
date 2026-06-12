@@ -9,13 +9,12 @@ import {
   StyleSheet,
   Image,
   TouchableOpacity,
-  ScrollView,
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppBottomSheet, AppBottomSheetRef } from '../generics';
 import { PrimaryButton } from '../buttons';
-import { colors, fontFamily, fontSize } from '../../../src/themes';
+import { colors, fontFamily, fontSize } from '../../themes';
 
 export type ReservationStatus = 'none' | 'confirmed' | 'pending';
 
@@ -138,7 +137,6 @@ export const ProfessionalProviderBottomSheet = forwardRef<
         scrollable
         containerStyle={styles.sheet}
       >
-        {/* ── Clinic name + status badge ── */}
         <View style={styles.titleRow}>
           <Text style={styles.clinicName} numberOfLines={1}>
             {provider.clinicName}
@@ -146,7 +144,6 @@ export const ProfessionalProviderBottomSheet = forwardRef<
           <StatusBadge status={reservationStatus} />
         </View>
 
-        {/* ── Header : avatar + stats ── */}
         <View style={styles.header}>
           <Image source={{ uri: provider.avatarUri }} style={styles.avatar} />
           <View style={styles.statsRow}>
@@ -158,11 +155,9 @@ export const ProfessionalProviderBottomSheet = forwardRef<
           </View>
         </View>
 
-        {/* ── Doctor name + description ── */}
         <Text style={styles.doctorName}>{provider.doctorName}</Text>
         <Text style={styles.description}>{provider.description}</Text>
 
-        {/* ── CTA buttons ── */}
         <View style={styles.ctaRow}>
           {hasReservation ? (
             <PrimaryButton
@@ -188,16 +183,13 @@ export const ProfessionalProviderBottomSheet = forwardRef<
           </TouchableOpacity>
         </View>
 
-        {/* ── Service hours ── */}
         <Text style={styles.sectionTitle}>Heures de services</Text>
         <InfoRow icon="time-outline" text={provider.hoursRange} />
         <InfoRow icon="calendar-outline" text={provider.hoursdays} />
 
-        {/* ── Location ── */}
         <Text style={styles.sectionTitle}>Lieu de service</Text>
         <InfoRow icon="location-outline" text={provider.location} />
 
-        {/* ── Cover image ── */}
         {provider.coverUri && (
           <Image
             source={{ uri: provider.coverUri }}
@@ -206,7 +198,6 @@ export const ProfessionalProviderBottomSheet = forwardRef<
           />
         )}
 
-        {/* ── Show on map ── */}
         <TouchableOpacity style={styles.mapBtn} onPress={onShowOnMap}>
           <Ionicons name="map-outline" size={18} color={colors.ink} />
           <Text style={styles.mapBtnText}>Montrer sur la Carte</Text>
@@ -226,8 +217,6 @@ const styles = StyleSheet.create({
   sheet: {
     paddingHorizontal: 20,
   },
-
-  // Title row
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -241,8 +230,6 @@ const styles = StyleSheet.create({
     color: colors.inkMuted,
     flexShrink: 1,
   },
-
-  // Badge
   badge: {
     paddingHorizontal: 8,
     paddingVertical: 3,
@@ -264,8 +251,6 @@ const styles = StyleSheet.create({
   badgeTextPending: {
     color: '#B45309',
   },
-
-  // Header
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -303,8 +288,6 @@ const styles = StyleSheet.create({
     height: 28,
     backgroundColor: colors.border,
   },
-
-  // Doctor info
   doctorName: {
     fontFamily: fontFamily.bold,
     fontSize: fontSize.lg,
@@ -318,8 +301,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginBottom: 20,
   },
-
-  // CTA
   ctaRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -338,8 +319,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-
-  // Sections
   sectionTitle: {
     fontFamily: fontFamily.semiBold,
     fontSize: fontSize.md,
@@ -358,8 +337,6 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md,
     color: colors.inkMuted,
   },
-
-  // Cover
   coverImage: {
     width: '100%',
     height: 180,
@@ -368,8 +345,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     backgroundColor: colors.border,
   },
-
-  // Map button
   mapBtn: {
     flexDirection: 'row',
     alignItems: 'center',

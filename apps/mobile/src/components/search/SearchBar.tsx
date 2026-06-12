@@ -7,8 +7,8 @@ import {
   ViewStyle,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { PrimaryButton  } from '../buttons';
-import { colors, fontFamily, fontSize } from '../../../src/themes';
+import { PrimaryButton } from '../buttons';
+import { colors, fontFamily, fontSize } from '../../themes';
 
 type Props = {
   value?: string;
@@ -41,13 +41,13 @@ export const SearchBar = ({
         placeholderTextColor={colors.inkMuted}
         returnKeyType="search"
       />
-       <PrimaryButton
-          onPress={onFilterPress}
-          icon={<Ionicons name="options-outline" size={18} color={colors.white} />}
-          isRound={true}
-          size="sm"
-          style={styles.filterButton}
-        />
+      <PrimaryButton
+        onPress={onFilterPress}
+        icon={<Ionicons name="options-outline" size={18} color={colors.white} />}
+        isRound={true}
+        size="sm"
+        style={styles.filterButton}
+      />
     </View>
   );
 };

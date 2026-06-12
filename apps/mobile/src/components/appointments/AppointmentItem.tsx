@@ -23,8 +23,8 @@ export function AppointmentItem({ doctorName, date, time, status, avatarUrl, onP
   const config = STATUS_CONFIG[status];
 
   return (
-    <TouchableOpacity 
-      style={styles.container} 
+    <TouchableOpacity
+      style={styles.container}
       onPress={onPress}
       activeOpacity={onPress ? 0.7 : 1}
       disabled={!onPress}

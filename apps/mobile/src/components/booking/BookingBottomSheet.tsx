@@ -16,13 +16,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { AppBottomSheet, AppBottomSheetRef } from "../generics";
 import { PrimaryButton } from "../buttons";
-import { colors, fontFamily, fontSize } from "../../../src/themes";
+import { colors, fontFamily, fontSize } from "../../themes";
 
-import { ProgressBar } from "../booking/ProgressBar";
-import { StepDate } from "../booking/StepDate";
-import { StepTime } from "../booking/StepTime";
-import { StepReason } from "../booking/StepReason";
-import { StepConfirm } from "../booking/StepConfirm";
+import { ProgressBar } from "./ProgressBar";
+import { StepDate } from "./StepDate";
+import { StepTime } from "./StepTime";
+import { StepReason } from "./StepReason";
+import { StepConfirm } from "./StepConfirm";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -58,7 +58,7 @@ const TOTAL_STEPS = 4;
 
 const DEFAULT_PROVIDER: Provider = {
   name: "Dr. Igriss Kakmo",
-  specialty: "Gynécologue",              // typo corrigé
+  specialty: "Gynécologue",
   avatarUri: "https://randomuser.me/api/portraits/men/75.jpg",
   priceXCFA: 5000,
   location: "Clinique Wellstar, Bastos, Yaoundé",
@@ -128,15 +128,13 @@ export const BookingBottomSheet = forwardRef<BookingBottomSheetRef, Props>(
     const canContinue = () => {
       if (step === 1) return booking.date !== null;
       if (step === 2) return booking.time !== null;
-      return true; // steps 3 & 4
+      return true;
     };
 
     const handleNext = () => {
       if (step < TOTAL_STEPS) {
         const next = step + 1;
         setStep(next);
-        // Expand to max snap point when entering the confirmation step
-        // so the full content is immediately accessible without a manual swipe.
         if (next === TOTAL_STEPS) sheetRef.current?.expand();
       } else {
         sheetRef.current?.close();
@@ -144,7 +142,6 @@ export const BookingBottomSheet = forwardRef<BookingBottomSheetRef, Props>(
       }
     };
 
-    // Retour toujours disponible sauf à l'étape 1
     const handleBack = () => {
       if (step > 1) setStep((s) => s - 1);
       else handleClose();
@@ -160,21 +157,16 @@ export const BookingBottomSheet = forwardRef<BookingBottomSheetRef, Props>(
         scrollable={false}
         containerStyle={styles.sheet}
       >
-        {/* Top bar */}
         <View style={styles.topBar}>
           <Text style={styles.title}>Nouvelle réservation</Text>
         </View>
 
-        {/* Progress */}
         <ProgressBar step={step} total={TOTAL_STEPS} />
 
-        {/* Provider */}
         <ProviderCard provider={provider} />
 
-        {/* Date preview — seulement si date déjà sélectionnée */}
         {step === 1 && booking.date && <DatePreview date={booking.date} />}
 
-        {/* Step content */}
         <View style={styles.stepContent}>
           {step === 1 && (
             <StepDate
@@ -204,7 +196,6 @@ export const BookingBottomSheet = forwardRef<BookingBottomSheetRef, Props>(
           )}
         </View>
 
-        {/* Footer */}
         <View style={styles.footer}>
           {step > 1 && !isLastStep && (
             <TouchableOpacity onPress={handleBack} style={styles.backBtn} hitSlop={8}>
@@ -242,8 +233,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0,
     paddingTop: 8,
   },
-
-  // Top bar
   topBar: {
     flexDirection: "row",
     alignItems: "center",
@@ -274,8 +263,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-
-  // Provider card
   providerCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -306,8 +293,6 @@ const styles = StyleSheet.create({
     color: colors.inkMuted,
     marginTop: 2,
   },
-
-  // Date preview
   datePreview: {
     flexDirection: "row",
     alignItems: "center",
@@ -327,15 +312,11 @@ const styles = StyleSheet.create({
     color: colors.primary,
     textTransform: "capitalize",
   },
-
-  // Step content
   stepContent: {
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 8,
   },
-
-  // Footer
   footer: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -344,14 +325,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 12,
   },
-
   backText: {
     fontSize: fontSize.md,
     color: colors.ink,
     fontFamily: fontFamily.medium,
   },
-
-  // Terms
   termsFooter: {
     fontFamily: fontFamily.regular,
     fontSize: fontSize.xs,

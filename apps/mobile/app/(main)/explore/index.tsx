@@ -15,7 +15,7 @@ import { colors, fontFamily, fontSize } from "../../../src/themes";
 import {
   ProfessionalProviderBottomSheet,
   ProfessionalProviderBottomSheetRef,
-} from "../../../src/components/modals/ProfessionalProviderBottomSheet";
+} from "../../../src/components/providers/ProfessionalProviderBottomSheet";
 import { useMapStore } from "../../../src/store";
 import { ClinicProviderResponse } from "../../../src/types/api-responses";
 

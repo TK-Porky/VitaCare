@@ -1,20 +1,40 @@
-// Importation des labels
-export * from './labels'
+// Labels
+export * from './labels';
 
-// Importation des Inputs
-export * from './inputs'
+// Inputs
+export * from './inputs';
 
-// Importation des boutons
-export * from './buttons'
+// Buttons
+export * from './buttons';
 
-// Importation des layouts
-export * from './layout'
+// Layout
+export * from './layout';
 
-// Importation des composantes visuelles
-export * from './display'
+// Generics
+export * from './generics';
 
-// Importation des composants génériques
-export * from './generics'
+// Display (SectionHeader, StatCard)
+export * from './display';
 
-// Importation des modales
-export * from './modals'
+// ── Domain folders ──────────────────────────────────────────────────────────
+
+// Appointments (display + modals)
+export * from './appointments';
+
+// Medications (display + modals)
+export * from './medications';
+
+// Providers (clinic cards, map, professional sheets)
+export * from './providers';
+
+// Search & filters
+export * from './search';
+
+// Booking flow
+export * from './booking';
+
+// Payment sheets
+export * from './payment';
+
+// Notifications
+export * from './notifications';

@@ -7,7 +7,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fontFamily, fontSize } from '../../../src/themes';
+import { colors, fontFamily, fontSize } from '../../themes';
 import { PrimaryButton } from '../buttons';
 
 export type Provider = {
