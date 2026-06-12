@@ -3,6 +3,7 @@ import {
   StyleSheet,
   ScrollView,
   StatusBar,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from "expo-router";
@@ -60,6 +61,7 @@ function isUpcoming(dateTime: string): boolean {
 
 function toSheetData(item: Appointment): AppointmentSheetData {
   return {
+    id:             item.id,
     title:          `Visite`,
     doctorName:     item.doctorName,
     doctorAvatarUri: item.doctorAvatarUri || item.avatarUri || '',
@@ -113,6 +115,17 @@ export default function AppointmentScreen() {
     appointmentRef.current?.open();
   }, []);
 
+  const handleCancel = useCallback(async () => {
+    const id = selectedItem?.id;
+    if (!id) return;
+    try {
+      await appointmentService.cancel(id);
+      await fetchAll();
+    } catch (err: any) {
+      Alert.alert('Erreur', err?.message || 'Impossible d\'annuler le rendez-vous.');
+    }
+  }, [selectedItem?.id, fetchAll]);
+
   const handleReservation = () => {
     router.push('/booking' as never);
   };
@@ -157,7 +170,7 @@ export default function AppointmentScreen() {
         actionVariant={activeTab === 'upcoming' ? 'reschedule' : 'book_again'}
         onReschedule={handleReservation}
         onBookAgain={handleReservation}
-        onCancel={() => console.log('RDV annulé')}
+        onCancel={handleCancel}
         onShowOnMap={() => router.push('/home/map' as never)}
       />
     </SafeAreaView>

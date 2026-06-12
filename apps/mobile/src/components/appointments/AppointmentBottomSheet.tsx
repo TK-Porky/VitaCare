@@ -26,6 +26,7 @@ type InvoiceLine = {
 };
 
 export type AppointmentSheetData = {
+  id: string | number;
   title: string;
   doctorName: string;
   doctorAvatarUri: string;
@@ -66,6 +67,7 @@ type Props = {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const DEFAULT_APPOINTMENT: Appointment = {
+  id: 0,
   title: 'Visite 002',
   doctorName: 'Dr. Igriss Kakmo',
   doctorAvatarUri: 'https://randomuser.me/api/portraits/men/75.jpg',
