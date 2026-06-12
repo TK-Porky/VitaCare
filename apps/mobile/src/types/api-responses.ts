@@ -202,6 +202,52 @@ export interface DashboardResponse extends ApiResponse<{
 }> {}
 
 // ---------------------------------------------------------------------------
+// Médecins / Docteurs
+// ---------------------------------------------------------------------------
+
+export interface MedecinDTO {
+  id: number;
+  userId: number;
+  fullName: string;
+  email: string;
+  phone: string;
+  isActive: boolean;
+  specialization: string;
+  licenseNumber: string;
+  experienceYears: number | null;
+  teleconsultationEnabled: boolean;
+  serviceLocationImageUrl: string | null;
+  consultationFee: number | null;
+  latitude: number | null;
+  longitude: number | null;
+  city: string | null;
+  bio: string | null;
+  cabinet: string | null;
+  address: string | null;
+  hours: string | null;
+  days: string | null;
+  valide: boolean;
+  avatarUrl: string | null;
+  createdAt: string;
+}
+
+export interface ReviewDTO {
+  id: number;
+  patientName: string;
+  rating: number;
+  comment: string | null;
+  createdAt: string;
+}
+
+export interface DoctorDetailResponse {
+  doctor: MedecinDTO;
+  availabilities: any[];
+  averageRating: number | null;
+  reviewCount: number;
+  latestReviews: ReviewDTO[];
+}
+
+// ---------------------------------------------------------------------------
 // Paiements
 // ---------------------------------------------------------------------------
 

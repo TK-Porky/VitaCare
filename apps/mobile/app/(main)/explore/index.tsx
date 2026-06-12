@@ -17,7 +17,9 @@ import {
   ProfessionalProviderBottomSheetRef,
 } from "../../../src/components/providers/ProfessionalProviderBottomSheet";
 import { useMapStore } from "../../../src/store";
-import { ClinicProviderResponse } from "../../../src/types/api-responses";
+import { ClinicProviderResponse, DoctorDetailResponse } from "../../../src/types/api-responses";
+import { apiClient } from '../../../src/lib/api.client';
+import { API_ENDPOINTS } from '../../../src/types/api-endpoints';
 
 // ================================================================================== //
 // Main
@@ -46,6 +48,8 @@ export default function ExploreScreen() {
   // States
   // ================================================================================== //
   const [search, setSearch] = useState("");
+  const [doctorDetail, setDoctorDetail] = useState<DoctorDetailResponse | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   // ================================================================================== //
   // Effects
@@ -53,6 +57,28 @@ export default function ExploreScreen() {
   useEffect(() => {
     fetchClinics({ search: search });
   }, []);
+
+  // Fetch real doctor detail when selectedClinic changes
+  useEffect(() => {
+    if (!selectedClinic) { setDoctorDetail(null); return; }
+    let cancelled = false;
+    setDetailLoading(true);
+    const doctorId = Number(selectedClinic.id);
+    if (!doctorId) { setDetailLoading(false); return; }
+
+    apiClient.get<any>(API_ENDPOINTS.CLINICS.DETAIL(doctorId))
+      .then(res => {
+        if (cancelled) return;
+        if (!res.success) { setDoctorDetail(null); return; }
+        const body = res.data;
+        const detail: DoctorDetailResponse = body?.data ?? body;
+        setDoctorDetail(detail);
+      })
+      .catch(() => { if (!cancelled) setDoctorDetail(null); })
+      .finally(() => { if (!cancelled) setDetailLoading(false); });
+
+    return () => { cancelled = true; };
+  }, [selectedClinic]);
 
   // ================================================================================== //
   // Functions
@@ -84,6 +110,7 @@ export default function ExploreScreen() {
     router.push({
       pathname: '/booking',
       params: target ? {
+        providerId: target.id,
         providerName: target.doctorName,
         specialty: target.specialty,
         avatarUri: target.avatarUri ?? '',
@@ -170,16 +197,30 @@ export default function ExploreScreen() {
       {selectedClinic && (
         <ProfessionalProviderBottomSheet
           ref={profileSheetRef}
-          provider={{
+          provider={doctorDetail ? {
+            clinicName: doctorDetail.doctor.cabinet ?? selectedClinic.clinicName,
+            avatarUri: doctorDetail.doctor.avatarUrl ?? selectedClinic.avatarUri ?? '',
+            specialty: doctorDetail.doctor.specialization ?? selectedClinic.specialty,
+            experience: doctorDetail.doctor.experienceYears
+              ? `+${doctorDetail.doctor.experienceYears} Ans`
+              : '+5 Ans',
+            language: 'FR-EN',
+            doctorName: doctorDetail.doctor.fullName ?? selectedClinic.doctorName,
+            description: doctorDetail.doctor.bio ?? selectedClinic.description ?? 'Spécialiste de santé qualifié.',
+            hoursRange: doctorDetail.doctor.hours ?? selectedClinic.hours ?? '08:00 - 18:00',
+            hoursdays: doctorDetail.doctor.days ?? selectedClinic.days ?? 'Lun - Ven',
+            location: doctorDetail.doctor.address ?? doctorDetail.doctor.city ?? selectedClinic.location,
+            coverUri: doctorDetail.doctor.serviceLocationImageUrl ?? selectedClinic.imageUri,
+          } : {
             clinicName: selectedClinic.clinicName,
-            avatarUri: selectedClinic.avatarUri || "",
+            avatarUri: selectedClinic.avatarUri || '',
             specialty: selectedClinic.specialty,
-            experience: "+5 Ans", // Mock or from real data if available
-            language: "FR-EN",
+            experience: '+5 Ans',
+            language: 'FR-EN',
             doctorName: selectedClinic.doctorName,
-            description: selectedClinic.description || "Spécialiste de santé qualifié.",
-            hoursRange: selectedClinic.hours || "08:00 - 18:00",
-            hoursdays: selectedClinic.days || "Lun - Ven",
+            description: selectedClinic.description || 'Spécialiste de santé qualifié.',
+            hoursRange: selectedClinic.hours || '08:00 - 18:00',
+            hoursdays: selectedClinic.days || 'Lun - Ven',
             location: selectedClinic.location,
             coverUri: selectedClinic.imageUri,
           }}
