@@ -16,7 +16,7 @@ import { SectionHeader } from "../../../src/components";
 import { AppHeader } from "../../../src/components";
 import { Category, Drug } from "../../../src/types";
 import { MARKETPLACE_CATEGORIES, MARKETPLACE_DRUGS } from "../../../src/data/mockMedications";
-import { DrugDetailBottomSheet, DrugDetailBottomSheetRef } from "../../../src/components/modals";
+import { DrugDetailBottomSheet, DrugDetailBottomSheetRef } from "../../../src/components/medications";
 
 // ================================================================================== //
 // Types
@@ -183,11 +183,12 @@ export default function MedecineScreen({ onReminders }: Props) {
       </ScrollView>
 
       {/* ── Modals ── */}
-      <DrugDetailBottomSheet 
+      <DrugDetailBottomSheet
         ref={drugSheetRef}
         drug={selectedDrug}
-        onAddToCart={(drug) => {
-          console.log("Add to cart:", drug.name);
+        relatedDrugs={MARKETPLACE_DRUGS.filter(d => d.id !== selectedDrug?.id)}
+        onAddToReminder={(drug) => {
+          console.log("Add to reminder:", drug.name);
           drugSheetRef.current?.close();
         }}
       />
