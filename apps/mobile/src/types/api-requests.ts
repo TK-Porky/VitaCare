@@ -121,7 +121,7 @@ export interface AppointmentsListQuery {
 }
 
 export interface CreateAppointmentRequest {
-  providerId: string;
+  providerId: number | string;
   date: string;
   time: string;
   reason: string;

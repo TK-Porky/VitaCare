@@ -72,18 +72,14 @@ export const API_ENDPOINTS = {
   },
 
   // ---------------------------------------------------------------------------
-  // Rendez-vous
+  // Rendez-vous (backend réel)
   // ---------------------------------------------------------------------------
   APPOINTMENTS: {
-    LIST: '/appointments',
+    LIST: '/patients/appointments',
     CREATE: '/appointments',
-    DETAIL: (id: string) => `/appointments/${id}`,
-    UPDATE: (id: string) => `/appointments/${id}`,
-    CANCEL: (id: string) => `/appointments/${id}/cancel`,
-    RESCHEDULE: (id: string) => `/appointments/${id}/reschedule`,
-    UPCOMING: '/appointments/upcoming',
-    PAST: '/appointments/past',
-    TODAY: '/appointments/today',
+    DETAIL: (id: string | number) => `/appointments/${id}`,
+    CANCEL: (id: string | number) => `/appointments/${id}/cancel`,
+    RESCHEDULE: (id: string | number) => `/appointments/${id}/reschedule`,
   },
 
   // ---------------------------------------------------------------------------

@@ -107,11 +107,41 @@ export interface TimeSlotsResponse {
 // Rendez-vous
 // ---------------------------------------------------------------------------
 
-export type AppointmentResponse = Appointment;
+export interface AppointmentResponse {
+  id: number;
+  patientId: number;
+  patientName: string;
+  doctorId: number;
+  doctorName: string;
+  doctorAvatarUrl: string | null;
+  specialty: string;
+  clinicName: string;
+  clinicAddress: string;
+  dateTime: string;
+  date: string;
+  time: string;
+  status: string;
+  reason: string | null;
+  total: number | null;
+  paymentMethod: string | null;
+  paymentStatus: string | null;
+  doctorNotes: string | null;
+  createdAt: string;
+}
 
-export interface AppointmentsListResponse extends PaginatedResponse<AppointmentResponse> {}
+export interface AppointmentsListResponse {
+  items: AppointmentResponse[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
 
-export interface AppointmentDetailResponse extends ApiResponse<AppointmentResponse> {}
+export interface AppointmentDetailResponse {
+  data: AppointmentResponse;
+}
 
 export interface RescheduleRequest {
   newDate: string;
