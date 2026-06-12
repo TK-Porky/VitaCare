@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -24,6 +24,8 @@ import { OrangePaymentSheet } from '../../../src/components/payment/OrangePaymen
 import { CardPaymentSheet } from '../../../src/components/payment/CardPaymentSheet';
 import type { PaymentSheetRef } from '../../../src/components/payment/MomoPaymentSheet';
 import { colors, fontFamily, fontSize } from '../../../src/themes';
+import { apiClient } from '../../../src/lib/api.client';
+import { API_ENDPOINTS } from '../../../src/types/api-endpoints';
 import { appointmentService } from '../../../src/services/appointment.service';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -94,6 +96,8 @@ export default function BookingScreen() {
   const [step, setStep] = useState(1);
   const [booking, setBooking] = useState<BookingData>(DEFAULT_BOOKING);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
 
   // Payment sheet refs
   const momoSheetRef   = useRef<PaymentSheetRef>(null);
@@ -104,12 +108,46 @@ export default function BookingScreen() {
   const createdAppointmentId = useRef<number | null>(null);
 
   const patchBooking = useCallback((patch: Partial<BookingData>) => {
-    setBooking(prev => ({ ...prev, ...patch }));
+    setBooking(prev => {
+      const next = { ...prev, ...patch };
+      if ('date' in patch && patch.date !== prev.date) {
+        next.time = null;
+      }
+      return next;
+    });
   }, []);
+
+  // Fetch available slots when date changes
+  useEffect(() => {
+    if (!booking.date || !provider.id) {
+      setAvailableSlots([]);
+      return;
+    }
+    let cancelled = false;
+    setSlotsLoading(true);
+    const weekStart = booking.date.toISOString().split('T')[0];
+    const dateStr = weekStart;
+
+    apiClient.get<any>(API_ENDPOINTS.CLINICS.AVAILABLE_SLOTS(provider.id), { weekStart })
+      .then(res => {
+        if (cancelled) return;
+        if (!res.success) { setAvailableSlots([]); return; }
+        const body = res.data;
+        const raw: any[] = body?.data ?? body ?? [];
+        const times = raw
+          .filter((s: any) => s.startTime?.startsWith(dateStr) && !s.isBooked)
+          .map((s: any) => s.startTime.split('T')[1].slice(0, 5));
+        setAvailableSlots(times);
+      })
+      .catch(() => { if (!cancelled) setAvailableSlots([]); })
+      .finally(() => { if (!cancelled) setSlotsLoading(false); });
+
+    return () => { cancelled = true; };
+  }, [booking.date, provider.id]);
 
   const canContinue = (): boolean => {
     if (step === 1) return booking.date !== null;
-    if (step === 2) return booking.time !== null;
+    if (step === 2) return booking.time !== null && availableSlots.length > 0;
     return true;
   };
 
@@ -268,6 +306,7 @@ export default function BookingScreen() {
         )}
         {step === 2 && (
           <StepTime
+            slots={slotsLoading ? [] : availableSlots}
             selected={booking.time}
             onSelect={t => patchBooking({ time: t })}
           />

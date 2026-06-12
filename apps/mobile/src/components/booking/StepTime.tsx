@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -10,29 +10,22 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, fontFamily, fontSize } from '../../themes';
 import { StepLabel } from './StepLabel';
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+// ─── Constants (fallback full grid) ──────────────────────────────────────────
 
-/** Hours 0–23 for 24h format */
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
-
-/** Minutes in 5-minute intervals: 0, 5, 10, …, 55 */
 const MINUTES = Array.from({ length: 12 }, (_, i) => i * 5);
-
-/** Format a number to 2-digit string (e.g. 8 → "08") */
 const pad = (n: number): string => String(n).padStart(2, '0');
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Props = {
+  slots?: string[];
   selected: string | null;
   onSelect: (time: string) => void;
 };
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-/**
- * A single selectable chip used in hour/minute grids.
- */
 const TimeChip = ({
   label,
   isSelected,
@@ -53,9 +46,6 @@ const TimeChip = ({
   </TouchableOpacity>
 );
 
-/**
- * Grid of chips inside a labelled section.
- */
 const ChipGrid = ({
   title,
   icon,
@@ -89,74 +79,91 @@ const ChipGrid = ({
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export const StepTime = ({ selected, onSelect }: Props) => {
-  // Parse initial values from the selected string (e.g. "08:30")
+export const StepTime = ({ slots, selected, onSelect }: Props) => {
+  const sorted = useMemo(() => {
+    if (!slots || slots.length === 0) return [];
+    return [...slots].sort();
+  }, [slots]);
+
   const parseHour = selected ? parseInt(selected.split(':')[0], 10) : 8;
   const parseMinute = selected ? parseInt(selected.split(':')[1], 10) : 0;
-
-  // Snap parsed minute to nearest 5-minute interval
   const snappedMinute = Math.round(parseMinute / 5) * 5;
-
   const [hour, setHour] = useState(parseHour);
   const [minute, setMinute] = useState(snappedMinute >= 60 ? 55 : snappedMinute);
 
-  const emitTime = useCallback(
-    (h: number, m: number) => {
-      onSelect(`${pad(h)}:${pad(m)}`);
-    },
-    [onSelect],
-  );
+  const emitTime = useCallback((h: number, m: number) => {
+    onSelect(`${pad(h)}:${pad(m)}`);
+  }, [onSelect]);
 
-  const handleHourSelect = useCallback(
-    (h: number) => {
-      setHour(h);
-      emitTime(h, minute);
-    },
-    [minute, emitTime],
-  );
+  const handleHourSelect = useCallback((h: number) => {
+    setHour(h);
+    emitTime(h, minute);
+  }, [minute, emitTime]);
 
-  const handleMinuteSelect = useCallback(
-    (m: number) => {
-      setMinute(m);
-      emitTime(hour, m);
-    },
-    [hour, emitTime],
-  );
+  const handleMinuteSelect = useCallback((m: number) => {
+    setMinute(m);
+    emitTime(hour, m);
+  }, [hour, emitTime]);
 
+  // Real slots: non-empty array → show available times
+  if (slots !== undefined && sorted.length > 0) {
+    return (
+      <View style={styles.container}>
+        <StepLabel number={2} label="Choisissez l'heure" />
+        {selected && (
+          <View style={styles.displayCard}>
+            <Ionicons name="time-outline" size={22} color={colors.primary} />
+            <Text style={styles.displayTime}>{selected.replace(':', 'h')}</Text>
+          </View>
+        )}
+        <ScrollView showsVerticalScrollIndicator={false} bounces={false}
+          contentContainerStyle={styles.scrollContent}>
+          <View style={styles.grid}>
+            {sorted.map((time) => {
+              const isSel = time === selected;
+              return (
+                <TouchableOpacity key={time} activeOpacity={0.7}
+                  onPress={() => onSelect(time)}
+                  style={[styles.chip, isSel && styles.chipSelected]}>
+                  <Text style={[styles.chipText, isSel && styles.chipTextSelected]}>
+                    {time.replace(':', 'h')}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </ScrollView>
+      </View>
+    );
+  }
+
+  // Real slots: empty array (explicit) → no availability
+  if (slots !== undefined && sorted.length === 0) {
+    return (
+      <View style={styles.container}>
+        <StepLabel number={2} label="Choisissez l'heure" />
+        <View style={styles.empty}>
+          <Ionicons name="time-outline" size={40} color={colors.inkFaint} />
+          <Text style={styles.emptyText}>Aucun créneau disponible pour cette date</Text>
+        </View>
+      </View>
+    );
+  }
+
+  // Fallback (slots undefined) → legacy full-hour/minute grid
   return (
     <View style={styles.container}>
       <StepLabel number={2} label="Choisissez l'heure" />
-
-      {/* Current selection display */}
       <View style={styles.displayCard}>
         <Ionicons name="time-outline" size={22} color={colors.primary} />
-        <Text style={styles.displayTime}>
-          {pad(hour)}:{pad(minute)}
-        </Text>
+        <Text style={styles.displayTime}>{pad(hour)}:{pad(minute)}</Text>
       </View>
-
-      {/* Scrollable grids */}
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        bounces={false}
-        nestedScrollEnabled
-        contentContainerStyle={styles.scrollContent}
-      >
-        <ChipGrid
-          title="Heure"
-          icon="time-outline"
-          items={HOURS}
-          selectedValue={hour}
-          onSelect={handleHourSelect}
-        />
-
-        <ChipGrid
-          title="Minutes"
-          icon="timer-outline"
-          items={MINUTES}
-          selectedValue={minute}
-          onSelect={handleMinuteSelect}
-        />
+      <ScrollView showsVerticalScrollIndicator={false} bounces={false}
+        nestedScrollEnabled contentContainerStyle={styles.scrollContent}>
+        <ChipGrid title="Heure" icon="time-outline" items={HOURS}
+          selectedValue={hour} onSelect={handleHourSelect} />
+        <ChipGrid title="Minutes" icon="timer-outline" items={MINUTES}
+          selectedValue={minute} onSelect={handleMinuteSelect} />
       </ScrollView>
     </View>
   );
@@ -169,7 +176,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  // ── Display card ──
   displayCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -185,18 +191,23 @@ const styles = StyleSheet.create({
   },
   displayTime: {
     fontFamily: fontFamily.bold,
-    fontSize: fontSize['4xl'],
+    fontSize: fontSize['3xl'],
     color: colors.ink,
-    letterSpacing: 4,
+    letterSpacing: 3,
   },
 
-  // ── Scroll content ──
   scrollContent: {
     paddingBottom: 16,
-    gap: 20,
   },
 
-  // ── Section (hour / minute) ──
+  // ── Grid (real slots) ──
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+
+  // ── Section (legacy full grid) ──
   section: {
     gap: 10,
   },
@@ -212,20 +223,16 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
-
-  // ── Chip grid ──
   chipGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
   },
 
-  // ── Individual chip ──
+  // ── Chip ──
   chip: {
-    width: 52,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
+    paddingHorizontal: 18,
+    paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 1.5,
     borderColor: colors.border,
@@ -243,5 +250,19 @@ const styles = StyleSheet.create({
   chipTextSelected: {
     color: colors.white,
     fontFamily: fontFamily.bold,
+  },
+
+  empty: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    paddingVertical: 60,
+  },
+  emptyText: {
+    fontFamily: fontFamily.medium,
+    fontSize: fontSize.base,
+    color: colors.inkMuted,
+    textAlign: 'center',
   },
 });
