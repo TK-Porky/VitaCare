@@ -1,9 +1,8 @@
 import { create } from "zustand";
 import { appointmentService } from "../services/appointment.service";
-import { AppointmentResponse } from "../types/api-responses";
-import { 
-  CreateAppointmentRequest, 
-  UpdateAppointmentRequest, 
+import type { AppointmentResponse } from "../types/api-responses";
+import type {
+  CreateAppointmentRequest,
   CancelAppointmentRequest,
   RescheduleAppointmentRequest,
   AppointmentsListQuery
@@ -23,7 +22,6 @@ interface AppointmentState {
   fetchToday: () => Promise<void>;
   fetchById: (id: string) => Promise<void>;
   create: (data: CreateAppointmentRequest) => Promise<void>;
-  update: (id: string, data: UpdateAppointmentRequest) => Promise<void>;
   cancel: (id: string, data: CancelAppointmentRequest) => Promise<void>;
   reschedule: (id: string, data: RescheduleAppointmentRequest) => Promise<void>;
   clearError: () => void;
@@ -41,8 +39,8 @@ export const useAppointmentStore = create<AppointmentState>((set, get) => ({
   fetchAppointments: async (query) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await appointmentService.getAppointments(query);
-      set({ appointments: response.data ?? [] });
+      const appointments = await appointmentService.getAppointments(query);
+      set({ appointments });
     } catch (e: any) {
       set({ error: e.message });
     } finally {
@@ -90,27 +88,9 @@ export const useAppointmentStore = create<AppointmentState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const newAppointment = await appointmentService.createAppointment(data);
-      set((state) => ({ 
+      set((state) => ({
         appointments: [newAppointment, ...state.appointments],
         upcomingAppointments: [newAppointment, ...state.upcomingAppointments]
-      }));
-    } catch (e: any) {
-      set({ error: e.message });
-      throw e;
-    } finally {
-      set({ isLoading: false });
-    }
-  },
-
-  update: async (id, data) => {
-    set({ isLoading: true, error: null });
-    try {
-      const updated = await appointmentService.updateAppointment(id, data);
-      set((state) => ({
-        appointments: state.appointments.map(a => a.id === id ? updated : a),
-        upcomingAppointments: state.upcomingAppointments.map(a => a.id === id ? updated : a),
-        todayAppointments: state.todayAppointments.map(a => a.id === id ? updated : a),
-        selectedAppointment: state.selectedAppointment?.id === id ? updated : state.selectedAppointment
       }));
     } catch (e: any) {
       set({ error: e.message });
@@ -124,8 +104,7 @@ export const useAppointmentStore = create<AppointmentState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       await appointmentService.cancelAppointment(id, data);
-      // Optionnel: rafraîchir ou mettre à jour le statut localement
-      await get().fetchAppointments(); 
+      await get().fetchAppointments();
     } catch (e: any) {
       set({ error: e.message });
       throw e;

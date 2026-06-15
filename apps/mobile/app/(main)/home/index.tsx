@@ -61,7 +61,7 @@ export default function DashboardScreen({ onMap, notificationBell }: BoardProps)
   /**
    * Handle medication press to update status
    */
-  const handleMedicationPress = (medicationId: string, currentStatus: string) => {
+  const handleMedicationPress = (medicationId: number, currentStatus: string) => {
     if (currentStatus !== 'pending') return;
 
     Alert.alert(

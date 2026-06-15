@@ -12,7 +12,7 @@ interface MedicationState {
   fetchMedications: () => Promise<void>;
   addMedication: (data: AddMedicationRequest) => Promise<void>;
   updateStatus: (data: UpdateMedicationStatusRequest) => Promise<void>;
-  removeMedication: (id: string) => Promise<void>;
+  removeMedication: (id: number) => Promise<void>;
   clearError: () => void;
 }
 

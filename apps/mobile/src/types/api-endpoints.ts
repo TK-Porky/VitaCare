@@ -24,7 +24,7 @@ export const API_ENDPOINTS = {
     REGISTER_PHONE: '/auth/patient/register/phone',
     REGISTER_EMAIL: '/auth/patient/register/email',
     LOGOUT: '/auth/patient/logout',
-    REFRESH: '/auth/patient/refresh',
+    REFRESH: '/auth/refresh-token',
     FORGOT_PASSWORD: '/auth/patient/forgot-password',
     RESET_PASSWORD: '/auth/patient/reset-password',
     RESET_PASSWORD_VERIFY: '/auth/patient/reset-password-verify',
@@ -75,7 +75,7 @@ export const API_ENDPOINTS = {
   // Rendez-vous (backend réel)
   // ---------------------------------------------------------------------------
   APPOINTMENTS: {
-    LIST: '/patients/appointments',
+    LIST: '/appointments/mine',
     CREATE: '/appointments',
     DETAIL: (id: string | number) => `/appointments/${id}`,
     CANCEL: (id: string | number) => `/appointments/${id}/cancel`,
@@ -91,7 +91,7 @@ export const API_ENDPOINTS = {
     MEDICATIONS: '/dashboard/medications',
     APPOINTMENTS: '/dashboard/appointments',
     OBSERVANCES: '/dashboard/observances',
-    UPDATE_MEDICATION: (id: string) => `/dashboard/medications/${id}`,
+    UPDATE_MEDICATION: (id: number) => `/dashboard/medications/${id}`,
     ADD_MEDICATION: '/dashboard/medications',
     UPDATE_OBSERVANCE: (id: string) => `/dashboard/observances/${id}`,
   },

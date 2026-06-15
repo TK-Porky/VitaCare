@@ -103,8 +103,27 @@ class ApiClient {
           this.isRefreshing = true;
           try {
             const newToken = await this.handleTokenRefresh();
+            // Retry the current request with the new token
+            headers['Authorization'] = `Bearer ${newToken}`;
+            const retryResponse = await fetch(url, { ...options, headers });
             this.isRefreshing = false;
+            // Notify other waiting subscribers
             this.onTokenRefreshed(newToken);
+            // Process the retry response
+            const retryText = await retryResponse.text();
+            let retryData: any = {};
+            try {
+              retryData = retryText ? JSON.parse(retryText) : {};
+            } catch (err) {
+              console.warn('[API] Retry response is not valid JSON:', retryText);
+            }
+            return {
+              success: retryResponse.ok,
+              data: retryResponse.ok ? retryData : undefined,
+              message: retryData.message,
+              error: !retryResponse.ok ? retryData.error || retryData.message || `HTTP Error ${retryResponse.status}` : undefined,
+              statusCode: retryResponse.status,
+            };
           } catch (error) {
             this.isRefreshing = false;
             this.onLogout?.(); // Logout if refresh fails
@@ -112,7 +131,7 @@ class ApiClient {
           }
         }
 
-        // Wait for the token to be refreshed
+        // Another request is already refreshing; queue this one
         return new Promise((resolve) => {
           this.addRefreshSubscriber((newToken) => {
             const retryHeaders = { ...headers, 'Authorization': `Bearer ${newToken}` };
@@ -161,9 +180,13 @@ class ApiClient {
   // ================================================================================== //
 
   private async handleTokenRefresh(): Promise<string> {
-    const response = await fetch(`${this.baseURL}/auth/patient/refresh`, {
+    const refreshToken = await SecureStore.getItemAsync('vitacare_refresh_token');
+    if (!refreshToken) throw new Error('No refresh token available');
+
+    const response = await fetch(`${this.baseURL}/auth/refresh-token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
     });
     const text = await response.text();
     let data: any = {};
@@ -172,8 +195,12 @@ class ApiClient {
     } catch (err) {
       console.warn('[API] Refresh response is not valid JSON:', text);
     }
-    const token = data.token || (data.data && (data.data.accessToken || data.data.token));
-    if (response.ok && token) return token;
+    // Backend wraps in ApiResponse: { success, data: { accessToken, expiresIn } }
+    const accessToken = data.data?.accessToken || data.accessToken;
+    if (response.ok && accessToken) {
+      await SecureStore.setItemAsync('vitacare_access_token', accessToken);
+      return accessToken;
+    }
     throw new Error('Token refresh failed');
   }
 

@@ -107,6 +107,15 @@ export interface TimeSlotsResponse {
 // Rendez-vous
 // ---------------------------------------------------------------------------
 
+export type AppointmentStatus =
+  | 'PENDING'
+  | 'CONFIRMED'
+  | 'IN_PROGRESS'
+  | 'COMPLETED'
+  | 'CANCELLED'
+  | 'NO_SHOW'
+  | 'RESCHEDULED';
+
 export interface AppointmentResponse {
   id: number;
   patientId: number;
@@ -120,7 +129,7 @@ export interface AppointmentResponse {
   dateTime: string;
   date: string;
   time: string;
-  status: string;
+  status: AppointmentStatus;
   reason: string | null;
   total: number | null;
   paymentMethod: string | null;
@@ -166,21 +175,12 @@ export interface DashboardStatsResponse {
 }
 
 export interface MedicationResponse {
-  id: string;
+  id: number;
   name: string;
   time: string;
   dosage: string;
   status: 'taken' | 'missed' | 'pending';
-  nextDose?: string;
-  remainingDays?: number;
-}
-
-export interface ObservanceResponse {
-  id: string;
-  title: string;
-  description: string;
-  date: string;
-  completed: boolean;
+  actif?: boolean;
 }
 
 export interface DashboardResponse extends ApiResponse<{
@@ -192,13 +192,7 @@ export interface DashboardResponse extends ApiResponse<{
   monthlyProgress: number;
   medications: MedicationResponse[];
   appointments: AppointmentResponse[];
-  observances: ObservanceResponse[];
-  appointmentsToday: {
-    doctorName: string;
-    clinic: string;
-    date: string;
-    time: string;
-  }[];
+  appointmentsToday: AppointmentResponse[];
 }> {}
 
 // ---------------------------------------------------------------------------

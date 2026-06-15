@@ -159,7 +159,7 @@ export interface DashboardQuery {
 }
 
 export interface UpdateMedicationStatusRequest {
-  medicationId: string;
+  medicationId: number;
   status: 'taken' | 'missed';
   takenAt?: string; // ISO datetime string
 }
