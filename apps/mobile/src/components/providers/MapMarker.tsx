@@ -1,7 +1,14 @@
 import React from 'react';
 import { View, Image, StyleSheet } from 'react-native';
-import { Marker } from '@maplibre/maplibre-react-native';
+import { Marker as LegacyMarker } from 'react-native-maps';
 import { colors } from '../../themes';
+
+let MapLibreMarker: any = null;
+try {
+  MapLibreMarker = require('@maplibre/maplibre-react-native').Marker;
+} catch (e) {
+  // MapLibre is not available (e.g. running in Expo Go)
+}
 
 type Props = {
   id: string;
@@ -21,23 +28,35 @@ export const MapMarker = ({
   isSelected = false,
   onPress,
 }: Props) => {
-  return (
-    <Marker
-      id={id}
-      lngLat={[coordinate.longitude, coordinate.latitude]}
-      onPress={onPress}
-    >
-      <View style={[styles.wrapper, isSelected && styles.wrapperSelected]}>
-        <View style={[styles.bubble, isSelected && styles.bubbleSelected]}>
-          {avatarUri ? (
-            <Image source={{ uri: avatarUri }} style={styles.avatar} />
-          ) : (
-            <View style={styles.avatarPlaceholder} />
-          )}
-        </View>
-        <View style={[styles.tail, isSelected && styles.tailSelected]} />
+  const markerContent = (
+    <View style={[styles.wrapper, isSelected && styles.wrapperSelected]}>
+      <View style={[styles.bubble, isSelected && styles.bubbleSelected]}>
+        {avatarUri ? (
+          <Image source={{ uri: avatarUri }} style={styles.avatar} />
+        ) : (
+          <View style={styles.avatarPlaceholder} />
+        )}
       </View>
-    </Marker>
+      <View style={[styles.tail, isSelected && styles.tailSelected]} />
+    </View>
+  );
+
+  if (MapLibreMarker) {
+    return (
+      <MapLibreMarker
+        id={id}
+        lngLat={[coordinate.longitude, coordinate.latitude]}
+        onPress={onPress}
+      >
+        {markerContent}
+      </MapLibreMarker>
+    );
+  }
+
+  return (
+    <LegacyMarker coordinate={coordinate} onPress={onPress} tracksViewChanges={false}>
+      {markerContent}
+    </LegacyMarker>
   );
 };
 

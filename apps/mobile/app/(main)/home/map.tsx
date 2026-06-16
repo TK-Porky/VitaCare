@@ -8,16 +8,29 @@ import {
   NativeSyntheticEvent,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  Map,
-  Camera,
-  UserLocation,
+import type {
   MapRef,
   CameraRef,
   ViewStateChangeEvent,
 } from '@maplibre/maplibre-react-native';
+import LegacyMapView, { UrlTile as LegacyUrlTile } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
+
+let MapComponent: any = null;
+let CameraComponent: any = null;
+let UserLocationComponent: any = null;
+let mapLibreLoaded = false;
+
+try {
+  const MapLibre = require('@maplibre/maplibre-react-native');
+  MapComponent = MapLibre.Map;
+  CameraComponent = MapLibre.Camera;
+  UserLocationComponent = MapLibre.UserLocation;
+  mapLibreLoaded = true;
+} catch (e) {
+  // MapLibre is not available (e.g. running in Expo Go)
+}
 
 const OSM_STYLE = {
   version: 8,
@@ -111,6 +124,7 @@ export default function MapScreen() {
   // ================================================================================== //
   const mapRef = useRef<MapRef>(null);
   const cameraRef = useRef<CameraRef>(null);
+  const legacyMapRef = useRef<LegacyMapView>(null);
   const filterSheetRef = useRef<FilterBottomSheetRef>(null);
 
   // ================================================================================== //
@@ -151,11 +165,16 @@ export default function MapScreen() {
           longitudeDelta: 0.05,
         };
         setRegion(newRegion);
-        cameraRef.current?.flyTo({
-          center: [currentLoc.coords.longitude, currentLoc.coords.latitude],
-          zoom: 12,
-          duration: 1000,
-        });
+        
+        if (mapLibreLoaded && cameraRef.current) {
+          cameraRef.current.flyTo({
+            center: [currentLoc.coords.longitude, currentLoc.coords.latitude],
+            zoom: 12,
+            duration: 1000,
+          });
+        } else if (legacyMapRef.current) {
+          legacyMapRef.current.animateToRegion(newRegion, 1000);
+        }
       } catch (error) {
         console.error("Error getting location:", error);
       } finally {
@@ -209,11 +228,19 @@ export default function MapScreen() {
     if (provider) {
       setSelectedClinic(provider);
       if (provider.coordinates) {
-        cameraRef.current?.flyTo({
-          center: [provider.coordinates.longitude, provider.coordinates.latitude],
-          zoom: 14,
-          duration: 500,
-        });
+        if (mapLibreLoaded && cameraRef.current) {
+          cameraRef.current.flyTo({
+            center: [provider.coordinates.longitude, provider.coordinates.latitude],
+            zoom: 14,
+            duration: 500,
+          });
+        } else if (legacyMapRef.current) {
+          legacyMapRef.current.animateToRegion({
+            ...provider.coordinates,
+            latitudeDelta: 0.015,
+            longitudeDelta: 0.015,
+          }, 500);
+        }
       }
     }
   };
@@ -272,33 +299,63 @@ export default function MapScreen() {
       <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
 
       {/* ── Map ── */}
-      <Map
-        ref={mapRef}
-        style={StyleSheet.absoluteFill}
-        mapStyle={OSM_STYLE as any}
-        logo={false}
-        attribution={false}
-        onRegionDidChange={handleRegionDidChange}
-      >
-        <Camera
-          ref={cameraRef}
-          initialViewState={{
-            center: [INITIAL_REGION.longitude, INITIAL_REGION.latitude],
-            zoom: 12,
-          }}
-        />
-        <UserLocation heading />
-        {providers.map((provider) => (
-          <MapMarker
-            key={provider.id}
-            id={provider.id}
-            coordinate={provider.coordinates || INITIAL_REGION}
-            avatarUri={provider.avatarUri}
-            isSelected={provider.id === selectedClinic?.id}
-            onPress={() => handleMarkerPress(provider.id)}
+      {mapLibreLoaded && MapComponent && CameraComponent && UserLocationComponent ? (
+        <MapComponent
+          ref={mapRef}
+          style={StyleSheet.absoluteFill}
+          mapStyle={OSM_STYLE as any}
+          logo={false}
+          attribution={false}
+          onRegionDidChange={handleRegionDidChange}
+        >
+          <CameraComponent
+            ref={cameraRef}
+            initialViewState={{
+              center: [INITIAL_REGION.longitude, INITIAL_REGION.latitude],
+              zoom: 12,
+            }}
           />
-        ))}
-      </Map>
+          <UserLocationComponent heading />
+          {providers.map((provider) => (
+            <MapMarker
+              key={provider.id}
+              id={provider.id}
+              coordinate={provider.coordinates || INITIAL_REGION}
+              avatarUri={provider.avatarUri}
+              isSelected={provider.id === selectedClinic?.id}
+              onPress={() => handleMarkerPress(provider.id)}
+            />
+          ))}
+        </MapComponent>
+      ) : (
+        <LegacyMapView
+          ref={legacyMapRef}
+          style={StyleSheet.absoluteFill}
+          initialRegion={INITIAL_REGION}
+          onRegionChangeComplete={setRegion}
+          showsUserLocation
+          showsMyLocationButton={false}
+          showsCompass={false}
+          toolbarEnabled={false}
+        >
+          <LegacyUrlTile
+            urlTemplate="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+            maximumZ={19}
+            flipY={false}
+            tileSize={256}
+          />
+          {providers.map((provider) => (
+            <MapMarker
+              key={provider.id}
+              id={provider.id}
+              coordinate={provider.coordinates || INITIAL_REGION}
+              avatarUri={provider.avatarUri}
+              isSelected={provider.id === selectedClinic?.id}
+              onPress={() => handleMarkerPress(provider.id)}
+            />
+          ))}
+        </LegacyMapView>
+      )}
 
       {/* ── Overlay layer ── */}
       <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
