@@ -46,7 +46,8 @@
       "expo-router",
       "expo-secure-store",
       "expo-splash-screen",
-      "expo-status-bar"
+      "expo-status-bar",
+      "@maplibre/maplibre-react-native"
     ]
   }
 }

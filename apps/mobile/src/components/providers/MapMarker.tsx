@@ -1,9 +1,10 @@
 import React from 'react';
 import { View, Image, StyleSheet } from 'react-native';
-import { Marker } from 'react-native-maps';
+import { Marker } from '@maplibre/maplibre-react-native';
 import { colors } from '../../themes';
 
 type Props = {
+  id: string;
   coordinate: {
     latitude: number;
     longitude: number;
@@ -14,13 +15,18 @@ type Props = {
 };
 
 export const MapMarker = ({
+  id,
   coordinate,
   avatarUri,
   isSelected = false,
   onPress,
 }: Props) => {
   return (
-    <Marker coordinate={coordinate} onPress={onPress} tracksViewChanges={false}>
+    <Marker
+      id={id}
+      lngLat={[coordinate.longitude, coordinate.latitude]}
+      onPress={onPress}
+    >
       <View style={[styles.wrapper, isSelected && styles.wrapperSelected]}>
         <View style={[styles.bubble, isSelected && styles.bubbleSelected]}>
           {avatarUri ? (

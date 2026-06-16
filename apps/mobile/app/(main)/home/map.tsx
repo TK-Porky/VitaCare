@@ -5,11 +5,40 @@ import {
   Platform,
   StatusBar,
   ActivityIndicator,
+  NativeSyntheticEvent,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import MapView, { UrlTile, PROVIDER_DEFAULT } from 'react-native-maps';
+import {
+  Map,
+  Camera,
+  UserLocation,
+  MapRef,
+  CameraRef,
+  ViewStateChangeEvent,
+} from '@maplibre/maplibre-react-native';
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
+
+const OSM_STYLE = {
+  version: 8,
+  sources: {
+    osm: {
+      type: 'raster',
+      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+      tileSize: 256,
+      attribution: '© OpenStreetMap contributors',
+    },
+  },
+  layers: [
+    {
+      id: 'osm',
+      type: 'raster',
+      source: 'osm',
+      minzoom: 0,
+      maxzoom: 19,
+    },
+  ],
+};
 
 import { BackButton } from '../../../src/components';
 import {
@@ -80,7 +109,8 @@ export default function MapScreen() {
   // ================================================================================== //
   // Refs
   // ================================================================================== //
-  const mapRef = useRef<MapView>(null);
+  const mapRef = useRef<MapRef>(null);
+  const cameraRef = useRef<CameraRef>(null);
   const filterSheetRef = useRef<FilterBottomSheetRef>(null);
 
   // ================================================================================== //
@@ -121,7 +151,11 @@ export default function MapScreen() {
           longitudeDelta: 0.05,
         };
         setRegion(newRegion);
-        mapRef.current?.animateToRegion(newRegion, 1000);
+        cameraRef.current?.flyTo({
+          center: [currentLoc.coords.longitude, currentLoc.coords.latitude],
+          zoom: 12,
+          duration: 1000,
+        });
       } catch (error) {
         console.error("Error getting location:", error);
       } finally {
@@ -149,6 +183,21 @@ export default function MapScreen() {
   // ================================================================================== //
   // Functions
   // ================================================================================== //
+
+  /**
+   * Handle region change to update the center coordinates for filtering
+   */
+  const handleRegionDidChange = (event: NativeSyntheticEvent<ViewStateChangeEvent>) => {
+    if (event && event.nativeEvent && event.nativeEvent.center) {
+      const [longitude, latitude] = event.nativeEvent.center;
+      setRegion({
+        latitude,
+        longitude,
+        latitudeDelta: 0.05,
+        longitudeDelta: 0.05,
+      });
+    }
+  };
   
   /**
    * Open the 
@@ -160,11 +209,11 @@ export default function MapScreen() {
     if (provider) {
       setSelectedClinic(provider);
       if (provider.coordinates) {
-        mapRef.current?.animateToRegion({
-          ...provider.coordinates,
-          latitudeDelta: 0.015,
-          longitudeDelta: 0.015,
-        }, 500);
+        cameraRef.current?.flyTo({
+          center: [provider.coordinates.longitude, provider.coordinates.latitude],
+          zoom: 14,
+          duration: 500,
+        });
       }
     }
   };
@@ -223,33 +272,33 @@ export default function MapScreen() {
       <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
 
       {/* ── Map ── */}
-      <MapView
+      <Map
         ref={mapRef}
         style={StyleSheet.absoluteFill}
-        provider={PROVIDER_DEFAULT}
-        initialRegion={INITIAL_REGION}
-        onRegionChangeComplete={setRegion}
-        showsUserLocation
-        showsMyLocationButton={false}
-        showsCompass={false}
-        toolbarEnabled={false}
+        mapStyle={OSM_STYLE as any}
+        logo={false}
+        attribution={false}
+        onRegionDidChange={handleRegionDidChange}
       >
-        <UrlTile
-          urlTemplate="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-          maximumZ={19}
-          flipY={false}
-          tileSize={256}
+        <Camera
+          ref={cameraRef}
+          initialViewState={{
+            center: [INITIAL_REGION.longitude, INITIAL_REGION.latitude],
+            zoom: 12,
+          }}
         />
+        <UserLocation heading />
         {providers.map((provider) => (
           <MapMarker
             key={provider.id}
+            id={provider.id}
             coordinate={provider.coordinates || INITIAL_REGION}
             avatarUri={provider.avatarUri}
             isSelected={provider.id === selectedClinic?.id}
             onPress={() => handleMarkerPress(provider.id)}
           />
         ))}
-      </MapView>
+      </Map>
 
       {/* ── Overlay layer ── */}
       <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
