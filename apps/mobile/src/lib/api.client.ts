@@ -97,8 +97,8 @@ class ApiClient {
       
       const response = await fetch(url, config);
       
-      // Handle authentication errors (401)
-      if (response.status === 401) {
+      // Handle authentication errors (401 or 403)
+      if (response.status === 401 || response.status === 403) {
         if (!this.isRefreshing) {
           this.isRefreshing = true;
           try {
