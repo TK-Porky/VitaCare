@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Search, Filter } from "lucide-react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SearchInput } from '../inputs/SearchInput';
 import { PrimaryButton } from '../buttons/PrimaryButton';
 import { colors, fontFamily, fontSize } from "../../themes";
@@ -37,11 +38,11 @@ export function AppHeader({
   rightActions,
   notificationBell,
 }: Props) {
-  const statusBarHeight = StatusBar.currentHeight ?? 50;
+  const insets = useSafeAreaInsets();
   const hideLogo = !!title;
 
   return (
-    <View style={[styles.container, { paddingTop: statusBarHeight + 8 }]}>
+    <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
       <View style={styles.topContainer}>
         {/* Logo */}
         <View style={styles.logo}>

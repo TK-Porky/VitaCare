@@ -85,10 +85,8 @@ class ApiClient {
 
     /* Original implementation commented out
     const url = endpoint.startsWith('http') ? endpoint : `${this.baseURL}${endpoint}`;
-...
     */
   }
-...
   async upload<T = any>(
     endpoint: string,
     fileUri: string,

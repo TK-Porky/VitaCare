@@ -3,12 +3,11 @@ import { View, TouchableOpacity, StyleSheet, Platform } from "react-native";
 import { Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { router, usePathname } from "expo-router";
+import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { colors, fontFamily, fontSize } from "../../themes";
 
 interface TabItem {
   name: string;
-  path: string;
   icon: keyof typeof Ionicons.glyphMap;
   iconActive: keyof typeof Ionicons.glyphMap;
   label: string;
@@ -17,68 +16,38 @@ interface TabItem {
 const TABS: TabItem[] = [
   {
     name: "index",
-    path: "/(main)/(tabs)/",
     icon: "home-outline",
     iconActive: "home",
     label: "Accueil",
   },
   {
     name: "explore",
-    path: "/(main)/(tabs)/explore",
     icon: "search-outline",
     iconActive: "search",
     label: "Explorer",
   },
   {
     name: "appointments",
-    path: "/(main)/(tabs)/appointments",
     icon: "calendar-outline",
     iconActive: "calendar",
     label: "RDV",
   },
   {
     name: "medications",
-    path: "/(main)/(tabs)/medications",
     icon: "medical-outline",
     iconActive: "medical",
     label: "Drugs",
   },
   {
     name: "profile",
-    path: "/(main)/(tabs)/profile",
     icon: "person-outline",
     iconActive: "person",
     label: "Profil",
   },
 ];
 
-export function BottomTabBar() {
+export function BottomTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
-  const pathname = usePathname();
-
-  const isActive = (tab: TabItem): boolean => {
-    if (tab.name === "fab") return false;
-
-    // Normalize pathname: remove trailing slashes
-    const normalizedPath = pathname.replace(/\/$/, "");
-
-    if (tab.name === "index") {
-      // Index tab: active for root paths
-      return (
-        normalizedPath === "" ||
-        normalizedPath === "/" ||
-        normalizedPath === "/(main)/(tabs)" ||
-        normalizedPath === "/(main)/(tabs)/index"
-      );
-    }
-
-    // Other tabs: check if pathname ends with tab name
-    return normalizedPath.endsWith(`/${tab.name}`);
-  };
-
-  const handlePress = (tab: TabItem) => {
-    router.replace(tab.path as any);
-  };
 
   return (
     <View
@@ -89,22 +58,38 @@ export function BottomTabBar() {
         },
       ]}
     >
-      {TABS.map((tab) => {
-        const active = isActive(tab);
+      {state.routes.map((route, index) => {
+        const tab = TABS.find((t) => t.name === route.name);
+        if (!tab) return null;
+
+        const isFocused = state.index === index;
+
+        const onPress = () => {
+          const event = navigation.emit({
+            type: "tabPress",
+            target: route.key,
+            canPreventDefault: true,
+          });
+
+          if (!isFocused && !event.defaultPrevented) {
+            navigation.navigate(route.name);
+          }
+        };
+
         return (
           <TouchableOpacity
-            key={tab.name}
+            key={route.key}
             style={styles.tabItem}
-            onPress={() => handlePress(tab)}
+            onPress={onPress}
             activeOpacity={0.7}
           >
-            {active && <View style={styles.indicator} />}
+            {isFocused && <View style={styles.indicator} />}
             <Ionicons
-              name={active ? tab.iconActive : tab.icon}
+              name={isFocused ? tab.iconActive : tab.icon}
               size={22}
-              color={active ? colors.primary : colors.inkLight}
+              color={isFocused ? colors.primary : colors.inkLight}
             />
-            <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>
+            <Text style={[styles.tabLabel, isFocused && styles.tabLabelActive]}>
               {tab.label}
             </Text>
           </TouchableOpacity>
