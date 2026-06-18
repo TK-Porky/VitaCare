@@ -16,19 +16,19 @@ export const dashboardService = {
   /**
    * Get dashboard overview data
    */
-  async getOverview(query?: DashboardQuery): Promise<DashboardResponse['data']> {
-    const res = await apiClient.get<DashboardResponse['data']>(API_ENDPOINTS.DASHBOARD.OVERVIEW, query as any);
+  async getOverview(query?: DashboardQuery): Promise<any> {
+    const res = await apiClient.get<any>(API_ENDPOINTS.DASHBOARD.OVERVIEW, query as any);
     if (!res.success) throw new Error(res.error ?? "Failed to fetch dashboard overview");
-    return res.data!;
+    return res.data!.data!;
   },
 
   /**
    * Get dashboard statistics
    */
   async getStats(): Promise<DashboardStatsResponse> {
-    const res = await apiClient.get<DashboardStatsResponse>(API_ENDPOINTS.DASHBOARD.STATS);
+    const res = await apiClient.get<any>(API_ENDPOINTS.DASHBOARD.STATS);
     if (!res.success) throw new Error(res.error ?? "Failed to fetch dashboard stats");
-    return res.data!;
+    return res.data!.data!.stats;
   },
 
   /**

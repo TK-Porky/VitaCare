@@ -184,15 +184,17 @@ export interface MedicationResponse {
 }
 
 export interface DashboardResponse extends ApiResponse<{
-  currentUser: string;
-  currentDate: string;
-  stats: DashboardStatsResponse;
-  streak: number;
-  activeMedications: number;
-  monthlyProgress: number;
-  medications: MedicationResponse[];
-  appointments: AppointmentResponse[];
-  appointmentsToday: AppointmentResponse[];
+  data: {
+    currentUser: string;
+    currentDate: string;
+    stats: DashboardStatsResponse;
+    streak: number;
+    activeMedications: number;
+    monthlyProgress: number;
+    medications: MedicationResponse[];
+    appointments: AppointmentResponse[];
+    appointmentsToday: AppointmentResponse[];
+  }
 }> {}
 
 // ---------------------------------------------------------------------------
