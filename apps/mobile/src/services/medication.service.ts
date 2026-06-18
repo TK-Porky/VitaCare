@@ -38,7 +38,7 @@ export const medicationService = {
   /**
    * Remove a medication
    */
-  async removeMedication(id: string): Promise<void> {
+  async removeMedication(id: number): Promise<void> {
     const res = await apiClient.delete(API_ENDPOINTS.DASHBOARD.UPDATE_MEDICATION(id));
     if (!res.success) throw new Error(res.error ?? "Failed to remove medication");
   }

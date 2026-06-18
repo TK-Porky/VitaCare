@@ -1,26 +1,28 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { colors, fontFamily, fontSize } from '../../themes';
 
-type Status = 'confirmed' | 'pending' | 'cancelled' | 'paid';
-
 type Props = {
   doctorName: string;
   date: string;
   time: string;
-  status: Status;
+  status: string;
   avatarUrl?: string;
   onPress?: () => void;
 };
 
-const STATUS_CONFIG: Record<Status, { label: string; bg: string; color: string }> = {
-  confirmed: { label: 'Confirmé',  bg: colors.successLight, color: colors.success },
-  paid:      { label: 'Payé',      bg: colors.successLight, color: colors.success },
-  pending:   { label: 'En attente', bg: colors.warningLight, color: colors.warning },
-  cancelled: { label: 'Annulé',   bg: colors.errorLight,   color: colors.error },
+const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string }> = {
+  confirmed:   { label: 'Confirmé',   bg: colors.successLight, color: colors.success },
+  paid:        { label: 'Payé',       bg: colors.successLight, color: colors.success },
+  pending:     { label: 'En attente', bg: colors.warningLight, color: colors.warning },
+  cancelled:   { label: 'Annulé',     bg: colors.errorLight,   color: colors.error },
+  completed:   { label: 'Terminé',    bg: colors.infoLight,    color: colors.info },
+  in_progress: { label: 'En cours',   bg: colors.infoLight,    color: colors.info },
+  no_show:     { label: 'Absent',     bg: colors.errorLight,   color: colors.error },
+  rescheduled: { label: 'Reporté',    bg: colors.warningLight, color: colors.warning },
 };
 
 export function AppointmentItem({ doctorName, date, time, status, avatarUrl, onPress }: Props) {
-  const config = STATUS_CONFIG[status];
+  const config = STATUS_CONFIG[status.toLowerCase()] ?? STATUS_CONFIG.pending;
 
   return (
     <TouchableOpacity

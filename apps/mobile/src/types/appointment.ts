@@ -1,16 +1,18 @@
+import { AppointmentStatus } from './api-responses';
+
 export interface Appointment {
   id: string;
   doctorName: string;
   doctorAvatarUri: string;
-  avatarUri?: string; // Legacy field for compatibility
+  avatarUri?: string;
   specialty: string;
   motif: string;
   clinic: string;
   address: string;
   date: string;
   time: string;
-  dateTime?: string; // Legacy field for compatibility
-  status: 'confirmed' | 'pending' | 'paid' | 'cancelled';
+  dateTime?: string;
+  status: AppointmentStatus;
   badge?: string | null;
   total?: number;
   currency?: string;

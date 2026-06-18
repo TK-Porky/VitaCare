@@ -61,7 +61,7 @@ export default function DashboardScreen({ onMap, notificationBell }: BoardProps)
   /**
    * Handle medication press to update status
    */
-  const handleMedicationPress = (medicationId: string, currentStatus: string) => {
+  const handleMedicationPress = (medicationId: number, currentStatus: string) => {
     if (currentStatus !== 'pending') return;
 
     Alert.alert(
@@ -95,7 +95,7 @@ export default function DashboardScreen({ onMap, notificationBell }: BoardProps)
   /**
    * Handle appointment press
    */
-  const handleAppointmentPress = (appointmentId: string) => {
+  const handleAppointmentPress = (appointmentId: number) => {
     // In a real app, navigate to appointment details
     // router.push({ pathname: "/(main)/appointments/[id]", params: { id: appointmentId } } as any);
     console.log("Navigate to appointment:", appointmentId);
@@ -228,7 +228,7 @@ export default function DashboardScreen({ onMap, notificationBell }: BoardProps)
                     date={dateStr}
                     time={timeStr}
                     status={appointment.status}
-                    avatarUrl={appointment.doctorAvatarUri}
+                    avatarUrl={appointment.doctorAvatarUrl ?? undefined}
                     onPress={() => handleAppointmentPress(appointment.id)}
                   />
                 );
