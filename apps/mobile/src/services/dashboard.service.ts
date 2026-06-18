@@ -3,7 +3,8 @@ import { API_ENDPOINTS } from "../types/api-endpoints";
 import { 
   DashboardQuery, 
   UpdateMedicationStatusRequest, 
-  UpdateObservanceRequest 
+  UpdateObservanceRequest,
+  AddMedicationRequest 
 } from "../types/api-requests";
 import { DashboardResponse, DashboardStatsResponse } from "../types/api-responses";
 
@@ -32,11 +33,28 @@ export const dashboardService = {
   },
 
   /**
+   * Add a new medication reminder
+   */
+  async addMedication(data: AddMedicationRequest): Promise<any> {
+    const res = await apiClient.post<any>(API_ENDPOINTS.DASHBOARD.ADD_MEDICATION, data);
+    if (!res.success) throw new Error(res.error ?? "Failed to add medication");
+    return res.data;
+  },
+
+  /**
    * Update medication status (taken/missed) from dashboard
    */
   async updateMedicationStatus(data: UpdateMedicationStatusRequest): Promise<void> {
-    const res = await apiClient.patch(API_ENDPOINTS.DASHBOARD.UPDATE_MEDICATION(data.medicationId), data);
+    const res = await apiClient.patch<any>(API_ENDPOINTS.DASHBOARD.UPDATE_MEDICATION(data.medicationId), data);
     if (!res.success) throw new Error(res.error ?? "Failed to update medication status");
+  },
+
+  /**
+   * Remove a medication
+   */
+  async deleteMedication(medicationId: number): Promise<void> {
+    const res = await apiClient.delete<any>(API_ENDPOINTS.DASHBOARD.DELETE_MEDICATION(medicationId));
+    if (!res.success) throw new Error(res.error ?? "Failed to delete medication");
   },
 
   /**

@@ -93,6 +93,7 @@ export const API_ENDPOINTS = {
     OBSERVANCES: '/dashboard/observances',
     UPDATE_MEDICATION: (id: number) => `/dashboard/medications/${id}`,
     ADD_MEDICATION: '/dashboard/medications',
+    DELETE_MEDICATION: (id: number) => `/dashboard/medications/${id}`,
     UPDATE_OBSERVANCE: (id: string) => `/dashboard/observances/${id}`,
   },
 

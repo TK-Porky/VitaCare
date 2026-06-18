@@ -16,36 +16,27 @@ import { colors, fontFamily, fontSize } from "../../../src/themes";
 import { SectionHeader } from "../../../src/components";
 import { AppHeader } from "../../../src/components";
 import { Category, Drug } from "../../../src/types";
-import { MARKETPLACE_CATEGORIES, MARKETPLACE_DRUGS } from "../../../src/data/mockMedications";
-import { DrugDetailBottomSheet, DrugDetailBottomSheetRef } from "../../../src/components/medications";
+import { useDashboardStore } from "../../../src/store";
+import { MedicationItem } from "../../../src/components";
 
-// ================================================================================== //
-// Types
-// ================================================================================== //
-type Props = {
-  onReminders?: () => void;
-};
+// ... dans MedecineScreen
+  const { data, fetchOverview } = useDashboardStore();
 
-// ================================================================================== //
-// Components
-// ================================================================================== //
+  useEffect(() => {
+    fetchOverview();
+  }, []);
 
-/**
- * Category card component
- * @param item - Category object
- * @returns Category card component
- */
-function CategoryCard({ item }: { item: Category }) {
-  return (
-    <TouchableOpacity style={styles.categoryCard} activeOpacity={0.85}>
-      <Image
-        source={{ uri: item.imageUri }}
-        style={styles.categoryImage}
-        resizeMode="cover"
-      />
-      <View style={styles.categoryLabelRow}>
-        <Text style={styles.categoryLabel}>{item.label}</Text>
-      </View>
+  // ... (dans le ScrollView, remplacer la grid par les vraies données)
+        <SectionHeader title="Mes Médicaments" onSeeAll={() => {}} />
+        <View style={styles.drugsGrid}>
+          {data?.medications.map((medication) => (
+             <MedicationItem
+                key={medication.id}
+                item={medication}
+                onPress={() => { /* Logique de clic */ }}
+             />
+          ))}
+        </View>
     </TouchableOpacity>
   );
 }
