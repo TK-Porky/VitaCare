@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,15 +8,58 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  NativeModules,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MapPin } from 'lucide-react-native';
-import MapView, { UrlTile, Marker, PROVIDER_DEFAULT } from 'react-native-maps';
+import LegacyMapView, { UrlTile as LegacyUrlTile, Marker as LegacyMarker, PROVIDER_DEFAULT } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { colors, fontFamily, fontSize } from '../../../src/themes';
 import { TopBar, PrimaryButton, SearchInput } from '../../../src/components';
 import { useProfile } from '../../../src/hooks';
 import { useAuthStore } from '../../../src/store';
+
+// ================================================================================== //
+// MapLibre configuration
+// ================================================================================== //
+let MapComponent: any = null;
+let CameraComponent: any = null;
+let PointAnnotationComponent: any = null;
+let mapLibreLoaded = false;
+
+try {
+  const isMapLibreAvailable = !!NativeModules.MLRNModule || !!NativeModules.MLRNCameraModule;
+  if (isMapLibreAvailable) {
+    const MapLibre = require('@maplibre/maplibre-react-native');
+    MapComponent = MapLibre.Map;
+    CameraComponent = MapLibre.Camera;
+    PointAnnotationComponent = MapLibre.PointAnnotation;
+    mapLibreLoaded = true;
+  }
+} catch (e) {
+  // MapLibre is not available
+}
+
+const OSM_STYLE = {
+  version: 8,
+  sources: {
+    osm: {
+      type: 'raster',
+      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+      tileSize: 256,
+      attribution: '© OpenStreetMap contributors',
+    },
+  },
+  layers: [
+    {
+      id: 'osm',
+      type: 'raster',
+      source: 'osm',
+      minzoom: 0,
+      maxzoom: 19,
+    },
+  ],
+};
 
 const INITIAL_REGION = {
   latitude: 3.848,
@@ -25,6 +68,9 @@ const INITIAL_REGION = {
   longitudeDelta: 0.05,
 };
 
+// ================================================================================== //
+// Main Component
+// ================================================================================== //
 export default function LocationScreen() {
   const user = useAuthStore((s) => s.user);
   const { updateProfile, isUpdatingProfile } = useProfile();
@@ -38,6 +84,8 @@ export default function LocationScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isMapReady, setIsMapReady] = useState(false);
 
+  const cameraRef = useRef<any>(null);
+
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -47,22 +95,28 @@ export default function LocationScreen() {
       }
 
       const currentLoc = await Location.getCurrentPositionAsync({});
-      const newRegion = {
+      const coords = {
         latitude: currentLoc.coords.latitude,
         longitude: currentLoc.coords.longitude,
+      };
+
+      setMarkerCoords(coords);
+      setRegion({
+        ...coords,
         latitudeDelta: 0.01,
         longitudeDelta: 0.01,
-      };
-      setRegion(newRegion);
-      setMarkerCoords({
-        latitude: currentLoc.coords.latitude,
-        longitude: currentLoc.coords.longitude,
       });
 
-      const reverse = await Location.reverseGeocodeAsync({
-        latitude: currentLoc.coords.latitude,
-        longitude: currentLoc.coords.longitude,
-      });
+      // Move camera if MapLibre is loaded
+      if (mapLibreLoaded && cameraRef.current) {
+        cameraRef.current.setCamera({
+          centerCoordinate: [coords.longitude, coords.latitude],
+          zoomLevel: 14,
+          animationDuration: 1000,
+        });
+      }
+
+      const reverse = await Location.reverseGeocodeAsync(coords);
       if (reverse.length > 0) {
         const item = reverse[0];
         const parts = [item.street, item.district, item.city].filter(Boolean).join(', ');
@@ -91,8 +145,19 @@ export default function LocationScreen() {
       const results = await Location.geocodeAsync(searchQuery.trim());
       if (results.length > 0) {
         const { latitude, longitude } = results[0];
-        setRegion({ latitude, longitude, latitudeDelta: 0.01, longitudeDelta: 0.01 });
-        setMarkerCoords({ latitude, longitude });
+        const coords = { latitude, longitude };
+        
+        setMarkerCoords(coords);
+        setRegion({ ...coords, latitudeDelta: 0.01, longitudeDelta: 0.01 });
+        
+        if (mapLibreLoaded && cameraRef.current) {
+          cameraRef.current.setCamera({
+            centerCoordinate: [longitude, latitude],
+            zoomLevel: 14,
+            animationDuration: 1000,
+          });
+        }
+
         setLocation(searchQuery.trim());
       } else {
         Alert.alert('Introuvable', 'Aucun résultat pour cette adresse.');
@@ -134,26 +199,59 @@ export default function LocationScreen() {
           />
 
           <View style={styles.mapContainer}>
-            <MapView
-              style={styles.map}
-              provider={PROVIDER_DEFAULT}
-              region={region}
-              onRegionChangeComplete={setRegion}
-              onPress={(e) => handleMapPress(e.nativeEvent.coordinate)}
-              onMapReady={() => setIsMapReady(true)}
-            >
-              <UrlTile
-                urlTemplate="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-                maximumZ={19}
-                flipY={false}
-                tileSize={256}
-              />
-              <Marker coordinate={markerCoords}>
-                <View style={styles.customMarker}>
-                  <MapPin size={24} color={colors.primary} fill={colors.white} />
-                </View>
-              </Marker>
-            </MapView>
+            {mapLibreLoaded && MapComponent && CameraComponent ? (
+              <MapComponent
+                style={styles.map}
+                mapStyle={OSM_STYLE as any}
+                onPress={(e: any) => {
+                  const [longitude, latitude] = e.geometry.coordinates;
+                  handleMapPress({ latitude, longitude });
+                }}
+                onDidFinishLoadingMap={() => setIsMapReady(true)}
+                logoEnabled={false}
+                attributionEnabled={false}
+              >
+                <CameraComponent
+                  ref={cameraRef}
+                  initialViewState={{
+                    centerCoordinate: [INITIAL_REGION.longitude, INITIAL_REGION.latitude],
+                    zoomLevel: 12,
+                  }}
+                />
+                {PointAnnotationComponent && (
+                  <PointAnnotationComponent
+                    id="user-location-marker"
+                    coordinate={[markerCoords.longitude, markerCoords.latitude]}
+                  >
+                    <View style={styles.customMarker}>
+                      <MapPin size={24} color={colors.primary} fill={colors.white} />
+                    </View>
+                  </PointAnnotationComponent>
+                )}
+              </MapComponent>
+            ) : (
+              <LegacyMapView
+                style={styles.map}
+                provider={PROVIDER_DEFAULT}
+                region={region}
+                onRegionChangeComplete={setRegion}
+                onPress={(e) => handleMapPress(e.nativeEvent.coordinate)}
+                onMapReady={() => setIsMapReady(true)}
+              >
+                <LegacyUrlTile
+                  urlTemplate="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  maximumZ={19}
+                  flipY={false}
+                  tileSize={256}
+                />
+                <LegacyMarker coordinate={markerCoords}>
+                  <View style={styles.customMarker}>
+                    <MapPin size={24} color={colors.primary} fill={colors.white} />
+                  </View>
+                </LegacyMarker>
+              </LegacyMapView>
+            )}
+
             {!isMapReady && (
               <View style={styles.loaderOverlay}>
                 <ActivityIndicator color={colors.primary} />
