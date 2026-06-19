@@ -16,27 +16,36 @@ import { colors, fontFamily, fontSize } from "../../../src/themes";
 import { SectionHeader } from "../../../src/components";
 import { AppHeader } from "../../../src/components";
 import { Category, Drug } from "../../../src/types";
-import { useDashboardStore } from "../../../src/store";
-import { MedicationItem } from "../../../src/components";
+import { MARKETPLACE_CATEGORIES, MARKETPLACE_DRUGS } from "../../../src/data/mockMedications";
+import { DrugDetailBottomSheet, DrugDetailBottomSheetRef } from "../../../src/components/medications";
 
-// ... dans MedecineScreen
-  const { data, fetchOverview } = useDashboardStore();
+// ================================================================================== //
+// Types
+// ================================================================================== //
+type Props = {
+  onReminders?: () => void;
+};
 
-  useEffect(() => {
-    fetchOverview();
-  }, []);
+// ================================================================================== //
+// Components
+// ================================================================================== //
 
-  // ... (dans le ScrollView, remplacer la grid par les vraies données)
-        <SectionHeader title="Mes Médicaments" onSeeAll={() => {}} />
-        <View style={styles.drugsGrid}>
-          {data?.medications.map((medication) => (
-             <MedicationItem
-                key={medication.id}
-                item={medication}
-                onPress={() => { /* Logique de clic */ }}
-             />
-          ))}
-        </View>
+/**
+ * Category card component
+ * @param item - Category object
+ * @returns Category card component
+ */
+function CategoryCard({ item }: { item: Category }) {
+  return (
+    <TouchableOpacity style={styles.categoryCard} activeOpacity={0.85}>
+      <Image
+        source={{ uri: item.imageUri }}
+        style={styles.categoryImage}
+        resizeMode="cover"
+      />
+      <View style={styles.categoryLabelRow}>
+        <Text style={styles.categoryLabel}>{item.label}</Text>
+      </View>
     </TouchableOpacity>
   );
 }
