@@ -125,10 +125,9 @@ export default function BookingScreen() {
     }
     let cancelled = false;
     setSlotsLoading(true);
-    const weekStart = booking.date.toISOString().split('T')[0];
-    const dateStr = weekStart;
+    const dateStr = booking.date.toISOString().split('T')[0];
 
-    apiClient.get<any>(API_ENDPOINTS.CLINICS.AVAILABLE_SLOTS(provider.id), { weekStart })
+    apiClient.get<any>(API_ENDPOINTS.CLINICS.AVAILABLE_SLOTS(provider.id))
       .then(res => {
         if (cancelled) return;
         if (!res.success) { setAvailableSlots(undefined); return; }
@@ -137,7 +136,7 @@ export default function BookingScreen() {
         const times = raw
           .filter((s: any) => s.startTime?.startsWith(dateStr) && !s.isBooked)
           .map((s: any) => s.startTime.split('T')[1].slice(0, 5));
-        setAvailableSlots(times.length > 0 ? times : undefined);
+        setAvailableSlots(times);
       })
       .catch(() => { if (!cancelled) setAvailableSlots(undefined); })
       .finally(() => { if (!cancelled) setSlotsLoading(false); });

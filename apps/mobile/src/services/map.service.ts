@@ -21,8 +21,8 @@ const mapDoctorToClinic = (doctor: any): ClinicProviderResponse => {
     priceXCFA: doctor.consultationFee,
     clinicName: doctor.cabinet || doctor.clinicName || "Cabinet Médical",
     description: doctor.bio || doctor.description || "Spécialiste de santé qualifié.",
-    hours: doctor.hours || doctor.heuresOuverture || "08:00 - 18:00",
-    days: doctor.days || doctor.joursOuverture || "Lun - Ven",
+    hours: doctor.hours || doctor.heuresOuverture,
+    days: doctor.days || doctor.joursOuverture,
     location: doctor.address || doctor.ville || "Yaoundé",
     coordinates: doctor.latitude && doctor.longitude ? {
       latitude: doctor.latitude,

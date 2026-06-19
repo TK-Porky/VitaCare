@@ -183,9 +183,13 @@ export const ProfessionalProviderBottomSheet = forwardRef<
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.sectionTitle}>Heures de services</Text>
-        <InfoRow icon="time-outline" text={provider.hoursRange} />
-        <InfoRow icon="calendar-outline" text={provider.hoursdays} />
+        {provider.hoursRange && provider.hoursdays && (
+          <>
+            <Text style={styles.sectionTitle}>Heures de services</Text>
+            <InfoRow icon="time-outline" text={provider.hoursRange} />
+            <InfoRow icon="calendar-outline" text={provider.hoursdays} />
+          </>
+        )}
 
         <Text style={styles.sectionTitle}>Lieu de service</Text>
         <InfoRow icon="location-outline" text={provider.location} />

@@ -207,8 +207,8 @@ export default function ExploreScreen() {
             language: 'FR-EN',
             doctorName: doctorDetail.doctor.fullName ?? selectedClinic.doctorName,
             description: doctorDetail.doctor.bio ?? selectedClinic.description ?? 'Spécialiste de santé qualifié.',
-            hoursRange: doctorDetail.doctor.hours ?? selectedClinic.hours ?? '08:00 - 18:00',
-            hoursdays: doctorDetail.doctor.days ?? selectedClinic.days ?? 'Lun - Ven',
+            hoursRange: doctorDetail.doctor.hours ?? selectedClinic.hours,
+            hoursdays: doctorDetail.doctor.days ?? selectedClinic.days,
             location: doctorDetail.doctor.address ?? doctorDetail.doctor.city ?? selectedClinic.location,
             coverUri: doctorDetail.doctor.serviceLocationImageUrl ?? selectedClinic.imageUri,
           } : {
@@ -219,8 +219,8 @@ export default function ExploreScreen() {
             language: 'FR-EN',
             doctorName: selectedClinic.doctorName,
             description: selectedClinic.description || 'Spécialiste de santé qualifié.',
-            hoursRange: selectedClinic.hours || '08:00 - 18:00',
-            hoursdays: selectedClinic.days || 'Lun - Ven',
+            hoursRange: selectedClinic.hours,
+            hoursdays: selectedClinic.days,
             location: selectedClinic.location,
             coverUri: selectedClinic.imageUri,
           }}
