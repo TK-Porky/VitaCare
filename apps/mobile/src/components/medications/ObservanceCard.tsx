@@ -1,4 +1,3 @@
-import React, { memo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Svg, Circle } from 'react-native-svg';
 import { colors, fontFamily, fontSize } from '../../themes';
@@ -13,12 +12,12 @@ type Props = {
 const RADIUS = 36;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
-export const ObservanceCard = memo(({
+export function ObservanceCard({
   remainingDoses,
   totalDoses,
   appointments,
   observancePercent,
-}: Props) => {
+}: Props) {
   const strokeDashoffset = CIRCUMFERENCE * (1 - observancePercent / 100);
 
   return (
@@ -65,7 +64,7 @@ export const ObservanceCard = memo(({
       </View>
     </View>
   );
-});
+}
 
 const styles = StyleSheet.create({
   container: {

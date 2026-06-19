@@ -1,4 +1,3 @@
-import React, { memo } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { colors, fontFamily, fontSize } from '../../themes';
 
@@ -22,7 +21,7 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string }
   rescheduled: { label: 'Reporté',    bg: colors.warningLight, color: colors.warning },
 };
 
-export const AppointmentItem = memo(({ doctorName, date, time, status, avatarUrl, onPress }: Props) => {
+export function AppointmentItem({ doctorName, date, time, status, avatarUrl, onPress }: Props) {
   const config = STATUS_CONFIG[status.toLowerCase()] ?? STATUS_CONFIG.pending;
 
   return (
@@ -59,7 +58,7 @@ export const AppointmentItem = memo(({ doctorName, date, time, status, avatarUrl
       </View>
     </TouchableOpacity>
   );
-});
+}
 
 const styles = StyleSheet.create({
   container: {

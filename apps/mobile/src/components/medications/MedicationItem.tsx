@@ -1,4 +1,3 @@
-import React, { memo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Pill } from 'lucide-react-native';
 import { colors, fontFamily, fontSize } from '../../themes';
@@ -19,7 +18,7 @@ const STATUS_CONFIG: Record<Status, { label: string; color: string }> = {
   pending: { label: 'À venir', color: colors.inkLight },
 };
 
-export const MedicationItem = memo(({ name, dose, status, time, onPress }: Props) => {
+export function MedicationItem({ name, dose, status, time, onPress }: Props) {
   const config = STATUS_CONFIG[status];
 
   return (
@@ -53,7 +52,7 @@ export const MedicationItem = memo(({ name, dose, status, time, onPress }: Props
       </View>
     </TouchableOpacity>
   );
-});
+}
 
 const styles = StyleSheet.create({
   container: {
