@@ -1,13 +1,14 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import {
+  View,
   StyleSheet,
   ScrollView,
   StatusBar,
   Alert,
+  Text,
 } from "react-native";
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from "expo-router";
-import { colors } from "../../../src/themes";
+import { colors, fontFamily, fontSize } from "../../../src/themes";
 import { appointmentService } from "../../../src/services";
 import { Appointment } from "../../../src/types";
 import { AppointmentResponse } from "../../../src/types/api-responses";
@@ -23,6 +24,7 @@ import {
   AppointmentCard,
   AppointmentCardSkeleton,
 } from "../../../src/components";
+import { Ionicons } from "@expo/vector-icons";
 
 // ── Mapper backend → UI ───────────────────────────────────────────────────────
 
@@ -30,10 +32,10 @@ function toAppointment(r: AppointmentResponse): Appointment {
   return {
     id: String(r.id),
     doctorName: r.doctorName,
-    doctorAvatarUri: r.doctorAvatarUrl ?? '',
-    avatarUri: r.doctorAvatarUrl ?? '',
+    doctorAvatarUri: r.doctorAvatarUrl ?? "",
+    avatarUri: r.doctorAvatarUrl ?? "",
     specialty: r.specialty,
-    motif: r.reason ?? '',
+    motif: r.reason ?? "",
     clinic: r.clinicName,
     address: r.clinicAddress,
     date: r.date,
@@ -44,13 +46,13 @@ function toAppointment(r: AppointmentResponse): Appointment {
   };
 }
 
-function normalizeStatus(s: string): Appointment['status'] {
+function normalizeStatus(s: string): Appointment["status"] {
   const low = s.toLowerCase();
-  if (low === 'confirmed') return 'confirmed';
-  if (low === 'pending') return 'pending';
-  if (low === 'paid') return 'paid';
-  if (low === 'cancelled') return 'cancelled';
-  return 'pending';
+  if (low === "confirmed") return "confirmed";
+  if (low === "pending") return "pending";
+  if (low === "paid") return "paid";
+  if (low === "cancelled") return "cancelled";
+  return "pending";
 }
 
 function isUpcoming(dateTime: string): boolean {
@@ -61,20 +63,20 @@ function isUpcoming(dateTime: string): boolean {
 
 function toSheetData(item: Appointment): AppointmentSheetData {
   return {
-    id:             item.id,
-    title:          `Visite`,
-    doctorName:     item.doctorName,
-    doctorAvatarUri: item.doctorAvatarUri || item.avatarUri || '',
-    specialty:      item.specialty,
-    status:         item.status,
-    reason:         item.motif,
-    dateTime:       item.dateTime ?? `${item.date} à ${item.time}`,
-    clinicName:     item.clinic,
+    id: item.id,
+    title: `Visite`,
+    doctorName: item.doctorName,
+    doctorAvatarUri: item.doctorAvatarUri || item.avatarUri || "",
+    specialty: item.specialty,
+    status: item.status,
+    reason: item.motif,
+    dateTime: item.dateTime ?? `${item.date} à ${item.time}`,
+    clinicName: item.clinic,
     locationSuffix: item.address,
-    paymentMethod:  'Payer à la consultation',
-    invoiceLines:   item.invoiceLines ?? [],
-    total:          item.total ?? 0,
-    currency:       item.currency ?? 'XCFA',
+    paymentMethod: "Payer à la consultation",
+    invoiceLines: item.invoiceLines ?? [],
+    total: item.total ?? 0,
+    currency: item.currency ?? "XCFA",
   };
 }
 
@@ -87,7 +89,9 @@ export default function AppointmentScreen() {
   const [activeTab, setActiveTab] = useState<"upcoming" | "past">("upcoming");
   const [isLoading, setIsLoading] = useState(true);
   const [allAppointments, setAllAppointments] = useState<Appointment[]>([]);
-  const [selectedItem, setSelectedItem] = useState<AppointmentSheetData | null>(null);
+  const [selectedItem, setSelectedItem] = useState<AppointmentSheetData | null>(
+    null,
+  );
 
   const fetchAll = useCallback(async () => {
     setIsLoading(true);
@@ -95,7 +99,7 @@ export default function AppointmentScreen() {
       const items = await appointmentService.getAll();
       setAllAppointments(items.map(toAppointment));
     } catch (err) {
-      console.warn('Failed to fetch appointments', err);
+      console.warn("Failed to fetch appointments", err);
       setAllAppointments([]);
     } finally {
       setIsLoading(false);
@@ -106,8 +110,10 @@ export default function AppointmentScreen() {
     fetchAll();
   }, [fetchAll]);
 
-  const displayed = allAppointments.filter(a =>
-    activeTab === 'upcoming' ? isUpcoming(a.dateTime ?? a.date) : !isUpcoming(a.dateTime ?? a.date)
+  const displayed = allAppointments.filter((a) =>
+    activeTab === "upcoming"
+      ? isUpcoming(a.dateTime ?? a.date)
+      : !isUpcoming(a.dateTime ?? a.date),
   );
 
   const handleCardPress = useCallback((item: Appointment) => {
@@ -122,22 +128,22 @@ export default function AppointmentScreen() {
       await appointmentService.cancel(id);
       await fetchAll();
     } catch (err: any) {
-      Alert.alert('Erreur', err?.message || 'Impossible d\'annuler le rendez-vous.');
+      Alert.alert(
+        "Erreur",
+        err?.message || "Impossible d'annuler le rendez-vous.",
+      );
     }
   }, [selectedItem?.id, fetchAll]);
 
   const handleReservation = () => {
-    router.push('/booking' as never);
+    router.push("/booking" as never);
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <View style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.primary} />
 
-      <AppHeader
-        title="Rendez-vous"
-        onFilter={() => console.log("Filter pressed")}
-      />
+      <AppHeader title="Rendez-vous" />
 
       <TabsSection activeTab={activeTab} onTabChange={setActiveTab} />
 
@@ -145,42 +151,56 @@ export default function AppointmentScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <MonthHeader monthLabel={currentMonthLabel()} count={isLoading ? 3 : displayed.length} />
-
         {isLoading ? (
           <>
             <AppointmentCardSkeleton />
             <AppointmentCardSkeleton />
             <AppointmentCardSkeleton />
           </>
-        ) : (
-          displayed.map((item) => (
-            <AppointmentCard
-              key={item.id}
-              item={item}
-              onPress={() => handleCardPress(item)}
+        ) : allAppointments.length > 0 ? (
+          <View>
+            <MonthHeader
+              monthLabel={currentMonthLabel()}
+              count={isLoading ? 3 : displayed.length}
             />
-          ))
+
+            {displayed.map((item) => (
+              <AppointmentCard
+                key={item.id}
+                item={item}
+                onPress={() => handleCardPress(item)}
+              />
+            ))}
+          </View>
+        ) : (
+          <View style={styles.emptyState}>
+            <Ionicons
+              name="calendar-outline"
+              size={48}
+              color={colors.inkFaint}
+            />
+            <Text style={styles.emptyStateText}>Aucun rendez-vous</Text>
+          </View>
         )}
       </ScrollView>
 
       <AppointmentDetailBottomSheet
         ref={appointmentRef}
         appointment={selectedItem ?? undefined}
-        actionVariant={activeTab === 'upcoming' ? 'reschedule' : 'book_again'}
+        actionVariant={activeTab === "upcoming" ? "reschedule" : "book_again"}
         onReschedule={handleReservation}
         onBookAgain={handleReservation}
         onCancel={handleCancel}
-        onShowOnMap={() => router.push('/home/map' as never)}
+        onShowOnMap={() => router.push("/home/map" as never)}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function currentMonthLabel(): string {
-  const raw = new Date().toLocaleDateString('fr-FR', { month: 'long' });
+  const raw = new Date().toLocaleDateString("fr-FR", { month: "long" });
   return raw.charAt(0).toUpperCase() + raw.slice(1);
 }
 
@@ -190,7 +210,19 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   scrollContent: {
+    flex: 1,
     paddingHorizontal: 12,
     paddingBottom: 20,
+  },
+  emptyState: {
+    flex: 1,
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  emptyStateText: {
+    fontSize: fontSize.md,
+    fontFamily: fontFamily.regular,
+    color: colors.inkFaint,
   },
 });

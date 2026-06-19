@@ -122,7 +122,7 @@ export default function MedecineScreen({ onReminders }: Props) {
   // Render
   // ================================================================================== //
   return (
-    <SafeAreaView style={styles.safe}>
+    <View style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
 
       {/* ── Top bar ── */}
@@ -195,7 +195,7 @@ export default function MedecineScreen({ onReminders }: Props) {
           drugSheetRef.current?.close();
         }}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 

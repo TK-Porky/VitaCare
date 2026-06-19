@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useCallback } from "react";
 import { 
   FlatList, 
-  View, 
+  View,
+  Platform,
   Text, 
   StyleSheet, 
   StatusBar, 

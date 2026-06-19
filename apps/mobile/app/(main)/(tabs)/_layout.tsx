@@ -8,6 +8,12 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
       }}
-    />
+    >
+      <Tabs.Screen name="index" />
+      <Tabs.Screen name="explore" />
+      <Tabs.Screen name="appointments" />
+      <Tabs.Screen name="medications" />
+      <Tabs.Screen name="profile" />
+    </Tabs>
   );
 }

@@ -30,19 +30,19 @@ const TABS: TabItem[] = [
     name: "appointments",
     icon: "calendar-outline",
     iconActive: "calendar",
-    label: "RDV",
+    label: "Planning",
   },
   {
     name: "medications",
     icon: "medical-outline",
     iconActive: "medical",
-    label: "Drugs",
+    label: "Prises",
   },
   {
     name: "profile",
     icon: "person-outline",
     iconActive: "person",
-    label: "Profil",
+    label: "Profile",
   },
 ];
 
