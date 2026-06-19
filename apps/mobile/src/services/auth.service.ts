@@ -103,15 +103,8 @@ import type { ApiResponse } from "../types/api-responses";
      * @param appVerifier 
      */
     async sendOtp(phone: string, appVerifier: ApplicationVerifier): Promise<void> {
-      try {
-        _confirmationResult = await signInWithPhoneNumber(
-          firebaseAuth,
-          `+237${phone}`,
-          appVerifier
-        );
-      } catch (error) {
-        throw new Error(mapAuthError(error));
-      }
+      console.log("[MOCK-AUTH] Sending OTP to", phone);
+      return new Promise((resolve) => setTimeout(resolve, 1000));
     },
   
     /**
@@ -120,29 +113,21 @@ import type { ApiResponse } from "../types/api-responses";
      * @param fullName Optional fullName for registration
      */
     async verifyOtp(code: string, fullName?: string): Promise<AuthResult> {
-      if (!_confirmationResult) throw new Error("Aucune demande OTP en cours.");
-  
-      try {
-        const credential = await _confirmationResult.confirm(code);
-        const firebaseToken = await getIdToken(credential.user);
-        _confirmationResult = null;
-    
-        const res = await apiClient.post<BackendAuthResponseWrapper>(
-          API_ENDPOINTS.AUTH.LOGIN_PHONE,
-          { fullName, firebaseToken } // Send both token and fullName
-        );
-        if (!res.success || !res.data) throw new Error(res.error ?? "Erreur serveur");
-        const payload = res.data.data;
-        return {
-          tokens: {
-            accessToken: payload.accessToken,
-            refreshToken: payload.refreshToken ?? '',
-          },
-          user: payload.patient,
-        };
-      } catch (error) {
-        throw new Error(mapAuthError(error));
-      }
+      console.log("[MOCK-AUTH] Verifying OTP", code);
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve({
+            tokens: { accessToken: "mock_access", refreshToken: "mock_refresh" },
+            user: {
+              id: "mock_user_id",
+              fullName: fullName || "Utilisateur Test",
+              email: "test@vitacare.cm",
+              phone: "690000000",
+              avatarUrl: "https://i.pravatar.cc/150?u=mock_user_id"
+            }
+          });
+        }, 1000);
+      });
     },
   
     /**
@@ -151,29 +136,21 @@ import type { ApiResponse } from "../types/api-responses";
      * @returns Auth result
      */
     async loginWithEmail(data: LoginEmailInput): Promise<AuthResult> {
-      try {
-        const credential = await signInWithEmailAndPassword(
-          firebaseAuth, data.email, data.password
-        );
-        const firebaseToken = await getIdToken(credential.user);
-    
-        const res = await apiClient.post<BackendAuthResponseWrapper>(
-          API_ENDPOINTS.AUTH.LOGIN_EMAIL,
-          { firebaseToken }
-        );
-        console.log("Full Response:", res);
-        if (!res.success || !res.data) throw new Error(res.error ?? "Erreur serveur");
-        const payload = res.data.data;
-        return {
-          tokens: {
-            accessToken: payload.accessToken,
-            refreshToken: payload.refreshToken ?? '',
-          },
-          user: payload.patient,
-        };
-      } catch (error) {
-        throw new Error(mapAuthError(error));
-      }
+      console.log("[MOCK-AUTH] Login with email", data.email);
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve({
+            tokens: { accessToken: "mock_access", refreshToken: "mock_refresh" },
+            user: {
+              id: "mock_user_id",
+              fullName: "Utilisateur Test",
+              email: data.email,
+              phone: "690000000",
+              avatarUrl: "https://i.pravatar.cc/150?u=mock_user_id"
+            }
+          });
+        }, 1000);
+      });
     },
   
     /**
@@ -186,29 +163,21 @@ import type { ApiResponse } from "../types/api-responses";
         return { requiresOtp: true };
       }
   
-      try {
-        const credential = await createUserWithEmailAndPassword(
-          firebaseAuth, data.email!, data.password!
-        );
-        const firebaseToken = await getIdToken(credential.user);
-    
-        const res = await apiClient.post<BackendAuthResponseWrapper>(
-          API_ENDPOINTS.AUTH.REGISTER_EMAIL,
-          { fullName: data.fullName, firebaseToken }
-        );
-        console.log("Full Response:", res);
-        if (!res.success || !res.data) throw new Error(res.error ?? "Erreur serveur");
-        const payload = res.data.data;
-        return {
-          tokens: {
-            accessToken: payload.accessToken,
-            refreshToken: payload.refreshToken ?? '',
-          },
-          user: payload.patient,
-        };
-      } catch (error) {
-        throw new Error(mapAuthError(error));
-      }
+      console.log("[MOCK-AUTH] Register with email", data.email);
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve({
+            tokens: { accessToken: "mock_access", refreshToken: "mock_refresh" },
+            user: {
+              id: "mock_user_id",
+              fullName: data.fullName,
+              email: data.email,
+              phone: data.phone,
+              avatarUrl: "https://i.pravatar.cc/150?u=mock_user_id"
+            }
+          });
+        }, 1000);
+      });
     },
   
     /**
@@ -217,14 +186,8 @@ import type { ApiResponse } from "../types/api-responses";
      * @returns Promise<void>
      */
     async forgotPassword(email: string): Promise<void> {
-      try {
-        await sendPasswordResetEmail(firebaseAuth, email);
-        // On informe aussi le backend si nécessaire via forgotPassword endpoint
-        const res = await apiClient.post(API_ENDPOINTS.AUTH.FORGOT_PASSWORD, { email });
-        if (!res.success) throw new Error(res.error ?? "Erreur serveur");
-      } catch (error) {
-        throw new Error(mapAuthError(error));
-      }
+      console.log("[MOCK-AUTH] Forgot password for", email);
+      return new Promise((resolve) => setTimeout(resolve, 1000));
     },
 
     /**
@@ -234,8 +197,8 @@ import type { ApiResponse } from "../types/api-responses";
      * @returns Promise<void>
      */
     async verifyPasswordResetOtp(email: string, otp: string): Promise<void> {
-      const res = await apiClient.post(API_ENDPOINTS.AUTH.RESET_PASSWORD_VERIFY, { email, otp });
-      if (!res.success) throw new Error(res.error ?? "Code invalide ou expiré");
+      console.log("[MOCK-AUTH] Verify password reset OTP", otp);
+      return new Promise((resolve) => setTimeout(resolve, 1000));
     },
 
     /**
@@ -244,15 +207,16 @@ import type { ApiResponse } from "../types/api-responses";
      * @returns Promise<void>
      */
     async resetPassword(email: string, password: string): Promise<void> {
-      const res = await apiClient.post(API_ENDPOINTS.AUTH.RESET_PASSWORD, { email, password });
-      if (!res.success) throw new Error(res.error ?? "Erreur lors de la réinitialisation");
+      console.log("[MOCK-AUTH] Resetting password for", email);
+      return new Promise((resolve) => setTimeout(resolve, 1000));
     },
 
     /**
-     * Logout     * @returns Promise<void>
+     * Logout
+     * @returns Promise<void>
      */
     async logout(): Promise<void> {
-      await signOut(firebaseAuth);
-      await apiClient.post(API_ENDPOINTS.AUTH.LOGOUT).catch(() => {}); // best-effort
+      console.log("[MOCK-AUTH] Logout");
+      return new Promise((resolve) => setTimeout(resolve, 500));
     },
   };

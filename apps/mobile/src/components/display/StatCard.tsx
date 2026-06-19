@@ -1,3 +1,4 @@
+import React, { memo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, fontFamily, fontSize } from '../../themes';
 
@@ -7,7 +8,7 @@ type Props = {
   label: string;
 };
 
-export function StatCard({ icon, value, label }: Props) {
+export const StatCard = memo(({ icon, value, label }: Props) => {
   return (
     <View style={styles.container}>
       <View style={styles.icon}>{icon}</View>
@@ -15,7 +16,7 @@ export function StatCard({ icon, value, label }: Props) {
       <Text style={styles.label}>{label}</Text>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

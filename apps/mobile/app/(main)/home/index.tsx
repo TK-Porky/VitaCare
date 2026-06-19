@@ -1,5 +1,16 @@
-import React, { useEffect } from "react";
-import { ScrollView, View, Text, StyleSheet, StatusBar, ActivityIndicator, RefreshControl, Alert } from "react-native";
+import React, { useEffect, useMemo, useCallback } from "react";
+import { 
+  FlatList, 
+  View,
+  Platform,
+  Text, 
+  StyleSheet, 
+  StatusBar, 
+  ActivityIndicator, 
+  RefreshControl, 
+  Alert,
+  ListRenderItem
+} from "react-native";
 import { router } from "expo-router";
 import { Flame, Pill, TrendingUp } from "lucide-react-native";
 import {
@@ -22,6 +33,16 @@ type BoardProps = {
   notificationBell?: React.ReactNode;
 };
 
+type DashboardListItem = 
+  | { type: 'greeting'; id: string }
+  | { type: 'observance'; id: string }
+  | { type: 'stats'; id: string }
+  | { type: 'section_header'; id: string; title: string; onSeeAll: () => void }
+  | { type: 'medication'; id: string; medication: any }
+  | { type: 'appointment'; id: string; appointment: any }
+  | { type: 'empty'; id: string; message: string }
+  | { type: 'spacer'; id: string; height: number };
+
 // ================================================================================== //
 // Main
 // ================================================================================== //
@@ -42,26 +63,26 @@ export default function DashboardScreen({ onMap, notificationBell }: BoardProps)
   // ================================================================================== //
   // Handlers
   // ================================================================================== //
-  const onRefresh = () => {
+  const onRefresh = useCallback(() => {
     fetchOverview();
-  };
+  }, [fetchOverview]);
 
-  const handleSeeAllMedications = () => {
+  const handleSeeAllMedications = useCallback(() => {
     router.push("/(main)/(tabs)/medications" as any);
-  };
+  }, []);
 
-  const handleSeeAllAppointments = () => {
+  const handleSeeAllAppointments = useCallback(() => {
     router.push("/(main)/(tabs)/appointments" as any);
-  };
+  }, []);
 
-  const handleSearch = () => {
+  const handleSearch = useCallback(() => {
     router.push("/(main)/(tabs)/explore" as any);
-  };
+  }, []);
 
   /**
    * Handle medication press to update status
    */
-  const handleMedicationPress = (medicationId: number, currentStatus: string) => {
+  const handleMedicationPress = useCallback((medicationId: number, currentStatus: string) => {
     if (currentStatus !== 'pending') return;
 
     Alert.alert(
@@ -90,19 +111,148 @@ export default function DashboardScreen({ onMap, notificationBell }: BoardProps)
         }
       ]
     );
-  };
+  }, [updateMedicationStatus]);
 
   /**
    * Handle appointment press
    */
-  const handleAppointmentPress = (appointmentId: number) => {
-    // In a real app, navigate to appointment details
-    // router.push({ pathname: "/(main)/appointments/[id]", params: { id: appointmentId } } as any);
+  const handleAppointmentPress = useCallback((appointmentId: number) => {
     console.log("Navigate to appointment:", appointmentId);
+  }, []);
+
+  // ================================================================================== //
+  // Memoized Data for FlatList
+  // ================================================================================== //
+  const listData = useMemo(() => {
+    if (!data) return [];
+
+    const items: DashboardListItem[] = [
+      { type: 'greeting', id: 'greeting' },
+      { type: 'observance', id: 'observance' },
+      { type: 'stats', id: 'stats' },
+      { type: 'spacer', id: 'spacer1', height: 8 },
+      { 
+        type: 'section_header', 
+        id: 'medications_header', 
+        title: "Prises du jour", 
+        onSeeAll: handleSeeAllMedications 
+      },
+    ];
+
+    if (data.medications.length === 0) {
+      items.push({ type: 'empty', id: 'empty_meds', message: "Aucune prise programmée" });
+    } else {
+      data.medications.forEach(med => {
+        items.push({ type: 'medication', id: `med_${med.id}`, medication: med });
+      });
+    }
+
+    items.push({ type: 'spacer', id: 'spacer2', height: 8 });
+    items.push({ 
+      type: 'section_header', 
+      id: 'appointments_header', 
+      title: "Vos Rendez-vous", 
+      onSeeAll: handleSeeAllAppointments 
+    });
+
+    if (data.appointments.length === 0) {
+      items.push({ type: 'empty', id: 'empty_apps', message: "Aucun rendez-vous prévu" });
+    } else {
+      data.appointments.slice(0, 3).forEach(app => {
+        items.push({ type: 'appointment', id: `app_${app.id}`, appointment: app });
+      });
+    }
+
+    return items;
+  }, [data, handleSeeAllMedications, handleSeeAllAppointments]);
+
+  // ================================================================================== //
+  // Render Helpers
+  // ================================================================================== //
+  const todayStr = useMemo(() => new Date().toLocaleDateString('fr-FR', { 
+    weekday: 'long', 
+    day: 'numeric', 
+    month: 'long' 
+  }), []);
+
+  const renderItem: ListRenderItem<DashboardListItem> = ({ item }) => {
+    switch (item.type) {
+      case 'greeting':
+        return (
+          <View style={styles.greeting}>
+            <Text style={styles.greetingText}>
+              Bienvenue <Text style={styles.greetingName}>{user?.fullName || data?.currentUser}</Text> !
+            </Text>
+            <Text style={styles.greetingDate}>Aujourd'hui, {todayStr}</Text>
+          </View>
+        );
+      case 'observance':
+        return data ? (
+          <ObservanceCard
+            remainingDoses={data.stats.pending}
+            totalDoses={data.stats.total}
+            appointments={data.appointments.length}
+            observancePercent={data.stats.observance}
+          />
+        ) : null;
+      case 'stats':
+        return data ? (
+          <View style={styles.statsRow}>
+            <StatCard
+              icon={<Flame size={20} color={colors.inkLight} />}
+              value={data.streak}
+              label={"Jours\nConsécutifs"}
+            />
+            <StatCard
+              icon={<Pill size={20} color={colors.inkLight} />}
+              value={data.activeMedications}
+              label={"Médicaments\nactifs"}
+            />
+            <StatCard
+              icon={<TrendingUp size={20} color={colors.inkLight} />}
+              value={`${data.monthlyProgress}%`}
+              label="Ce mois-ci"
+            />
+          </View>
+        ) : null;
+      case 'section_header':
+        return (
+          <SectionHeader title={item.title} onSeeAll={item.onSeeAll} />
+        );
+      case 'medication':
+        return (
+          <MedicationItem
+            name={item.medication.name}
+            dose={item.medication.dosage}
+            status={item.medication.status}
+            time={item.medication.time}
+            onPress={() => handleMedicationPress(item.medication.id, item.medication.status)}
+          />
+        );
+      case 'appointment':
+        return (
+          <AppointmentItem
+            doctorName={item.appointment.doctorName}
+            date={item.appointment.date}
+            time={item.appointment.time}
+            status={item.appointment.status}
+            avatarUrl={item.appointment.doctorAvatarUrl ?? undefined}
+            onPress={() => handleAppointmentPress(item.appointment.id)}
+          />
+        );
+      case 'empty':
+        return (
+          <Text style={styles.emptyText}>{item.message}</Text>
+        );
+      case 'spacer':
+        return <View style={{ height: item.height }} />;
+      default:
+        return null;
+    }
   };
 
   // ================================================================================== //
-  // Loading Render
+  // Loading & Error Renders
   // ================================================================================== //
   if (isLoading && !data) {
     return (
@@ -112,9 +262,6 @@ export default function DashboardScreen({ onMap, notificationBell }: BoardProps)
     );
   }
 
-  // ================================================================================== //
-  // Error Render
-  // ================================================================================== //
   if (!data && error) {
     return (
       <View style={styles.errorContainer}>
@@ -124,19 +271,8 @@ export default function DashboardScreen({ onMap, notificationBell }: BoardProps)
     );
   }
 
-  if (!data) return null;
-
   // ================================================================================== //
-  // Utility Functions
-  // ================================================================================== //
-  const todayStr = new Date().toLocaleDateString('fr-FR', { 
-    weekday: 'long', 
-    day: 'numeric', 
-    month: 'long' 
-  });
-
-  // ================================================================================== //
-  // Render
+  // Main Render
   // ================================================================================== //
   return (
     <View style={styles.root}>
@@ -147,96 +283,20 @@ export default function DashboardScreen({ onMap, notificationBell }: BoardProps)
       />
       <AppHeader onSearch={handleSearch} onMap={onMap} notificationBell={notificationBell} />
 
-      <ScrollView
+      <FlatList
+        data={listData}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={isLoading} onRefresh={onRefresh} tintColor={colors.primary} />
         }
-      >
-        {/* Greeting */}
-        <View style={styles.greeting}>
-          <Text style={styles.greetingText}>
-            Bienvenue <Text style={styles.greetingName}>{user?.fullName || data.currentUser}</Text> !
-          </Text>
-          <Text style={styles.greetingDate}>Aujourd'hui, {todayStr}</Text>
-        </View>
-
-        {/* Observance */}
-        <ObservanceCard
-          remainingDoses={data.stats.pending}
-          totalDoses={data.stats.total}
-          appointments={data.appointments.length}
-          observancePercent={data.stats.observance}
-        />
-
-        {/* Stats */}
-        <View style={styles.statsRow}>
-          <StatCard
-            icon={<Flame size={20} color={colors.inkLight} />}
-            value={data.streak}
-            label={"Jours\nConsécutifs"}
-          />
-          <StatCard
-            icon={<Pill size={20} color={colors.inkLight} />}
-            value={data.activeMedications}
-            label={"Médicaments\nactifs"}
-          />
-          <StatCard
-            icon={<TrendingUp size={20} color={colors.inkLight} />}
-            value={`${data.monthlyProgress}%`}
-            label="Ce mois-ci"
-          />
-        </View>
-
-        {/* Prises du jour */}
-        <View style={styles.section}>
-          <SectionHeader title="Prises du jour" onSeeAll={handleSeeAllMedications} />
-          {data.medications.length === 0 ? (
-            <Text style={styles.emptyText}>Aucune prise programmée</Text>
-          ):(
-            <>
-              {data.medications.map((medication) => (
-                <MedicationItem
-                key={medication.id}
-                name={medication.name}
-                dose={medication.dosage}
-                status={medication.status}
-                time={medication.time}
-                onPress={() => handleMedicationPress(medication.id, medication.status)}
-              />
-              ))}
-            </>
-          )}
-        </View>
-
-        {/* Rendez-vous */}
-        <View style={styles.section}>
-          <SectionHeader title="Vos Rendez-vous" onSeeAll={handleSeeAllAppointments} />
-          {data.appointments.length === 0 ? (
-            <Text style={styles.emptyText}>Aucun rendez-vous prévu</Text>
-          ):(
-            <>
-              {data.appointments.slice(0, 3).map((appointment) => {
-                const dateStr = appointment.date;
-                const timeStr = appointment.time;
-
-                return (
-                  <AppointmentItem
-                    key={appointment.id}
-                    doctorName={appointment.doctorName}
-                    date={dateStr}
-                    time={timeStr}
-                    status={appointment.status}
-                    avatarUrl={appointment.doctorAvatarUrl ?? undefined}
-                    onPress={() => handleAppointmentPress(appointment.id)}
-                  />
-                );
-              })}
-            </>
-          )}
-        </View>
-      </ScrollView>
+        removeClippedSubviews={Platform.OS === 'android'}
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+      />
     </View>
   );
 }

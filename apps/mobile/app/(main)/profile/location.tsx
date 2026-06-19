@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -9,15 +9,19 @@ import {
   ActivityIndicator,
   Alert,
   NativeModules,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { MapPin } from 'lucide-react-native';
-import LegacyMapView, { UrlTile as LegacyUrlTile, Marker as LegacyMarker, PROVIDER_DEFAULT } from 'react-native-maps';
-import * as Location from 'expo-location';
-import { colors, fontFamily, fontSize } from '../../../src/themes';
-import { TopBar, PrimaryButton, SearchInput } from '../../../src/components';
-import { useProfile } from '../../../src/hooks';
-import { useAuthStore } from '../../../src/store';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { MapPin } from "lucide-react-native";
+import LegacyMapView, {
+  UrlTile as LegacyUrlTile,
+  Marker as LegacyMarker,
+  PROVIDER_DEFAULT,
+} from "react-native-maps";
+import * as Location from "expo-location";
+import { colors, fontFamily, fontSize } from "../../../src/themes";
+import { TopBar, PrimaryButton, SearchInput } from "../../../src/components";
+import { useProfile } from "../../../src/hooks";
+import { useAuthStore } from "../../../src/store";
 
 // ================================================================================== //
 // MapLibre configuration
@@ -28,9 +32,10 @@ let PointAnnotationComponent: any = null;
 let mapLibreLoaded = false;
 
 try {
-  const isMapLibreAvailable = !!NativeModules.MLRNModule || !!NativeModules.MLRNCameraModule;
+  const isMapLibreAvailable =
+    !!NativeModules.MLRNModule || !!NativeModules.MLRNCameraModule;
   if (isMapLibreAvailable) {
-    const MapLibre = require('@maplibre/maplibre-react-native');
+    const MapLibre = require("@maplibre/maplibre-react-native");
     MapComponent = MapLibre.Map;
     CameraComponent = MapLibre.Camera;
     PointAnnotationComponent = MapLibre.PointAnnotation;
@@ -44,17 +49,17 @@ const OSM_STYLE = {
   version: 8,
   sources: {
     osm: {
-      type: 'raster',
-      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+      type: "raster",
+      tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
       tileSize: 256,
-      attribution: '© OpenStreetMap contributors',
+      attribution: "© OpenStreetMap contributors",
     },
   },
   layers: [
     {
-      id: 'osm',
-      type: 'raster',
-      source: 'osm',
+      id: "osm",
+      type: "raster",
+      source: "osm",
       minzoom: 0,
       maxzoom: 19,
     },
@@ -75,13 +80,13 @@ export default function LocationScreen() {
   const user = useAuthStore((s) => s.user);
   const { updateProfile, isUpdatingProfile } = useProfile();
 
-  const [location, setLocation] = useState('Recherche de votre position...');
+  const [location, setLocation] = useState("Recherche de votre position...");
   const [region, setRegion] = useState(INITIAL_REGION);
   const [markerCoords, setMarkerCoords] = useState({
     latitude: INITIAL_REGION.latitude,
     longitude: INITIAL_REGION.longitude,
   });
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [isMapReady, setIsMapReady] = useState(false);
 
   const cameraRef = useRef<any>(null);
@@ -89,8 +94,8 @@ export default function LocationScreen() {
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setLocation('Permission de localisation refusée');
+      if (status !== "granted") {
+        setLocation("Permission de localisation refusée");
         return;
       }
 
@@ -119,25 +124,32 @@ export default function LocationScreen() {
       const reverse = await Location.reverseGeocodeAsync(coords);
       if (reverse.length > 0) {
         const item = reverse[0];
-        const parts = [item.street, item.district, item.city].filter(Boolean).join(', ');
-        setLocation(parts || 'Position détectée');
+        const parts = [item.street, item.district, item.city]
+          .filter(Boolean)
+          .join(", ");
+        setLocation(parts || "Position détectée");
       }
     })();
   }, []);
 
-  const handleMapPress = useCallback(async (coords: { latitude: number; longitude: number }) => {
-    setMarkerCoords(coords);
-    try {
-      const reverse = await Location.reverseGeocodeAsync(coords);
-      if (reverse.length > 0) {
-        const item = reverse[0];
-        const parts = [item.street, item.district, item.city].filter(Boolean).join(', ');
-        setLocation(parts || 'Position sélectionnée');
+  const handleMapPress = useCallback(
+    async (coords: { latitude: number; longitude: number }) => {
+      setMarkerCoords(coords);
+      try {
+        const reverse = await Location.reverseGeocodeAsync(coords);
+        if (reverse.length > 0) {
+          const item = reverse[0];
+          const parts = [item.street, item.district, item.city]
+            .filter(Boolean)
+            .join(", ");
+          setLocation(parts || "Position sélectionnée");
+        }
+      } catch {
+        // keep previous location text
       }
-    } catch {
-      // keep previous location text
-    }
-  }, []);
+    },
+    [],
+  );
 
   const handleSearch = useCallback(async () => {
     if (!searchQuery.trim()) return;
@@ -146,10 +158,10 @@ export default function LocationScreen() {
       if (results.length > 0) {
         const { latitude, longitude } = results[0];
         const coords = { latitude, longitude };
-        
+
         setMarkerCoords(coords);
         setRegion({ ...coords, latitudeDelta: 0.01, longitudeDelta: 0.01 });
-        
+
         if (mapLibreLoaded && cameraRef.current) {
           cameraRef.current.setCamera({
             centerCoordinate: [longitude, latitude],
@@ -160,34 +172,34 @@ export default function LocationScreen() {
 
         setLocation(searchQuery.trim());
       } else {
-        Alert.alert('Introuvable', 'Aucun résultat pour cette adresse.');
+        Alert.alert("Introuvable", "Aucun résultat pour cette adresse.");
       }
     } catch {
-      Alert.alert('Erreur', 'Impossible de géolocaliser cette adresse.');
+      Alert.alert("Erreur", "Impossible de géolocaliser cette adresse.");
     }
   }, [searchQuery]);
 
   const handleSave = async () => {
     try {
       await updateProfile({
-        fullName: user?.fullName ?? '',
-        email: user?.email ?? '',
-        phone: user?.phone ?? '',
+        fullName: user?.fullName ?? "",
+        email: user?.email ?? "",
+        phone: user?.phone ?? "",
         location,
       });
-      Alert.alert('Succès', 'Votre localisation a été mise à jour.');
+      Alert.alert("Succès", "Votre localisation a été mise à jour.");
     } catch {
-      Alert.alert('Erreur', 'Impossible de sauvegarder la localisation.');
+      Alert.alert("Erreur", "Impossible de sauvegarder la localisation.");
     }
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={['bottom']}>
+    <SafeAreaView style={styles.safe} edges={["bottom"]}>
       <TopBar title="Ma localisation" />
 
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <View style={styles.content}>
           <SearchInput
@@ -214,7 +226,10 @@ export default function LocationScreen() {
                 <CameraComponent
                   ref={cameraRef}
                   initialViewState={{
-                    centerCoordinate: [INITIAL_REGION.longitude, INITIAL_REGION.latitude],
+                    centerCoordinate: [
+                      INITIAL_REGION.longitude,
+                      INITIAL_REGION.latitude,
+                    ],
                     zoomLevel: 12,
                   }}
                 />
@@ -224,7 +239,11 @@ export default function LocationScreen() {
                     coordinate={[markerCoords.longitude, markerCoords.latitude]}
                   >
                     <View style={styles.customMarker}>
-                      <MapPin size={24} color={colors.primary} fill={colors.white} />
+                      <MapPin
+                        size={24}
+                        color={colors.primary}
+                        fill={colors.white}
+                      />
                     </View>
                   </PointAnnotationComponent>
                 )}
@@ -239,14 +258,18 @@ export default function LocationScreen() {
                 onMapReady={() => setIsMapReady(true)}
               >
                 <LegacyUrlTile
-                  urlTemplate="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  urlTemplate="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
                   maximumZ={19}
                   flipY={false}
                   tileSize={256}
                 />
                 <LegacyMarker coordinate={markerCoords}>
                   <View style={styles.customMarker}>
-                    <MapPin size={24} color={colors.primary} fill={colors.white} />
+                    <MapPin
+                      size={24}
+                      color={colors.primary}
+                      fill={colors.white}
+                    />
                   </View>
                 </LegacyMarker>
               </LegacyMapView>
@@ -261,7 +284,9 @@ export default function LocationScreen() {
 
           <TouchableOpacity style={styles.locationRow} activeOpacity={0.7}>
             <MapPin size={16} color={colors.inkMuted} />
-            <Text style={styles.locationText} numberOfLines={1}>{location}</Text>
+            <Text style={styles.locationText} numberOfLines={1}>
+              {location}
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -292,7 +317,7 @@ const styles = StyleSheet.create({
   mapContainer: {
     flex: 1,
     borderRadius: 20,
-    overflow: 'hidden',
+    overflow: "hidden",
     backgroundColor: colors.surface,
   },
   map: {
@@ -301,25 +326,25 @@ const styles = StyleSheet.create({
   loaderOverlay: {
     ...StyleSheet.absoluteFill,
     backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   customMarker: {
     width: 40,
     height: 40,
     backgroundColor: colors.white,
     borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
   locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
     backgroundColor: colors.surface,
     padding: 14,

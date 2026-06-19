@@ -162,7 +162,7 @@ export default function ExploreScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.root}>
+    <View style={styles.root}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.primary} />
       <AppHeader
         onSearch={() => handleSearch(search)}
@@ -233,7 +233,7 @@ export default function ExploreScreen() {
         />
       )}
 
-    </SafeAreaView>
+    </View>
   );
 }
 
