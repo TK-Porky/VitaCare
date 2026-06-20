@@ -211,6 +211,58 @@ export interface UpdateNotificationPreferencesRequest {
 }
 
 // ---------------------------------------------------------------------------
+// Reminders (NEW)
+// ---------------------------------------------------------------------------
+
+export interface CreateReminderRequest {
+  medicationId: string;
+  patientId: string;
+  scheduledDate: string; // ISO date string
+  scheduledTime: string; // HH:mm format
+  notes?: string;
+}
+
+export interface UpdateReminderRequest {
+  medicationId?: string;
+  scheduledDate?: string; // ISO date string
+  scheduledTime?: string; // HH:mm format
+  status?: 'PENDING' | 'TAKEN' | 'SNOOZED' | 'MISSED' | 'CANCELLED';
+  notes?: string;
+}
+
+export interface MarkReminderTakenRequest {
+  reminderId: string;
+  takenAt?: string; // ISO datetime string, defaults to now
+}
+
+export interface SnoozeReminderRequest {
+  reminderId: string;
+  minutes: number; // Number of minutes to snooze
+}
+
+export interface RemindersListQuery {
+  page?: number;
+  limit?: number;
+  status?: ReminderStatus | 'all';
+  startDate?: string; // ISO date string
+  endDate?: string; // ISO date string
+  patientId?: string;
+  medicationId?: string;
+}
+
+export interface BulkCreateRemindersRequest {
+  reminders: Omit<CreateReminderRequest, 'patientId'>[];
+  patientId: string;
+}
+
+export interface MarkReminderReadRequest {
+  reminderIds?: string[]; // if empty, marks all as read
+}
+
+// Re-export status type for convenience
+export type ReminderStatus = 'PENDING' | 'TAKEN' | 'SNOOZED' | 'MISSED' | 'CANCELLED';
+
+// ---------------------------------------------------------------------------
 // Profil utilisateur
 // ---------------------------------------------------------------------------
 

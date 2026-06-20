@@ -8,8 +8,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Search, Filter } from "lucide-react-native";
-import { SearchInput } from '../inputs/SearchInput';
-import { PrimaryButton } from '../buttons/PrimaryButton';
+import { SearchInput } from "../inputs/SearchInput";
+import { PrimaryButton } from "../buttons/PrimaryButton";
 import { colors, fontFamily, fontSize } from "../../themes";
 
 type Props = {
@@ -17,6 +17,7 @@ type Props = {
   searchBar?: boolean;
   searchValue?: string;
   onSearch?: () => void;
+  onSearchChange?: (value: string) => void;
   onSearchFocus?: () => void;
   onMap?: () => void;
   onReminders?: () => void;
@@ -59,12 +60,20 @@ export function AppHeader({
         ) : (
           <View style={styles.actions}>
             {!searchBar && (
-              <TouchableOpacity onPress={onSearch} activeOpacity={0.7} style={styles.iconButton}>
+              <TouchableOpacity
+                onPress={onSearch}
+                activeOpacity={0.7}
+                style={styles.iconButton}
+              >
                 <Search size={20} color={colors.ink} />
               </TouchableOpacity>
             )}
             {onFilter && (
-              <TouchableOpacity onPress={onFilter} activeOpacity={0.7} style={styles.iconButton}>
+              <TouchableOpacity
+                onPress={onFilter}
+                activeOpacity={0.7}
+                style={styles.iconButton}
+              >
                 <Filter size={20} color={colors.ink} />
               </TouchableOpacity>
             )}
@@ -81,7 +90,13 @@ export function AppHeader({
               <PrimaryButton
                 label="Rappels"
                 onPress={onReminders}
-                icon={<Ionicons name="time-outline" size={18} color={colors.white} />}
+                icon={
+                  <Ionicons
+                    name="time-outline"
+                    size={18}
+                    color={colors.white}
+                  />
+                }
                 size="sm"
                 style={styles.mapButton}
               />
@@ -95,19 +110,22 @@ export function AppHeader({
         <View style={styles.bottomContainer}>
           {title && <Text style={styles.title}>{title}</Text>}
           {searchBar && (
-              <View style={styles.searchWrap}>
-                <View pointerEvents={onSearchFocus ? 'none' : 'auto'}>
-                  <SearchInput value={searchValue || ""} onChangeText={() => {}} />
-                </View>
-                {onSearchFocus && (
-                  <TouchableOpacity
-                    style={StyleSheet.absoluteFill}
-                    onPress={onSearchFocus}
-                    activeOpacity={0.7}
-                  />
-                )}
+            <View style={styles.searchWrap}>
+              <View pointerEvents={onSearchFocus ? "none" : "auto"}>
+                <SearchInput
+                  value={searchValue || ""}
+                  onChangeText={() => {}}
+                />
               </View>
-            )}
+              {onSearchFocus && (
+                <TouchableOpacity
+                  style={StyleSheet.absoluteFill}
+                  onPress={onSearchFocus}
+                  activeOpacity={0.7}
+                />
+              )}
+            </View>
+          )}
         </View>
       )}
     </View>
@@ -157,7 +175,7 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   searchWrap: {
-    position: 'relative',
+    position: "relative",
   },
   title: {
     fontFamily: fontFamily.bold,

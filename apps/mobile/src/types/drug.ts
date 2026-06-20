@@ -1,7 +1,12 @@
 export interface Drug {
   id: string;
-  category: string;
   name: string;
-  price: string;
-  imageUri: string;
+  category?: string;
+  price?: number;
+  imageUri?: string;
+  dosage?: string;
+  description?: string;
+  manufacturer?: string;
+  requiresPrescription?: boolean;
+  stock?: number;
 }

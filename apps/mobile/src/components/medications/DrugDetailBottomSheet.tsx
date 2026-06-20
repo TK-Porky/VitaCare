@@ -1,4 +1,9 @@
-import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import React, {
+  forwardRef,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import {
   View,
   Text,
@@ -7,13 +12,13 @@ import {
   ScrollView,
   TouchableOpacity,
   Platform,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { AppBottomSheet, AppBottomSheetRef } from '../generics';
-import { PrimaryButton } from '../buttons';
-import { GrayButton } from '../buttons/GrayButton';
-import { colors, fontFamily, fontSize } from '../../themes';
-import { Drug } from '../../types';
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { AppBottomSheet, AppBottomSheetRef } from "../generics";
+import { PrimaryButton } from "../buttons";
+import { GrayButton } from "../buttons/GrayButton";
+import { colors, fontFamily, fontSize } from "../../themes";
+import { Drug } from "../../types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -27,19 +32,28 @@ type Props = {
   onAddToReminder?: (drug: Drug) => void;
   onClose?: () => void;
   relatedDrugs?: Drug[];
+  hasReminder?: boolean;
 };
 
 // ─── Tabs ─────────────────────────────────────────────────────────────────────
 
-const TABS = ['Adulte', 'Enfant', 'Avis', 'Garde', 'Generique', 'Indication', 'Mise en garde'] as const;
-type DrugTab = typeof TABS[number];
+const TABS = [
+  "Adulte",
+  "Enfant",
+  "Avis",
+  "Garde",
+  "Generique",
+  "Indication",
+  "Mise en garde",
+] as const;
+type DrugTab = (typeof TABS)[number];
 
 type Section = { title: string; body: string };
 
 const TAB_CONTENT: Record<DrugTab, Section[]> = {
   Adulte: [
     {
-      title: 'POSOLOGIE ADULTE',
+      title: "POSOLOGIE ADULTE",
       body: "1 à 2 comprimés de 500 mg toutes les 4 à 6 heures. Ne pas dépasser 4 g (8 comprimés de 500 mg) par 24 heures. Respectez la posologie minimale efficace et la durée de traitement la plus courte possible.",
     },
     {
@@ -47,53 +61,53 @@ const TAB_CONTENT: Record<DrugTab, Section[]> = {
       body: "Voie orale uniquement. Avaler les comprimés avec un grand verre d'eau, au moment ou en dehors des repas.",
     },
     {
-      title: 'DURÉE DU TRAITEMENT',
+      title: "DURÉE DU TRAITEMENT",
       body: "La durée ne doit pas dépasser 3 jours en cas de fièvre et 5 jours en cas de douleur sans avis médical.",
     },
   ],
   Enfant: [
     {
-      title: 'POSOLOGIE ENFANT',
+      title: "POSOLOGIE ENFANT",
       body: "La dose recommandée est de 15 mg/kg de poids corporel par prise, renouvelable toutes les 6 heures si nécessaire. Ne pas dépasser 60 mg/kg/jour en 4 prises.",
     },
     {
-      title: 'ÂGE MINIMUM',
+      title: "ÂGE MINIMUM",
       body: "Ce médicament est déconseillé aux enfants de moins de 3 ans sans avis médical. Consultez un médecin ou pharmacien pour les nourrissons.",
     },
   ],
   Avis: [
     {
-      title: 'AVIS MÉDICAL',
+      title: "AVIS MÉDICAL",
       body: "Médicament recommandé par l'OMS comme analgésique et antipyrétique de première intention. Efficacité prouvée dans le traitement des douleurs légères à modérées.",
     },
     {
-      title: 'CONTRE-INDICATIONS',
+      title: "CONTRE-INDICATIONS",
       body: "Hypersensibilité connue au paracétamol. Insuffisance hépatocellulaire sévère. Ne pas associer à d'autres médicaments contenant du paracétamol.",
     },
   ],
   Garde: [
     {
-      title: 'DISPONIBILITÉ',
+      title: "DISPONIBILITÉ",
       body: "Médicament disponible sans ordonnance dans toutes les pharmacies agréées. Accessible en pharmacies de garde 24h/24.",
     },
     {
-      title: 'CONSERVATION',
+      title: "CONSERVATION",
       body: "À conserver à une température inférieure à 25°C, à l'abri de la lumière et de l'humidité. Tenir hors de portée des enfants.",
     },
   ],
   Generique: [
     {
-      title: 'MÉDICAMENTS GÉNÉRIQUES',
+      title: "MÉDICAMENTS GÉNÉRIQUES",
       body: "Le paracétamol est la substance active. Des génériques sont disponibles en comprimés à 500 mg, 1000 mg et en formes sécables.",
     },
     {
-      title: 'ÉQUIVALENCE THÉRAPEUTIQUE',
+      title: "ÉQUIVALENCE THÉRAPEUTIQUE",
       body: "Tous les médicaments à base de paracétamol ont la même efficacité thérapeutique à dosages équivalents. Le choix du générique est souvent motivé par des raisons économiques.",
     },
   ],
   Indication: [
     {
-      title: 'INDICATIONS THÉRAPEUTIQUES',
+      title: "INDICATIONS THÉRAPEUTIQUES",
       body: "Traitement symptomatique des douleurs légères à modérées et des états fébriles : céphalées, douleurs dentaires, douleurs musculaires, douleurs arthritiques, fièvre.",
     },
     {
@@ -101,13 +115,13 @@ const TAB_CONTENT: Record<DrugTab, Section[]> = {
       body: "Le paracétamol exerce son action analgésique et antipyrétique par inhibition centrale de la synthèse des prostaglandines, sans action anti-inflammatoire périphérique significative.",
     },
   ],
-  'Mise en garde': [
+  "Mise en garde": [
     {
       title: "MISES EN GARDE ET PRÉCAUTIONS D'EMPLOI",
       body: "En cas de traitement par le paracétamol, éviter la consommation d'alcool. Ne pas dépasser la dose prescrite. En cas de surdosage accidentel, consulter immédiatement un médecin même en l'absence de symptômes.",
     },
     {
-      title: 'INTERACTIONS MÉDICAMENTEUSES',
+      title: "INTERACTIONS MÉDICAMENTEUSES",
       body: "Informer votre médecin ou pharmacien si vous prenez d'autres médicaments contenant du paracétamol afin d'éviter un surdosage. Précautions particulières avec les anticoagulants oraux de type warfarine.",
     },
   ],
@@ -124,11 +138,19 @@ const Tag = ({ label }: { label: string }) => (
 const RelatedCard = ({ item }: { item: Drug }) => (
   <TouchableOpacity style={styles.relatedCard} activeOpacity={0.8}>
     <View style={styles.relatedImageWrap}>
-      <Image source={{ uri: item.imageUri }} style={styles.relatedImage} resizeMode="contain" />
+      <Image
+        source={{ uri: item.imageUri }}
+        style={styles.relatedImage}
+        resizeMode="contain"
+      />
     </View>
     <View style={styles.relatedInfo}>
-      <Text style={styles.relatedCategory} numberOfLines={1}>{item.category}</Text>
-      <Text style={styles.relatedName} numberOfLines={2}>{item.name}</Text>
+      <Text style={styles.relatedCategory} numberOfLines={1}>
+        {item.category}
+      </Text>
+      <Text style={styles.relatedName} numberOfLines={2}>
+        {item.name}
+      </Text>
       <Text style={styles.relatedPrice}>{item.price}</Text>
     </View>
   </TouchableOpacity>
@@ -136,10 +158,16 @@ const RelatedCard = ({ item }: { item: Drug }) => (
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export const DrugDetailBottomSheet = forwardRef<DrugDetailBottomSheetRef, Props>(
-  ({ drug, onAddToReminder, onClose, relatedDrugs = [] }, ref) => {
+export const DrugDetailBottomSheet = forwardRef<
+  DrugDetailBottomSheetRef,
+  Props
+>(
+  (
+    { drug, onAddToReminder, onClose, relatedDrugs = [], hasReminder = false },
+    ref,
+  ) => {
     const sheetRef = useRef<AppBottomSheetRef>(null);
-    const [activeTab, setActiveTab] = useState<DrugTab>('Adulte');
+    const [activeTab, setActiveTab] = useState<DrugTab>("Adulte");
 
     useImperativeHandle(ref, () => ({
       open: () => sheetRef.current?.open(),
@@ -148,7 +176,7 @@ export const DrugDetailBottomSheet = forwardRef<DrugDetailBottomSheetRef, Props>
 
     if (!drug) return null;
 
-    const tags = [drug.category, 'Sans ordonnance', 'Voie orale'];
+    const tags = [drug.category, "Sans ordonnance", "Voie orale"];
 
     return (
       <AppBottomSheet
@@ -175,9 +203,13 @@ export const DrugDetailBottomSheet = forwardRef<DrugDetailBottomSheetRef, Props>
             </View>
             <View style={styles.infoWrap}>
               <View style={styles.categoryBadge}>
-                <Text style={styles.categoryText} numberOfLines={2}>{drug.category}</Text>
+                <Text style={styles.categoryText} numberOfLines={2}>
+                  {drug.category}
+                </Text>
               </View>
-              <Text style={styles.drugName} numberOfLines={2}>{drug.name}</Text>
+              <Text style={styles.drugName} numberOfLines={2}>
+                {drug.name}
+              </Text>
               <Text style={styles.drugPrice}>{drug.price}</Text>
             </View>
           </View>
@@ -187,24 +219,38 @@ export const DrugDetailBottomSheet = forwardRef<DrugDetailBottomSheetRef, Props>
           {/* ── Description ── */}
           <View style={styles.descriptionWrap}>
             <Text style={styles.descriptionText}>
-              Ce médicament est indiqué dans le traitement symptomatique des douleurs légères à
-              modérées et des états fébriles. Toujours lire attentivement la notice avant utilisation
-              et consulter un professionnel de santé en cas de doute.
+              Ce médicament est indiqué dans le traitement symptomatique des
+              douleurs légères à modérées et des états fébriles. Toujours lire
+              attentivement la notice avant utilisation et consulter un
+              professionnel de santé en cas de doute.
             </Text>
           </View>
 
           {/* ── Tags ── */}
           <View style={styles.tagsWrap}>
-            {tags.map(tag => <Tag key={tag} label={tag} />)}
+            {tags.map((tag) => (
+              <Tag key={tag} label={tag} />
+            ))}
           </View>
 
           {/* ── CTA ── */}
           <View style={styles.ctaWrap}>
             <PrimaryButton
-              label="Ajouter au rappel"
+              label={
+                hasReminder ? "Déjà dans mes rappels" : "Ajouter à mes rappels"
+              }
+              variant={hasReminder ? "outline" : "solid"}
+              size="md"
               fullWidth
-              icon={<Ionicons name="alarm-outline" size={18} color={colors.white} />}
-              onPress={() => drug && onAddToReminder?.(drug)}
+              icon={
+                <Ionicons
+                  name={hasReminder ? "checkmark-circle" : "alarm-outline"}
+                  size={18}
+                  color={hasReminder ? colors.error : colors.white}
+                />
+              }
+              onPress={() => !hasReminder && drug && onAddToReminder?.(drug)}
+              isDisabled={hasReminder}
             />
           </View>
 
@@ -217,14 +263,19 @@ export const DrugDetailBottomSheet = forwardRef<DrugDetailBottomSheetRef, Props>
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.tabBarContent}
             >
-              {TABS.map(tab => (
+              {TABS.map((tab) => (
                 <TouchableOpacity
                   key={tab}
                   style={[styles.tab, activeTab === tab && styles.tabActive]}
                   onPress={() => setActiveTab(tab)}
                   activeOpacity={0.7}
                 >
-                  <Text style={[styles.tabLabel, activeTab === tab && styles.tabLabelActive]}>
+                  <Text
+                    style={[
+                      styles.tabLabel,
+                      activeTab === tab && styles.tabLabelActive,
+                    ]}
+                  >
                     {tab}
                   </Text>
                 </TouchableOpacity>
@@ -235,7 +286,10 @@ export const DrugDetailBottomSheet = forwardRef<DrugDetailBottomSheetRef, Props>
           {/* ── Tab content (expanded inline) ── */}
           <View style={styles.tabContent}>
             {TAB_CONTENT[activeTab].map((section, i) => (
-              <View key={i} style={[styles.section, i > 0 && styles.sectionSpacing]}>
+              <View
+                key={i}
+                style={[styles.section, i > 0 && styles.sectionSpacing]}
+              >
                 <Text style={styles.sectionTitle}>{section.title}</Text>
                 <Text style={styles.sectionBody}>{section.body}</Text>
               </View>
@@ -253,7 +307,7 @@ export const DrugDetailBottomSheet = forwardRef<DrugDetailBottomSheetRef, Props>
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={styles.relatedList}
                 >
-                  {relatedDrugs.map(item => (
+                  {relatedDrugs.map((item) => (
                     <RelatedCard key={item.id} item={item} />
                   ))}
                 </ScrollView>
@@ -274,10 +328,10 @@ export const DrugDetailBottomSheet = forwardRef<DrugDetailBottomSheetRef, Props>
         </View>
       </AppBottomSheet>
     );
-  }
+  },
 );
 
-DrugDetailBottomSheet.displayName = 'DrugDetailBottomSheet';
+DrugDetailBottomSheet.displayName = "DrugDetailBottomSheet";
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
@@ -300,7 +354,7 @@ const styles = StyleSheet.create({
 
   // ── Header ──
   header: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 14,
     paddingHorizontal: 16,
     paddingTop: 8,
@@ -311,23 +365,23 @@ const styles = StyleSheet.create({
     height: 120,
     borderRadius: 16,
     backgroundColor: colors.surface,
-    overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
+    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
   },
   drugImage: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   infoWrap: {
     flex: 1,
     gap: 6,
     paddingTop: 2,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   categoryBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(17, 199, 147, 0.12)',
+    alignSelf: "flex-start",
+    backgroundColor: "rgba(17, 199, 147, 0.12)",
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -371,8 +425,8 @@ const styles = StyleSheet.create({
 
   // ── Tags ──
   tagsWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
     paddingHorizontal: 16,
     paddingBottom: 14,
@@ -409,7 +463,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 12,
     borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
+    borderBottomColor: "transparent",
   },
   tabActive: {
     borderBottomColor: colors.primaryDark,
@@ -468,21 +522,21 @@ const styles = StyleSheet.create({
   relatedCard: {
     width: 130,
     borderRadius: 14,
-    overflow: 'hidden',
+    overflow: "hidden",
     backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.border,
   },
   relatedImageWrap: {
-    width: '100%',
+    width: "100%",
     height: 90,
     backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   relatedImage: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   relatedInfo: {
     padding: 8,
@@ -509,11 +563,11 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: 16,
     paddingTop: 10,
-    paddingBottom: Platform.OS === 'ios' ? 36 : 20,
+    paddingBottom: Platform.OS === "ios" ? 36 : 20,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.border,
   },
   closeBtn: {
-    width: '100%',
+    width: "100%",
   },
 });

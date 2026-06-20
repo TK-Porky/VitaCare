@@ -281,6 +281,89 @@ export interface NotificationsListResponse extends PaginatedResponse<Notificatio
 
 export interface MarkNotificationReadResponse extends ApiResponse<null> {}
 
+
+// ---------------------------------------------------------------------------
+// Store Medications
+// ---------------------------------------------------------------------------
+
+export interface StoreMedicationResponse {
+  id: string;
+  name: string;
+  description?: string;
+  category?: string;
+  forms?: string[];
+  price?: number;
+  imageUri?: string;
+  dosage?: string;
+  manufacturer?: string;
+  requiresPrescription?: boolean;
+  stock?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface MedicationFormResponse {
+  medicationId: string;
+  medicationName: string;
+  forms: {
+    id: string;
+    name: string; // e.g., "Comprimé", "Gélule", "Sirop"
+    description?: string;
+    isAvailable: boolean;
+  }[];
+}
+
+export interface MedicationSearchResponse {
+  query: string;
+  results: StoreMedicationResponse[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+// ---------------------------------------------------------------------------
+// Reminders
+// ---------------------------------------------------------------------------
+
+export type ReminderStatus = 'PENDING' | 'TAKEN' | 'SNOOZED' | 'MISSED' | 'CANCELLED';
+
+export interface ReminderResponse {
+  id: string;
+  medicationId: string;
+  medicationName: string;
+  medicationDosage: string;
+  patientId: string;
+  patientName: string;
+  scheduledTime: string; // ISO datetime string
+  scheduledDate: string; // ISO date string
+  scheduledHour: string; // HH:mm format
+  status: ReminderStatus;
+  takenAt?: string; // ISO datetime string
+  snoozedUntil?: string; // ISO datetime string
+  snoozeCount: number;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RemindersListResponse {
+  items: ReminderResponse[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+  summary?: {
+    pending: number;
+    taken: number;
+    missed: number;
+    total: number;
+  };
+}
+
+export interface ReminderDetailResponse extends ApiResponse<ReminderResponse> {}
+
 // ---------------------------------------------------------------------------
 // Profil utilisateur
 // ---------------------------------------------------------------------------

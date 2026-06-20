@@ -4,7 +4,7 @@
  * This class handles all API requests with automatic token management and retry logic.
  */
 
-import { API_CONFIG, API_ENDPOINTS } from '../types/api-endpoints';
+import { API_CONFIG } from '../types/api-endpoints';
 import { ApiResponse } from '../types/api-responses';
 import * as SecureStore from 'expo-secure-store';
 

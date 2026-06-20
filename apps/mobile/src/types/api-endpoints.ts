@@ -97,6 +97,17 @@ export const API_ENDPOINTS = {
     UPDATE_OBSERVANCE: (id: string) => `/dashboard/observances/${id}`,
   },
 
+
+  // ---------------------------------------------------------------------------
+  // Medicaments
+  // ---------------------------------------------------------------------------
+  MEDICATIONS: {
+    LIST: '/api/medications',
+    GET: (id: string) => `/api/medications/${id}`,
+    FORMS: (id: string) => `/api/medications/${id}/forms`,
+    SEARCH: '/api/medications/search',
+  },
+
   // ---------------------------------------------------------------------------
   // Paiements
   // ---------------------------------------------------------------------------
@@ -119,6 +130,27 @@ export const API_ENDPOINTS = {
     UPDATE_PREFERENCES: '/notifications/preferences',
     REGISTER_DEVICE: '/notifications/register-device',
     UNREGISTER_DEVICE: '/notifications/unregister-device',
+  },
+
+  // ---------------------------------------------------------------------------
+  // Reminders
+  // ---------------------------------------------------------------------------
+  REMINDERS: {
+    LIST: '/reminders',
+    CREATE: '/reminders',
+    GET: (id: string) => `/reminders/${id}`,
+    UPDATE: (id: string) => `/reminders/${id}`,
+    DELETE: (id: string) => `/reminders/${id}`,
+    MARK_TAKEN: '/reminders/mark-taken',
+    SNOOZE: '/reminders/snooze',
+    UPCOMING: '/reminders/upcoming',
+    TODAY: '/reminders/today',
+    BULK_CREATE: '/reminders/bulk',
+    MARK_READ: '/reminders/mark-read',
+    MARK_ALL_READ: '/reminders/mark-all-read',
+    SUMMARY: '/reminders/summary',
+    PATIENT: (patientId: string) => `/reminders/patient/${patientId}`,
+    MEDICATION: (medicationId: string) => `/reminders/medication/${medicationId}`,
   },
 
   // ---------------------------------------------------------------------------
@@ -198,6 +230,8 @@ export type EndpointParams = {
   notificationId: string;
   ticketId: string;
   cardId: string;
+  reminderId: string; // Added for intake reminders
+  patientId: string; // Added for patient-specific endpoints
 };
 
 // ---------------------------------------------------------------------------
