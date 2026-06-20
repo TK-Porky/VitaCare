@@ -7,8 +7,8 @@ export interface ClinicProvider {
   priceXCFA?: number;
   clinicName: string;
   description: string;
-  hours: string;
-  days: string;
+  hours?: string;
+  days?: string;
   location: string;
   coordinates?: {
     latitude: number;

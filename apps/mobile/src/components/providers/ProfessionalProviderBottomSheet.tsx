@@ -26,8 +26,8 @@ type Provider = {
   language: string;
   doctorName: string;
   description: string;
-  hoursRange: string;
-  hoursdays: string;
+  hoursRange?: string;
+  hoursdays?: string;
   location: string;
   coverUri?: string;
 };
