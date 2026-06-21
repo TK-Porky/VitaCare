@@ -1,7 +1,7 @@
 import { apiClient } from "../lib/api.client";
 import { API_ENDPOINTS } from "../types/api-endpoints";
 import { ClinicSearchRequest, ClinicsListQuery } from "../types/api-requests";
-import { ClinicProviderResponse, ClinicsListResponse, ApiResponse } from "../types/api-responses";
+import { ClinicProviderResponse, ClinicsListResponse } from "../types/api-responses";
 
 // ================================================================================== //
 // Map Service
@@ -39,10 +39,10 @@ export const mapService = {
    * Search for clinics with filters and coordinates
    */
   async searchClinics(data: ClinicSearchRequest): Promise<ClinicProviderResponse[]> {
-    const res = await apiClient.get<ApiResponse<any[]>>(API_ENDPOINTS.CLINICS.SEARCH, data as any);
+    const res = await apiClient.get<any[]>(API_ENDPOINTS.CLINICS.SEARCH, data as any);
     if (!res.success || !res.data) throw new Error(res.error ?? "Failed to search clinics");
     
-    const backendData = res.data.data || [];
+    const backendData = res.data || [];
     return backendData.map(mapDoctorToClinic);
   },
 
@@ -50,19 +50,19 @@ export const mapService = {
    * Get list of clinics with pagination and filtering
    */
   async getClinics(query?: ClinicsListQuery): Promise<ClinicsListResponse> {
-    const res = await apiClient.get<ApiResponse<any>>(API_ENDPOINTS.CLINICS.LIST, query as any);
+    const res = await apiClient.get<any>(API_ENDPOINTS.CLINICS.LIST, query as any);
     if (!res.success || !res.data) throw new Error(res.error ?? "Failed to fetch clinics");
     
     const backendResponse = res.data;
-    const doctors = Array.isArray(backendResponse.data) 
-      ? backendResponse.data 
-      : (backendResponse.data?.content || []);
+    const doctors = Array.isArray(backendResponse) 
+      ? backendResponse 
+      : (backendResponse?.content || []);
     
-    const pagination = backendResponse.data?.totalPages ? {
-      page: backendResponse.data.number + 1,
-      limit: backendResponse.data.size,
-      total: backendResponse.data.totalElements,
-      totalPages: backendResponse.data.totalPages,
+    const pagination = backendResponse?.totalPages ? {
+      page: backendResponse.number + 1,
+      limit: backendResponse.size,
+      total: backendResponse.totalElements,
+      totalPages: backendResponse.totalPages,
     } : {
       page: 1,
       limit: doctors.length,
@@ -81,18 +81,18 @@ export const mapService = {
    * Get specific clinic details by ID
    */
   async getClinicDetails(id: string): Promise<ClinicProviderResponse> {
-    const res = await apiClient.get<ApiResponse<any>>(API_ENDPOINTS.CLINICS.DETAIL(id));
+    const res = await apiClient.get<any>(API_ENDPOINTS.CLINICS.DETAIL(id));
     if (!res.success || !res.data) throw new Error(res.error ?? "Failed to fetch clinic details");
-    return mapDoctorToClinic(res.data.data);
+    return mapDoctorToClinic(res.data);
   },
 
   /**
    * Get clinic availability for specific dates
    */
   async getClinicAvailability(id: string): Promise<ClinicProviderResponse['availability']> {
-    const res = await apiClient.get<ApiResponse<any[]>>(API_ENDPOINTS.CLINICS.AVAILABILITY(id));
+    const res = await apiClient.get<any[]>(API_ENDPOINTS.CLINICS.AVAILABILITY(id));
     if (!res.success || !res.data) throw new Error(res.error ?? "Failed to fetch clinic availability");
-    return res.data.data;
+    return res.data;
   }
 };
 

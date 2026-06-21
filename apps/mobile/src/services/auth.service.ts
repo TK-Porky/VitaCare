@@ -40,13 +40,7 @@ import type { ApiResponse } from "../types/api-responses";
       patient: UserProfile;
     }
 
-    export interface BackendAuthResponseWrapper {
-      success: boolean;
-      message: string;
-      data: BackendAuthResponse;
-      statusCode: number;
-      timestamp?: string;
-  }
+
   
   // Auth Result
   export interface AuthResult {
@@ -127,12 +121,12 @@ import type { ApiResponse } from "../types/api-responses";
         const firebaseToken = await getIdToken(credential.user);
         _confirmationResult = null;
     
-        const res = await apiClient.post<BackendAuthResponseWrapper>(
+        const res = await apiClient.post<BackendAuthResponse>(
           API_ENDPOINTS.AUTH.LOGIN_PHONE,
-          { fullName, firebaseToken } // Send both token and fullName
+          { fullName, firebaseToken }
         );
         if (!res.success || !res.data) throw new Error(res.error ?? "Erreur serveur");
-        const payload = res.data.data;
+        const payload = res.data;
         return {
           tokens: {
             accessToken: payload.accessToken,
@@ -157,13 +151,13 @@ import type { ApiResponse } from "../types/api-responses";
         );
         const firebaseToken = await getIdToken(credential.user);
     
-        const res = await apiClient.post<BackendAuthResponseWrapper>(
+        const res = await apiClient.post<BackendAuthResponse>(
           API_ENDPOINTS.AUTH.LOGIN_EMAIL,
           { firebaseToken }
         );
         console.log("Full Response:", res);
         if (!res.success || !res.data) throw new Error(res.error ?? "Erreur serveur");
-        const payload = res.data.data;
+        const payload = res.data;
         return {
           tokens: {
             accessToken: payload.accessToken,
@@ -192,13 +186,13 @@ import type { ApiResponse } from "../types/api-responses";
         );
         const firebaseToken = await getIdToken(credential.user);
     
-        const res = await apiClient.post<BackendAuthResponseWrapper>(
+        const res = await apiClient.post<BackendAuthResponse>(
           API_ENDPOINTS.AUTH.REGISTER_EMAIL,
           { fullName: data.fullName, firebaseToken }
         );
         console.log("Full Response:", res);
         if (!res.success || !res.data) throw new Error(res.error ?? "Erreur serveur");
-        const payload = res.data.data;
+        const payload = res.data;
         return {
           tokens: {
             accessToken: payload.accessToken,

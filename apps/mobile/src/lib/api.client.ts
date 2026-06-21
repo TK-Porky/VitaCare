@@ -117,10 +117,11 @@ class ApiClient {
             } catch (err) {
               console.warn('[API] Retry response is not valid JSON:', retryText);
             }
+            const retryBody = retryResponse.ok ? retryData : undefined;
             return {
               success: retryResponse.ok,
-              data: retryResponse.ok ? retryData : undefined,
-              message: retryData.message,
+              data: retryBody?.data ?? retryBody,
+              message: retryBody?.message,
               error: !retryResponse.ok ? retryData.error || retryData.message || `HTTP Error ${retryResponse.status}` : undefined,
               statusCode: retryResponse.status,
             };
@@ -149,10 +150,11 @@ class ApiClient {
         console.warn('[API] Response is not valid JSON:', text);
       }
 
+      const body = response.ok ? data : undefined;
       return {
         success: response.ok,
-        data: response.ok ? data : undefined,
-        message: data.message,
+        data: body?.data ?? body,
+        message: body?.message,
         error: !response.ok ? data.error || data.message || `HTTP Error ${response.status}` : undefined,
         statusCode: response.status,
       };

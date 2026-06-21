@@ -141,8 +141,7 @@ export default function BookingScreen() {
       .then(res => {
         if (cancelled) return;
         if (!res.success) { setAvailableSlots(undefined); return; }
-        const body = res.data;
-        const raw: any[] = body?.data ?? body ?? [];
+        const raw: any[] = res.data ?? [];
         const times = raw
           .filter((s: any) => s.startTime?.startsWith(dateStr) && !s.isBooked)
           .map((s: any) => s.startTime.split('T')[1].slice(0, 5));
