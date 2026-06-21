@@ -130,11 +130,11 @@ export default function BookingScreen() {
     const d = String(booking.date.getDate()).padStart(2, '0');
     const dateStr = `${y}-${m}-${d}`;
 
-    const d = new Date(booking.date);
-    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
-    const wy = d.getFullYear();
-    const wm = String(d.getMonth() + 1).padStart(2, '0');
-    const wd = String(d.getDate()).padStart(2, '0');
+    const mon = new Date(booking.date);
+    mon.setDate(mon.getDate() - ((mon.getDay() + 6) % 7));
+    const wy = mon.getFullYear();
+    const wm = String(mon.getMonth() + 1).padStart(2, '0');
+    const wd = String(mon.getDate()).padStart(2, '0');
     const weekStart = `${wy}-${wm}-${wd}`;
 
     apiClient.get<any>(API_ENDPOINTS.CLINICS.AVAILABLE_SLOTS(provider.id), { weekStart })
