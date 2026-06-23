@@ -36,51 +36,45 @@ export const MARKETPLACE_CATEGORIES : Category[]= [
 export const MARKETPLACE_DRUGS : Drug[]= [
   {
     id: '1',
-    category: 'Analgésique',
+    dosageForm: 'Comprimé',
     name: 'Doliprane 500mg',
-    price: '2.500 FCFA',
-    imageUri:
-      'https://www.pharma-gdd.com/media/cache/resolve/product_show/73616e6f66692d746162732d313030306d672d382d636f6d7072696d65732d66616365804cf675.jpg'
+    referencePrice: 2500,
+    manufacturer: 'Sanofi',
   },
   {
     id: '2',
-    category: 'Comprimés',
+    dosageForm: 'Comprimé',
     name: 'Viatris Paracétamol 1g',
-    price: '3.800 FCFA',
-    imageUri:
-      'https://www.pharma-gdd.com/media/cache/resolve/product_show/766961747269732d70617261636574616d6f6c2d31672d636f6d7072696d652d6661636505288ef7.jpg'
+    referencePrice: 3800,
+    manufacturer: 'Viatris',
   },
   {
     id: '3',
-    category: 'Comprimés',
+    dosageForm: 'Comprimé',
     name: 'Citrate de Bétahistine USPA 2g',
-    price: '1.200 FCFA',
-    imageUri:
-      'https://www.pharma-gdd.com/media/cache/resolve/product_show/7061636b2d33642d636974726174652d636974726f6e2d31302d3230323226c52f40.jpg'
+    referencePrice: 1200,
+    manufacturer: 'USPA',
   },
   {
     id: '4',
-    category: 'Sirop',
+    dosageForm: 'Sirop',
     name: 'Mucolimax 200ml',
-    price: '3.200 FCFA',
-    imageUri:
-      'https://www.pharma-gdd.com/media/cache/resolve/product_show/6d75636f6d7973742d3230302d736163686574e14a62e5.jpg'
+    referencePrice: 3200,
+    manufacturer: 'Sanofi',
   },
   {
     id: '5',
-    category: 'Comprimés',
+    dosageForm: 'Comprimé',
     name: 'Aspirine UPSA 1000',
-    price: '4.500 FCFA',
-    imageUri:
-      'https://www.pharma-gdd.com/media/cache/resolve/product_show/7061636b2d33642d6173706972696e652d313030302d6566668dc52fcd.jpg'
+    referencePrice: 4500,
+    manufacturer: 'UPSA',
   },
   {
     id: '6',
-    category: 'Comprimés',
+    dosageForm: 'Comprimé',
     name: 'Vitamine C UPSA 1000',
-    price: '2.800 FCFA',
-    imageUri:
-      'https://www.pharma-gdd.com/media/cache/resolve/product_show/757073612d766974616d696e652d632d313030302d6d672d636f6d7072696d65732d612d63726f717565722d783135acb0b3e5.jpg'
+    referencePrice: 2800,
+    manufacturer: 'UPSA',
   },
 ];
 

@@ -10,6 +10,7 @@ import {
   ScrollView,
   StatusBar,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -17,24 +18,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, fontFamily, fontSize } from '../../../src/themes';
 import { Drug } from '../../../src/types';
-import { MARKETPLACE_DRUGS } from '../../../src/data/mockMedications';
-
-// ─── Suggestions ─────────────────────────────────────────────────────────────
+import { medicationService } from '../../../src/services/medication.service';
 
 const ALL_SUGGESTIONS = [
-  'Maux de gorge',
-  "Maux d'estomac",
-  'Maux de tête',
-  'Fièvre',
-  'Douleur',
-  'Toux',
-  'Rhume',
-  'Grippe',
-  'Allergie',
-  'Vitamine',
+  'Paracétamol',
+  'Ibuprofène',
+  'Amoxicilline',
+  'Vitamine C',
+  'Doliprane',
+  'Aspirine',
 ];
-
-// ─── Sub-components ───────────────────────────────────────────────────────────
 
 const SuggestionChip = ({ label, query, onPress }: { label: string; query: string; onPress: () => void }) => {
   const lower = label.toLowerCase();
@@ -59,12 +52,18 @@ const SuggestionChip = ({ label, query, onPress }: { label: string; query: strin
 const DrugCard = ({ item }: { item: Drug }) => (
   <TouchableOpacity style={styles.drugCard} activeOpacity={0.8}>
     <View style={styles.drugImageWrap}>
-      <Image source={{ uri: item.imageUri }} style={styles.drugImage} resizeMode="contain" />
+      <Image
+        source={{ uri: "https://via.placeholder.com/150" }}
+        style={styles.drugImage}
+        resizeMode="contain"
+      />
     </View>
     <View style={styles.drugBody}>
-      <Text style={styles.drugCategory} numberOfLines={1}>{item.category}</Text>
+      <Text style={styles.drugCategory} numberOfLines={1}>{item.dosageForm || "Médicament"}</Text>
       <Text style={styles.drugName} numberOfLines={2}>{item.name}</Text>
-      <Text style={styles.drugPrice}>{item.price}</Text>
+      {item.referencePrice != null && (
+        <Text style={styles.drugPrice}>{item.referencePrice} FCFA</Text>
+      )}
     </View>
     <TouchableOpacity style={styles.voirBtn} activeOpacity={0.85}>
       <LinearGradient
@@ -79,27 +78,35 @@ const DrugCard = ({ item }: { item: Drug }) => (
   </TouchableOpacity>
 );
 
-// ─── Screen ───────────────────────────────────────────────────────────────────
-
 export default function MedicationsSearchScreen() {
   const router = useRouter();
   const inputRef = useRef<TextInput>(null);
   const [query, setQuery] = useState('');
+  const [results, setResults] = useState<Drug[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   const suggestions = useMemo(() => {
     if (query.trim().length === 0) return ALL_SUGGESTIONS.slice(0, 6);
     return ALL_SUGGESTIONS.filter(s => s.toLowerCase().includes(query.toLowerCase()));
   }, [query]);
 
-  const results = useMemo(() => {
-    if (query.trim().length === 0) return MARKETPLACE_DRUGS;
-    const q = query.toLowerCase();
-    return MARKETPLACE_DRUGS.filter(
-      d => d.name.toLowerCase().includes(q) || d.category.toLowerCase().includes(q)
-    );
-  }, [query]);
+  const handleSearch = async (text: string) => {
+    setQuery(text);
+    if (!text.trim()) {
+      setResults([]);
+      return;
+    }
+    setIsSearching(true);
+    try {
+      const data = await medicationService.searchMedications(text);
+      setResults(data as Drug[]);
+    } catch {
+      setResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
-  // FlatList with numColumns=2 requires items to have consistent width
   const renderItem = ({ item, index }: { item: Drug; index: number }) => (
     <View style={[styles.cardWrap, index % 2 === 0 ? styles.cardLeft : styles.cardRight]}>
       <DrugCard item={item} />
@@ -110,7 +117,6 @@ export default function MedicationsSearchScreen() {
     <SafeAreaView style={styles.root} edges={['top']}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
 
-      {/* ── Search header ── */}
       <View style={styles.searchHeader}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
@@ -120,7 +126,7 @@ export default function MedicationsSearchScreen() {
             ref={inputRef}
             style={styles.input}
             value={query}
-            onChangeText={setQuery}
+            onChangeText={handleSearch}
             placeholder="Rechercher un médicament..."
             placeholderTextColor={colors.inkMuted}
             autoFocus
@@ -129,7 +135,7 @@ export default function MedicationsSearchScreen() {
             autoCorrect={false}
           />
           {query.length > 0 && (
-            <TouchableOpacity onPress={() => setQuery('')} hitSlop={8}>
+            <TouchableOpacity onPress={() => { setQuery(''); setResults([]); }} hitSlop={8}>
               <Ionicons name="close-circle" size={18} color={colors.inkMuted} />
             </TouchableOpacity>
           )}
@@ -146,44 +152,46 @@ export default function MedicationsSearchScreen() {
         contentContainerStyle={styles.listContent}
         columnWrapperStyle={styles.row}
         ListHeaderComponent={
-          <>
-            {/* ── Suggestions ── */}
-            {suggestions.length > 0 && (
-              <View style={styles.section}>
-                <Text style={styles.sectionLabel}>Termes suggérés</Text>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.chipsRow}
-                >
-                  {suggestions.map(s => (
-                    <SuggestionChip
-                      key={s}
-                      label={s}
-                      query={query}
-                      onPress={() => setQuery(s)}
-                    />
-                  ))}
-                </ScrollView>
-              </View>
-            )}
-
-            {/* ── Results label ── */}
-            <Text style={styles.sectionLabel}>Meilleures correspondances</Text>
+          <>{suggestions.length > 0 && results.length === 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>Termes suggérés</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.chipsRow}
+              >
+                {suggestions.map(s => (
+                  <SuggestionChip
+                    key={s}
+                    label={s}
+                    query={query}
+                    onPress={() => handleSearch(s)}
+                  />
+                ))}
+              </ScrollView>
+            </View>
+          )}
+          {results.length > 0 && (
+            <Text style={styles.sectionLabel}>Résultats</Text>
+          )}
           </>
         }
         ListEmptyComponent={
-          <View style={styles.empty}>
-            <Ionicons name="search-outline" size={40} color={colors.inkFaint} />
-            <Text style={styles.emptyText}>Aucun résultat pour « {query} »</Text>
-          </View>
+          query.trim() && !isSearching ? (
+            <View style={styles.empty}>
+              <Ionicons name="search-outline" size={40} color={colors.inkFaint} />
+              <Text style={styles.emptyText}>Aucun résultat pour « {query} »</Text>
+            </View>
+          ) : isSearching ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={colors.primary} />
+            </View>
+          ) : null
         }
       />
     </SafeAreaView>
   );
 }
-
-// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const CARD_GAP = 12;
 
@@ -192,8 +200,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.white,
   },
-
-  // ── Header ──
   searchHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -204,9 +210,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
     backgroundColor: colors.white,
   },
-  backBtn: {
-    padding: 4,
-  },
+  backBtn: { padding: 4 },
   inputWrap: {
     flex: 1,
     flexDirection: 'row',
@@ -224,21 +228,12 @@ const styles = StyleSheet.create({
     color: colors.ink,
     padding: 0,
   },
-
-  // ── List ──
   listContent: {
     paddingHorizontal: 16,
     paddingBottom: 32,
   },
-  row: {
-    gap: CARD_GAP,
-    marginBottom: CARD_GAP,
-  },
-
-  // ── Sections ──
-  section: {
-    marginBottom: 4,
-  },
+  row: { gap: CARD_GAP, marginBottom: CARD_GAP },
+  section: { marginBottom: 4 },
   sectionLabel: {
     fontFamily: fontFamily.semiBold,
     fontSize: fontSize.sm,
@@ -246,12 +241,7 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 10,
   },
-
-  // ── Suggestion chips ──
-  chipsRow: {
-    gap: 8,
-    paddingBottom: 4,
-  },
+  chipsRow: { gap: 8, paddingBottom: 4 },
   chip: {
     paddingHorizontal: 14,
     paddingVertical: 7,
@@ -269,17 +259,9 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.bold,
     color: colors.primaryDark,
   },
-
-  // ── Drug cards ──
-  cardWrap: {
-    flex: 1,
-  },
-  cardLeft: {
-    marginRight: CARD_GAP / 2,
-  },
-  cardRight: {
-    marginLeft: CARD_GAP / 2,
-  },
+  cardWrap: { flex: 1 },
+  cardLeft: { marginRight: CARD_GAP / 2 },
+  cardRight: { marginLeft: CARD_GAP / 2 },
   drugCard: {
     backgroundColor: colors.white,
     borderRadius: 14,
@@ -294,14 +276,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  drugImage: {
-    width: '100%',
-    height: '100%',
-  },
-  drugBody: {
-    padding: 10,
-    gap: 3,
-  },
+  drugImage: { width: '100%', height: '100%' },
+  drugBody: { padding: 10, gap: 3 },
   drugCategory: {
     fontFamily: fontFamily.regular,
     fontSize: fontSize.xs,
@@ -335,8 +311,7 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     color: colors.white,
   },
-
-  // ── Empty ──
+  loadingContainer: { padding: 40, alignItems: 'center' },
   empty: {
     alignItems: 'center',
     paddingTop: 60,
