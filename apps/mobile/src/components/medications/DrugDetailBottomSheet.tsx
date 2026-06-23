@@ -139,7 +139,7 @@ const RelatedCard = ({ item }: { item: Drug }) => (
   <TouchableOpacity style={styles.relatedCard} activeOpacity={0.8}>
     <View style={styles.relatedImageWrap}>
       <Image
-        source={{ uri: "https://via.placeholder.com/150" }}
+        source={{ uri: item.imageUrl || "https://via.placeholder.com/150" }}
         style={styles.relatedImage}
         resizeMode="contain"
       />
@@ -198,7 +198,7 @@ export const DrugDetailBottomSheet = forwardRef<
           <View style={styles.header}>
             <View style={styles.imageWrap}>
               <Image
-                source={{ uri: "https://via.placeholder.com/150" }}
+                source={{ uri: drug.imageUrl || "https://via.placeholder.com/150" }}
                 style={styles.drugImage}
                 resizeMode="contain"
               />

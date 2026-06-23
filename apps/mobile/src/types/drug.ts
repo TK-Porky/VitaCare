@@ -11,4 +11,5 @@ export interface Drug {
   referencePrice?: number;
   stockStatus?: string;
   isActive?: boolean;
+  imageUrl?: string;
 }

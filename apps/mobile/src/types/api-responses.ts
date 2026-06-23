@@ -299,6 +299,7 @@ export interface StoreMedicationResponse {
   referencePrice?: number;
   stockStatus?: string;
   isActive?: boolean;
+  imageUrl?: string;
 }
 
 export interface MedicationDetailResponse extends StoreMedicationResponse {

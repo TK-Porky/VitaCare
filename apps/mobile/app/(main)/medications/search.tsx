@@ -53,7 +53,7 @@ const DrugCard = ({ item }: { item: Drug }) => (
   <TouchableOpacity style={styles.drugCard} activeOpacity={0.8}>
     <View style={styles.drugImageWrap}>
       <Image
-        source={{ uri: "https://via.placeholder.com/150" }}
+        source={{ uri: item.imageUrl || "https://via.placeholder.com/150" }}
         style={styles.drugImage}
         resizeMode="contain"
       />

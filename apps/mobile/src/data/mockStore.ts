@@ -26,6 +26,7 @@ export const POPULAR_DRUGS: Drug[] = [
     name: 'Doliprane 500mg',
     referencePrice: 2500,
     manufacturer: 'Sanofi',
+    imageUrl: 'https://via.placeholder.com/150',
   },
   {
     id: '2',
@@ -33,6 +34,7 @@ export const POPULAR_DRUGS: Drug[] = [
     name: 'Doliprane 1000mg',
     referencePrice: 3500,
     manufacturer: 'Sanofi',
+    imageUrl: 'https://via.placeholder.com/150',
   },
   {
     id: '3',
@@ -40,6 +42,7 @@ export const POPULAR_DRUGS: Drug[] = [
     name: 'Paracétamol 500mg',
     referencePrice: 1800,
     manufacturer: 'Viatris',
+    imageUrl: 'https://via.placeholder.com/150',
   },
   {
     id: '4',
@@ -47,5 +50,6 @@ export const POPULAR_DRUGS: Drug[] = [
     name: 'Toplexil 150ml',
     referencePrice: 3200,
     manufacturer: 'Sanofi',
+    imageUrl: 'https://via.placeholder.com/150',
   },
 ];

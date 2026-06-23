@@ -81,7 +81,7 @@ function DrugCard({
     >
       <View style={styles.drugImageContainer}>
         <Image
-          source={{ uri: "https://via.placeholder.com/150" }}
+          source={{ uri: item.imageUrl || "https://via.placeholder.com/150" }}
           style={styles.drugImage}
           resizeMode="cover"
         />
@@ -131,6 +131,17 @@ export default function MedecineScreen({ onReminders }: Props) {
   // Auth & Reminders
   const user = useAuthStore((state) => state.user);
   const { createReminder } = useReminders();
+
+  // ── Categories dérivées des dosageForm ──
+  const categories = React.useMemo(() => {
+    const forms = new Set<string>();
+    medications.forEach(m => { if (m.dosageForm) forms.add(m.dosageForm); });
+    return Array.from(forms).map((form, i) => ({
+      id: String(i + 1),
+      label: form,
+      imageUri: "https://via.placeholder.com/150",
+    }));
+  }, [medications]);
 
   // ================================================================================== //
   // Effects
@@ -314,7 +325,7 @@ export default function MedecineScreen({ onReminders }: Props) {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.categoriesRow}
             >
-              {MARKETPLACE_CATEGORIES.map((cat) => (
+              {categories.map((cat) => (
                 <CategoryCard
                   key={cat.id}
                   item={cat}

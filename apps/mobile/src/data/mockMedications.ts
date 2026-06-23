@@ -40,6 +40,7 @@ export const MARKETPLACE_DRUGS : Drug[]= [
     name: 'Doliprane 500mg',
     referencePrice: 2500,
     manufacturer: 'Sanofi',
+    imageUrl: 'https://via.placeholder.com/150',
   },
   {
     id: '2',
@@ -47,6 +48,7 @@ export const MARKETPLACE_DRUGS : Drug[]= [
     name: 'Viatris Paracétamol 1g',
     referencePrice: 3800,
     manufacturer: 'Viatris',
+    imageUrl: 'https://via.placeholder.com/150',
   },
   {
     id: '3',
@@ -54,6 +56,7 @@ export const MARKETPLACE_DRUGS : Drug[]= [
     name: 'Citrate de Bétahistine USPA 2g',
     referencePrice: 1200,
     manufacturer: 'USPA',
+    imageUrl: 'https://via.placeholder.com/150',
   },
   {
     id: '4',
@@ -61,6 +64,7 @@ export const MARKETPLACE_DRUGS : Drug[]= [
     name: 'Mucolimax 200ml',
     referencePrice: 3200,
     manufacturer: 'Sanofi',
+    imageUrl: 'https://via.placeholder.com/150',
   },
   {
     id: '5',
@@ -68,6 +72,7 @@ export const MARKETPLACE_DRUGS : Drug[]= [
     name: 'Aspirine UPSA 1000',
     referencePrice: 4500,
     manufacturer: 'UPSA',
+    imageUrl: 'https://via.placeholder.com/150',
   },
   {
     id: '6',
@@ -75,6 +80,7 @@ export const MARKETPLACE_DRUGS : Drug[]= [
     name: 'Vitamine C UPSA 1000',
     referencePrice: 2800,
     manufacturer: 'UPSA',
+    imageUrl: 'https://via.placeholder.com/150',
   },
 ];
 
