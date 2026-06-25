@@ -10,11 +10,27 @@ const phoneRegex = /^[6](2|5|6|7|8|9)[0-9]{7}$/;
 export const updateProfileSchema = z.object({
   fullName: z.string().min(2, 'Le nom complet est requis (min 2 caractères)'),
   email: z.string().min(1, 'L\'adresse email est requise').email('Adresse email invalide'),
-  phone: z.string().min(1, 'Le numéro de téléphone est requis').regex(phoneRegex, 'Numéro de téléphone invalide'),
-  location: z.string().min(1, 'La localisation est requise'),
+  phoneNumber: z.string().optional().refine((val) => val === undefined || val === null || phoneRegex.test(val as string), 'Numéro de téléphone invalide'),
+  gender: z.string().optional(),
+  dateOfBirth: z.string().optional(),
+  bloodGroup: z.string().optional(),
+  medicalHistory: z.string().optional(),
+  address: z.string().optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
 });
 
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+
+// ================================================================================== //
+// Location Update
+// ================================================================================== //
+
+export const updateLocationSchema = z.object({
+  location: z.string().min(1, 'La localisation est requise'),
+});
+
+export type UpdateLocationInput = z.infer<typeof updateLocationSchema>;
 
 // ================================================================================== //
 // Change Password

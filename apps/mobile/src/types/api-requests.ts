@@ -267,17 +267,14 @@ export type ReminderStatus = 'PENDING' | 'TAKEN' | 'SNOOZED' | 'MISSED' | 'CANCE
 // ---------------------------------------------------------------------------
 
 export interface UpdateProfileRequest {
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
+  email?: string;
+  fullName?: string;
+  phoneNumber?: string;
+  avatarUrl?: string;
   dateOfBirth?: string;
-  gender?: 'male' | 'female' | 'other';
+  bloodGroup?: string;
+  medicalHistory?: string;
   address?: string;
-  emergencyContact?: {
-    name: string;
-    phone: string;
-    relationship: string;
-  };
 }
 
 export interface UpdatePreferencesRequest {

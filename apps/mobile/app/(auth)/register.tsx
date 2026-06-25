@@ -20,7 +20,6 @@ import {
 } from "../../src/components";
 import { colors, fontFamily, fontSize } from "../../src/themes";
 import { isValidCMPhone } from "@vitacare/utils";
-import { FirebaseRecaptchaVerifierModal } from "expo-firebase-recaptcha";
 import { useAuth } from "../../src/hooks/useAuth";
 import { useAuthStore } from "../../src/store";
 import { firebaseAuth } from "../../src/lib/firebase";
@@ -44,14 +43,13 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState(""); // User's password
   const [confirmPassword, setConfirmPassword] = useState(""); // User's confirm password
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({}); // Local validation errors
-  
+
   // ================================================================================== //
   // Refs
   // ================================================================================== //
-  const recaptchaVerifier = useRef<FirebaseRecaptchaVerifierModal>(null);
   const { register, isRegistering } = useAuth();
-  const storeError = useAuthStore(state => state.error);
-  const clearStoreError = useAuthStore(state => state.clearError);
+  const storeError = useAuthStore((state) => state.error);
+  const clearStoreError = useAuthStore((state) => state.clearError);
 
   // ================================================================================== //
   // Effecs
@@ -119,7 +117,7 @@ export default function RegisterScreen() {
 
   /**
    * Handle form submission
-   * @returns 
+   * @returns
    */
   const handleSubmit = async () => {
     if (!validate()) return;
@@ -134,7 +132,6 @@ export default function RegisterScreen() {
         password: mode === "email" ? password : undefined,
         confirmPassword: mode === "email" ? confirmPassword : undefined,
       },
-      verifier: mode === "phone" ? recaptchaVerifier.current : undefined,
     });
   };
 
@@ -144,12 +141,6 @@ export default function RegisterScreen() {
   return (
     <View style={styles.root}>
       <TopBar />
-      
-      <FirebaseRecaptchaVerifierModal
-        ref={recaptchaVerifier}
-        firebaseConfig={firebaseAuth.app.options}
-        attemptInvisibleVerification
-      />
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -164,7 +155,9 @@ export default function RegisterScreen() {
         >
           <View style={styles.header}>
             <Text style={styles.title}>Rejoignez notre service !</Text>
-            <Text style={styles.subtitle}>Créez votre profil dès maintenant</Text>
+            <Text style={styles.subtitle}>
+              Créez votre profil dès maintenant
+            </Text>
           </View>
 
           <View style={styles.form}>
@@ -275,14 +268,19 @@ export default function RegisterScreen() {
                       error={!!localErrors.confirmPassword}
                     />
                     {localErrors.confirmPassword && (
-                      <HelperText message={localErrors.confirmPassword} type="error" />
+                      <HelperText
+                        message={localErrors.confirmPassword}
+                        type="error"
+                      />
                     )}
                   </View>
                 </>
               )}
             </View>
 
-            {storeError && <HelperText message={storeError as string} type="error" />}
+            {storeError && (
+              <HelperText message={storeError as string} type="error" />
+            )}
           </View>
 
           <View style={styles.footer}>

@@ -6,14 +6,12 @@ import {
     signOut,
     getIdToken,
     ConfirmationResult,
-    ApplicationVerifier,
     AuthError,
   } from "firebase/auth";
   import { firebaseAuth } from "../lib/firebase"; 
   import { apiClient } from "../lib/api.client";
   import { LoginEmailInput, RegisterInput } from "../schemas/auth.schema";
 import { API_ENDPOINTS } from "../types/api-endpoints";
-import type { ApiResponse } from "../types/api-responses";
   
   // ================================================================================== //
   // Types
@@ -28,10 +26,14 @@ import type { ApiResponse } from "../types/api-responses";
   // User Profile
   export interface UserProfile {
     id: string;
-    fullName: string;
     email?: string;
-    phone?: string;
+    fullName: string;
+    phoneNumber?: string;
     avatarUrl?: string;
+    dateOfBirth?: string;
+    bloodGroup?: string;
+    medicalHistory?: string;
+    address?: string;
   }
 
   export interface BackendAuthResponse {
@@ -40,8 +42,6 @@ import type { ApiResponse } from "../types/api-responses";
       patient: UserProfile;
     }
 
-
-  
   // Auth Result
   export interface AuthResult {
     tokens: AuthTokens;
@@ -96,12 +96,11 @@ import type { ApiResponse } from "../types/api-responses";
      * @param phone 
      * @param appVerifier 
      */
-    async sendOtp(phone: string, appVerifier: ApplicationVerifier): Promise<void> {
+    async sendOtp(phone: string): Promise<void> {
       try {
         _confirmationResult = await signInWithPhoneNumber(
           firebaseAuth,
           `+237${phone}`,
-          appVerifier
         );
       } catch (error) {
         throw new Error(mapAuthError(error));

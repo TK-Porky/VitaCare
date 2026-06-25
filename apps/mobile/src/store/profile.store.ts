@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { profileService } from "../services/profile.service";
-import { UpdateProfileInput, ChangePasswordInput, UpdatePreferencesInput } from "../schemas/profile.schema";
+import { UpdateProfileInput, ChangePasswordInput, UpdatePreferencesInput, UpdateLocationInput } from "../schemas/profile.schema";
 import { useAuthStore } from "./auth.store";
 
 interface ProfileState {
@@ -9,6 +9,7 @@ interface ProfileState {
   success: boolean;
 
   // Actions
+  getProfile: () => Promise<void>;
   updateProfile: (data: UpdateProfileInput) => Promise<void>;
   changePassword: (data: ChangePasswordInput) => Promise<void>;
   updatePreferences: (data: UpdatePreferencesInput) => Promise<void>;
@@ -22,21 +23,38 @@ export const useProfileStore = create<ProfileState>((set) => ({
   success: false,
 
   /**
+   * 
+   * @param data 
+   */
+  getProfile: async() => {
+    set({ isLoading: true, error: null, success: false});
+    try {
+      await profileService.getProfile();
+
+      useAuthStore.getState().hydrate();
+
+      set({ success: true});
+    } catch (e: any) {
+      set({ error: e?.message ?? "Erreur lors de la récupération du profil."});
+    } finally {
+      set({ isLoading: false})
+    }
+  },
+
+  /**
    * Update user profile
    */
   updateProfile: async (data) => {
     set({ isLoading: true, error: null, success: false });
     try {
-      // Note: Map input names to API request names if they differ
-      // API expects firstName, lastName, phone, address...
-      const [firstName, ...lastNameParts] = data.fullName.split(' ');
-      const lastName = lastNameParts.join(' ');
 
-      const updatedUser = await profileService.updateProfile({
-        firstName,
-        lastName,
-        phone: data.phone,
-        address: data.location,
+      await profileService.updateProfile({
+        fullName: data.fullName,
+        phoneNumber: data.phoneNumber,
+        dateOfBirth: data.dateOfBirth,
+        bloodGroup: data.bloodGroup,
+        medicalHistory: data.medicalHistory,
+        address: data.address,
       });
 
       // Update auth store user data

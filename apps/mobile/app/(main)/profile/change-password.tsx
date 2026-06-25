@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -8,27 +8,48 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { colors, fontFamily, fontSize } from '../../../src/themes';
-import { TopBar, PasswordInput, PrimaryButton, HelperText } from '../../../src/components';
-import { router } from 'expo-router';
-import { useProfile } from '../../../src/hooks';
-import { changePasswordSchema, ChangePasswordInput } from '../../../src/schemas';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { colors, fontFamily, fontSize } from "../../../src/themes";
+import {
+  TopBar,
+  PasswordInput,
+  PrimaryButton,
+  HelperText,
+} from "../../../src/components";
+import { router } from "expo-router";
+import { useProfile } from "../../../src/hooks";
+import {
+  changePasswordSchema,
+  ChangePasswordInput,
+} from "../../../src/schemas";
 
 export default function ChangePasswordScreen() {
-  const { changePassword, isChangingPassword, error, clearState, success } = useProfile();
+  // ================================================================================== //
+  // Store & Hooks
+  // ================================================================================== //
 
-  const { control, handleSubmit, formState: { errors } } = useForm<ChangePasswordInput>({
+  const { changePassword, isChangingPassword, error, clearState, success } =
+    useProfile();
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ChangePasswordInput>({
     resolver: zodResolver(changePasswordSchema),
     defaultValues: {
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: '',
-    }
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
   });
+
+  // ================================================================================== //
+  // Effects
+  // ================================================================================== //
 
   useEffect(() => {
     if (success) {
@@ -42,13 +63,17 @@ export default function ChangePasswordScreen() {
     await changePassword(data);
   };
 
+  // ================================================================================== //
+  // JSX
+  // ================================================================================== //
+
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="dark-content" />
       <TopBar title="Modifier le mot de passe" />
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
       >
         <ScrollView
@@ -58,7 +83,8 @@ export default function ChangePasswordScreen() {
           <View style={styles.header}>
             <Text style={styles.title}>Sécurité du compte</Text>
             <Text style={styles.subtitle}>
-              Choisissez un mot de passe robuste pour protéger vos données de santé.
+              Choisissez un mot de passe robuste pour protéger vos données
+              médicales
             </Text>
           </View>
 
@@ -78,7 +104,12 @@ export default function ChangePasswordScreen() {
                   />
                 )}
               />
-              {errors.currentPassword && <HelperText message={errors.currentPassword.message || ""} type="error" />}
+              {errors.currentPassword && (
+                <HelperText
+                  message={errors.currentPassword.message || ""}
+                  type="error"
+                />
+              )}
             </View>
 
             <View style={styles.divider} />
@@ -98,11 +129,18 @@ export default function ChangePasswordScreen() {
                   />
                 )}
               />
-              {errors.newPassword && <HelperText message={errors.newPassword.message || ""} type="error" />}
+              {errors.newPassword && (
+                <HelperText
+                  message={errors.newPassword.message || ""}
+                  type="error"
+                />
+              )}
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Confirmer le nouveau mot de passe</Text>
+              <Text style={styles.label}>
+                Confirmer le nouveau mot de passe
+              </Text>
               <Controller
                 control={control}
                 name="confirmPassword"
@@ -116,7 +154,12 @@ export default function ChangePasswordScreen() {
                   />
                 )}
               />
-              {errors.confirmPassword && <HelperText message={errors.confirmPassword.message || ""} type="error" />}
+              {errors.confirmPassword && (
+                <HelperText
+                  message={errors.confirmPassword.message || ""}
+                  type="error"
+                />
+              )}
             </View>
 
             {error && <HelperText message={error as string} type="error" />}

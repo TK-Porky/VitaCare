@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,16 +6,20 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-} from 'react-native';
-import { router } from 'expo-router';
-import { PhoneInput, TopBar, HelperText, PrimaryButton } from "../../src/components";
-import { isValidCMPhone } from '@vitacare/utils';
-import { colors, fontFamily, fontSize } from '../../src/themes';
-import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
+} from "react-native";
+import { router } from "expo-router";
+import {
+  PhoneInput,
+  TopBar,
+  HelperText,
+  PrimaryButton,
+} from "../../src/components";
+import { isValidCMPhone } from "@vitacare/utils";
+import { colors, fontFamily, fontSize } from "../../src/themes";
 
-import { useAuth } from '../../src/hooks/useAuth';
-import { useAuthStore } from '../../src/store';
-import { firebaseAuth } from '../../src/lib/firebase';
+import { useAuth } from "../../src/hooks/useAuth";
+import { useAuthStore } from "../../src/store";
+import { firebaseAuth } from "../../src/lib/firebase";
 
 // ================================================================================== //
 // Main
@@ -24,20 +28,15 @@ export default function LoginPhoneScreen() {
   // ================================================================================== //
   // States
   // ================================================================================== //
-  const [phone, setPhone] = useState(''); // Phone input
-  const [localError, setLocalError] = useState(''); // Local validation error
-  
-  // ================================================================================== //
-  // Refs
-  // ================================================================================== //
-  const recaptchaVerifier = useRef<FirebaseRecaptchaVerifierModal>(null); // Recaptcha verifier
+  const [phone, setPhone] = useState(""); // Phone input
+  const [localError, setLocalError] = useState(""); // Local validation error
 
   // ================================================================================== //
   // Hooks
   // ================================================================================== //
   const { loginPhone, isLoggingInPhone } = useAuth(); // Auth hook
-  const storeError = useAuthStore(state => state.error); // Store error
-  const clearStoreError = useAuthStore(state => state.clearError); // Clear store error
+  const storeError = useAuthStore((state) => state.error); // Store error
+  const clearStoreError = useAuthStore((state) => state.clearError); // Clear store error
 
   // ================================================================================== //
   // Effects
@@ -49,22 +48,21 @@ export default function LoginPhoneScreen() {
   // ================================================================================== //
   // Functions
   // ================================================================================== //
-  
+
   /**
    * Handle form submission
    * @returns
    */
   const handleSubmit = async () => {
     if (!isValidCMPhone(phone)) {
-      setLocalError('Numéro de téléphone invalide.');
+      setLocalError("Numéro de téléphone invalide.");
       return;
     }
-    setLocalError('');
+    setLocalError("");
     clearStoreError();
 
-    loginPhone({ 
-      phone, 
-      verifier: recaptchaVerifier.current 
+    loginPhone({
+      phone,
     });
   };
 
@@ -74,15 +72,9 @@ export default function LoginPhoneScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.root}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <TopBar />
-      
-      <FirebaseRecaptchaVerifierModal
-        ref={recaptchaVerifier}
-        firebaseConfig={firebaseAuth.app.options}
-        attemptInvisibleVerification
-      />
 
       <ScrollView
         contentContainerStyle={styles.content}
@@ -98,13 +90,16 @@ export default function LoginPhoneScreen() {
             value={phone}
             onChangeText={(text) => {
               setPhone(text);
-              if (localError) setLocalError('');
+              if (localError) setLocalError("");
               if (storeError) clearStoreError();
             }}
             error={!!localError || !!storeError}
           />
           {localError || storeError ? (
-            <HelperText message={localError || (storeError as string)} type="error" />
+            <HelperText
+              message={localError || (storeError as string)}
+              type="error"
+            />
           ) : (
             <HelperText
               message="En continuant, vous acceptez nos conditions d'utilisation et notre politique de confidentialité."
@@ -132,8 +127,8 @@ const styles = StyleSheet.create({
   },
   content: {
     flexGrow: 1,
-    display: 'flex',
-    flexDirection: 'column',
+    display: "flex",
+    flexDirection: "column",
     paddingHorizontal: 16,
     paddingTop: 24,
     paddingBottom: 32,

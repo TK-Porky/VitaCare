@@ -25,8 +25,8 @@ export const useAuth = () => {
    * Send OTP mutation
    */
   const loginPhoneMutation = useMutation({
-    mutationFn: ({ phone, verifier }: { phone: string; verifier: any }) => 
-      store.sendOtp(phone, verifier),
+    mutationFn: ({ phone }: { phone: string }) => 
+      store.sendOtp(phone),
   });
 
   /**

@@ -45,7 +45,7 @@ interface AuthState {
 
   // Actions
   hydrate:          () => Promise<void>;
-  sendOtp:          (phone: string, verifier: ApplicationVerifier, fullName?: string) => Promise<void>;
+  sendOtp:          (phone: string, fullName?: string) => Promise<void>;
   verifyOtp:        (code: string, fullName?: string) => Promise<void>;
   loginWithEmail:   (data: LoginEmailInput) => Promise<void>;
   register:         (data: RegisterInput, verifier?: ApplicationVerifier) => Promise<void>;
@@ -98,11 +98,14 @@ export const useAuthStore = create<AuthState>()(
           if (token) {
             // Check if user is already in state from persist
             if (get().user && get().accessToken === token) {
-              set({ isHydrated: true });
+              const res = await apiClient.get<UserProfile>('/users/patients/profile');
+              console.log(res.data);
+              set({ user: res.data, isHydrated: true });
               return;
             }
 
             const res = await apiClient.get<UserProfile>('/users/patients/profile');
+
             if (res.success && res.data) {
               set({ accessToken: token, user: res.data });
             } else {
@@ -118,10 +121,10 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      sendOtp: async (phone: string, verifier: ApplicationVerifier, fullName?: string) => {
+      sendOtp: async (phone: string, fullName?: string) => {
         set({ isLoading: true, error: null });
         try {
-          await authService.sendOtp(phone, verifier);
+          await authService.sendOtp(phone);
           router.push({ 
             pathname: "/(auth)/otp", 
             params: { phone, fullName: fullName || "" } 
@@ -159,14 +162,11 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      register: async (data, verifier) => {
+      register: async (data) => {
         set({ isLoading: true, error: null });
         try {
           if (data.mode === 'phone') {
-            if (!verifier) {
-              throw new Error("Un vérificateur d'application est requis pour l'inscription par téléphone.");
-            }
-            await get().sendOtp(data.phone!, verifier, data.fullName);
+            await get().sendOtp(data.phone!, data.fullName);
             return;
           }
 

@@ -39,6 +39,7 @@ export const API_ENDPOINTS = {
   USERS: {
     PROFILE: '/users/patients/profile',
     UPDATE_PROFILE: '/users/patients/profile',
+    UPDATE_LOCATION: '/users/patients/location',
     PREFERENCES: '/users/patients/preferences',
     UPDATE_PREFERENCES: '/users/patients/preferences',
     AVATAR: '/users/patients/avatar',

@@ -129,11 +129,14 @@ const TAB_CONTENT: Record<DrugTab, Section[]> = {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-const Tag = ({ label }: { label: string }) => (
-  <View style={styles.tag}>
-    <Text style={styles.tagLabel}>{label}</Text>
-  </View>
-);
+const Tag = ({ label }: { label: string | undefined | null }) => {
+  if (!label) return null;
+  return (
+    <View style={styles.tag}>
+      <Text style={styles.tagLabel}>{label}</Text>
+    </View>
+  );
+};
 
 const RelatedCard = ({ item }: { item: Drug }) => (
   <TouchableOpacity style={styles.relatedCard} activeOpacity={0.8}>

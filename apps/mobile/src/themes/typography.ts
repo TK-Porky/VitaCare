@@ -1,8 +1,12 @@
 export const fontFamily = {
+    thin: 'DMSans_200ExtraLight',
+    light: 'DMSans_300Light',
     regular: 'DMSans_400Regular',
     medium: 'DMSans_500Medium',
     semiBold: 'DMSans_600SemiBold',
     bold: 'DMSans_700Bold',
+    extraBold: 'DMSans_800ExtraBold',
+    black: 'DMSans_900Black',
   } as const;
   
   export const fontSize = {

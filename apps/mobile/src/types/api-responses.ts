@@ -369,18 +369,15 @@ export interface ReminderDetailResponse extends ApiResponse<ReminderResponse> {}
 export interface UserProfileResponse {
   id: string;
   email: string;
-  firstName: string;
-  lastName: string;
-  phone?: string;
-  avatar?: string;
+  fullName: string;
+  phoneNumber?: string;
+  avatarUrl?: string;
   dateOfBirth?: string;
   gender?: 'male' | 'female' | 'other';
+  bloodGroup?: string;
+  medicalHistory?: string;
   address?: string;
-  emergencyContact?: {
-    name: string;
-    phone: string;
-    relationship: string;
-  };
+  profilComplete: boolean;
   preferences: {
     language: string;
     notifications: boolean;
