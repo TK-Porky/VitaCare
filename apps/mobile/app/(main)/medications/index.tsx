@@ -27,7 +27,6 @@ import { useMedicationStore } from "../../../src/store/medication.store";
 import { useReminders } from "../../../src/hooks";
 import { useAuthStore } from "../../../src/store/auth.store";
 import { StoreMedicationResponse } from "../../../src/types/api-responses";
-import { MARKETPLACE_CATEGORIES } from "../../../src/data/mockMedications";
 
 // ================================================================================== //
 // Types
@@ -82,7 +81,7 @@ function DrugCard({
     >
       <View style={styles.drugImageContainer}>
         <Image
-          source={{ uri: item.imageUri || "https://via.placeholder.com/150" }}
+          source={{ uri: item.imageUrl || "https://via.placeholder.com/150" }}
           style={styles.drugImage}
           resizeMode="cover"
         />
@@ -93,11 +92,11 @@ function DrugCard({
         )}
       </View>
       <View style={styles.drugInfo}>
-        <Text style={styles.drugCategory}>{item.category || "Médicament"}</Text>
+        <Text style={styles.drugCategory}>{item.dosageForm || "Médicament"}</Text>
         <Text style={styles.drugName} numberOfLines={2}>
           {item.name}
         </Text>
-        {item.price && <Text style={styles.drugPrice}>{item.price} FCFA</Text>}
+        {item.referencePrice != null && <Text style={styles.drugPrice}>{item.referencePrice} FCFA</Text>}
       </View>
     </TouchableOpacity>
   );
@@ -132,6 +131,17 @@ export default function MedecineScreen({ onReminders }: Props) {
   // Auth & Reminders
   const user = useAuthStore((state) => state.user);
   const { createReminder } = useReminders();
+
+  // ── Categories dérivées des dosageForm ──
+  const categories = React.useMemo(() => {
+    const forms = new Set<string>();
+    medications.forEach(m => { if (m.dosageForm) forms.add(m.dosageForm); });
+    return Array.from(forms).map((form, i) => ({
+      id: String(i + 1),
+      label: form,
+      imageUri: "https://via.placeholder.com/150",
+    }));
+  }, [medications]);
 
   // ================================================================================== //
   // Effects
@@ -191,7 +201,7 @@ export default function MedecineScreen({ onReminders }: Props) {
         patientId: user.id,
         scheduledDate: new Date().toISOString().split("T")[0],
         scheduledTime: "08:00",
-        notes: `Médicament: ${drug.name}${drug.category ? `, Catégorie: ${drug.category}` : ""}`,
+        notes: `Médicament: ${drug.name}${drug.dosageForm ? `, Forme: ${drug.dosageForm}` : ""}`,
       });
 
       Alert.alert(
@@ -221,7 +231,7 @@ export default function MedecineScreen({ onReminders }: Props) {
    * Handle category press
    */
   const handleCategoryPress = (category: string) => {
-    fetchMedications({ category });
+    fetchMedications({ searchQuery: category });
   };
 
   /**
@@ -315,7 +325,7 @@ export default function MedecineScreen({ onReminders }: Props) {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.categoriesRow}
             >
-              {MARKETPLACE_CATEGORIES.map((cat) => (
+              {categories.map((cat) => (
                 <CategoryCard
                   key={cat.id}
                   item={cat}

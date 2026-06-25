@@ -281,42 +281,57 @@ export interface MarkNotificationReadResponse extends ApiResponse<null> {}
 
 
 // ---------------------------------------------------------------------------
-// Store Medications
+// Store Medications (Catalogue Medipedia/BDPM)
 // ---------------------------------------------------------------------------
 
 export interface StoreMedicationResponse {
   id: string;
   name: string;
-  description?: string;
-  category?: string;
-  forms?: string[];
-  price?: number;
-  imageUri?: string;
+  commonName?: string;
+  activeIngredients?: string;
   dosage?: string;
+  dosageForm?: string;
   manufacturer?: string;
+  cis?: string;
+  atcCode?: string;
   requiresPrescription?: boolean;
-  stock?: number;
+  isGeneric?: boolean;
+  referencePrice?: number;
+  stockStatus?: string;
+  isActive?: boolean;
+  imageUrl?: string;
+}
+
+export interface MedicationDetailResponse extends StoreMedicationResponse {
+  concentration?: string;
+  route?: string;
+  cipCode?: string;
+  categoryId?: string;
+  galenicFormId?: string;
+  administrationRouteId?: string;
+  dosageUnitId?: string;
+  composition?: { role?: string; quantity?: string; substance?: string }[];
+  presentations?: { quantity?: string; packaging?: string }[];
+  indications?: string;
+  contraindications?: string;
+  precautions?: string;
+  sideEffects?: string;
+  conservation?: string;
+  storageConditions?: string[];
+  dispensationClass?: string;
+  stockQuantity?: number;
+  restockThreshold?: number;
   createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface MedicationFormResponse {
-  medicationId: string;
-  medicationName: string;
-  forms: {
+  images?: {
     id: string;
-    name: string; // e.g., "Comprimé", "Gélule", "Sirop"
-    description?: string;
-    isAvailable: boolean;
+    medicationId?: string;
+    url: string;
+    alt?: string;
+    isPrimary?: boolean;
+    type?: string;
+    mimeType?: string;
+    displayOrder?: number;
   }[];
-}
-
-export interface MedicationSearchResponse {
-  query: string;
-  results: StoreMedicationResponse[];
-  total: number;
-  page: number;
-  limit: number;
 }
 
 // ---------------------------------------------------------------------------

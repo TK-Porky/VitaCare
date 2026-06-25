@@ -142,19 +142,21 @@ const RelatedCard = ({ item }: { item: Drug }) => (
   <TouchableOpacity style={styles.relatedCard} activeOpacity={0.8}>
     <View style={styles.relatedImageWrap}>
       <Image
-        source={{ uri: item.imageUri }}
+        source={{ uri: item.imageUrl || "https://via.placeholder.com/150" }}
         style={styles.relatedImage}
         resizeMode="contain"
       />
     </View>
     <View style={styles.relatedInfo}>
       <Text style={styles.relatedCategory} numberOfLines={1}>
-        {item.category}
+        {item.dosageForm || "Médicament"}
       </Text>
       <Text style={styles.relatedName} numberOfLines={2}>
         {item.name}
       </Text>
-      <Text style={styles.relatedPrice}>{item.price}</Text>
+      {item.referencePrice != null && (
+        <Text style={styles.relatedPrice}>{item.referencePrice} FCFA</Text>
+      )}
     </View>
   </TouchableOpacity>
 );
@@ -179,7 +181,7 @@ export const DrugDetailBottomSheet = forwardRef<
 
     if (!drug) return null;
 
-    const tags = [drug.category, "Sans ordonnance", "Voie orale"];
+    const tags = [drug.dosageForm ?? "Médicament", ...(drug.requiresPrescription ? ["Sur ordonnance"] : ["Sans ordonnance"])];
 
     return (
       <AppBottomSheet
@@ -199,21 +201,25 @@ export const DrugDetailBottomSheet = forwardRef<
           <View style={styles.header}>
             <View style={styles.imageWrap}>
               <Image
-                source={{ uri: drug.imageUri }}
+                source={{ uri: drug.imageUrl || "https://via.placeholder.com/150" }}
                 style={styles.drugImage}
                 resizeMode="contain"
               />
             </View>
             <View style={styles.infoWrap}>
-              <View style={styles.categoryBadge}>
-                <Text style={styles.categoryText} numberOfLines={2}>
-                  {drug.category}
-                </Text>
-              </View>
+              {drug.dosageForm && (
+                <View style={styles.categoryBadge}>
+                  <Text style={styles.categoryText} numberOfLines={2}>
+                    {drug.dosageForm}
+                  </Text>
+                </View>
+              )}
               <Text style={styles.drugName} numberOfLines={2}>
                 {drug.name}
               </Text>
-              <Text style={styles.drugPrice}>{drug.price}</Text>
+              {drug.referencePrice != null && (
+                <Text style={styles.drugPrice}>{drug.referencePrice} FCFA</Text>
+              )}
             </View>
           </View>
 

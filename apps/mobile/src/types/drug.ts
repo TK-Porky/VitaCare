@@ -1,12 +1,15 @@
 export interface Drug {
   id: string;
   name: string;
-  category?: string;
-  price?: number;
-  imageUri?: string;
+  commonName?: string;
+  activeIngredients?: string;
   dosage?: string;
-  description?: string;
+  dosageForm?: string;
   manufacturer?: string;
   requiresPrescription?: boolean;
-  stock?: number;
+  isGeneric?: boolean;
+  referencePrice?: number;
+  stockStatus?: string;
+  isActive?: boolean;
+  imageUrl?: string;
 }

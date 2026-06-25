@@ -10,7 +10,7 @@
 // ================================================================================== //
 
 export const API_CONFIG = {
-  BASE_URL: process.env.EXPO_PUBLIC_API_BASE_URL || 'http://192.168.1.100:8080/api',
+  BASE_URL: process.env.EXPO_PUBLIC_API_BASE_URL || 'http://192.168.1.100:8080',
   TIMEOUT: 30000,
 } as const;
 
@@ -103,10 +103,10 @@ export const API_ENDPOINTS = {
   // Medicaments
   // ---------------------------------------------------------------------------
   MEDICATIONS: {
-    LIST: '/api/medications',
-    GET: (id: string) => `/api/medications/${id}`,
-    FORMS: (id: string) => `/api/medications/${id}/forms`,
-    SEARCH: '/api/medications/search',
+    LIST: '/medipedia',
+    GET: (id: string) => `/medipedia/${id}`,
+    FORMS: (id: string) => `/medipedia/${id}`,
+    SEARCH: '/medipedia/search',
   },
 
   // ---------------------------------------------------------------------------
