@@ -63,7 +63,7 @@ export const profileService = {
         throw new ProfileServiceError("Full name must be at least 2 characters");
       }
 
-      const res = await apiClient.put<UserProfileResponse>(
+      const res = await apiClient.patch<UserProfileResponse>(
         API_ENDPOINTS.USERS.UPDATE_PROFILE,
         data
       );
@@ -200,10 +200,10 @@ export const profileService = {
         fileUri,
         fileName,
         fileType,
-        'avatar'
+        'avatar' // Must match @RequestParam("avatar") on the backend
       );
 
-      console.log('[ProfileService] Avatar uploaded successfully:', res);
+      console.log('[ProfileService] Avatar upload response:', JSON.stringify(res));
 
       if (!res.success) {
         throw new ProfileServiceError(
@@ -212,7 +212,16 @@ export const profileService = {
         );
       }
 
-      return res.data!;
+      // The backend returns { success, message, data: { avatarUrl } }
+      // The apiClient unwraps .data from the response body
+      const avatarUrl = res.data?.avatarUrl;
+      console.log('[ProfileService] Avatar URL received:', avatarUrl);
+
+      if (!avatarUrl) {
+        console.warn('[ProfileService] No avatarUrl in response, raw data:', res.data);
+      }
+
+      return { avatarUrl: avatarUrl || '' };
     } catch (error) {
       if (error instanceof ProfileServiceError) throw error;
       throw new ProfileServiceError(

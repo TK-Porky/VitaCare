@@ -632,10 +632,11 @@ class ApiClient {
               console.warn('[API] Retry upload response is not valid JSON:', retryText);
             }
 
+            const retryBody = retryResponse.ok ? retryData : undefined;
             return {
               success: retryResponse.ok,
-              data: retryResponse.ok ? retryData : undefined,
-              message: retryData.message,
+              data: retryBody?.data ?? retryBody,
+              message: retryBody?.message ?? retryData.message,
               error: !retryResponse.ok ? retryData.error || retryData.message || `Upload HTTP Error ${retryResponse.status}` : undefined,
               statusCode: retryResponse.status,
             };
@@ -680,10 +681,11 @@ class ApiClient {
               console.warn('[API] Retry upload response is not valid JSON:', retryText);
             }
 
+            const retryBody2 = retryResponse.ok ? retryData : undefined;
             resolve({
               success: retryResponse.ok,
-              data: retryResponse.ok ? retryData : undefined,
-              message: retryData.message,
+              data: retryBody2?.data ?? retryBody2,
+              message: retryBody2?.message ?? retryData.message,
               error: !retryResponse.ok ? retryData.error || retryData.message || `Upload HTTP Error ${retryResponse.status}` : undefined,
               statusCode: retryResponse.status,
             });
@@ -691,10 +693,11 @@ class ApiClient {
         });
       }
 
+      const body = response.ok ? data : undefined;
       return {
         success: response.ok,
-        data: response.ok ? data : undefined,
-        message: data.message,
+        data: body?.data ?? body,
+        message: body?.message ?? data.message,
         error: !response.ok ? data.error || data.message || `Upload HTTP Error ${response.status}` : undefined,
         statusCode: response.status,
       };

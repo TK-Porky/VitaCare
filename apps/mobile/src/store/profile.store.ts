@@ -124,11 +124,30 @@ export const useProfileStore = create<ProfileState>((set) => ({
   uploadAvatar: async (fileUri, fileName, fileType) => {
     set({ isLoading: true, error: null, success: false });
     try {
-      await profileService.uploadAvatar(fileUri, fileName, fileType);
-      await useAuthStore.getState().hydrate();
+      const result = await profileService.uploadAvatar(fileUri, fileName, fileType);
+      console.log('[ProfileStore] Avatar upload result:', JSON.stringify(result));
+      
+      // Immediately update the auth store user with the new avatar URL
+      const authState = useAuthStore.getState();
+      if (authState.user && result.avatarUrl) {
+        useAuthStore.setState({
+          user: { ...authState.user, avatarUrl: result.avatarUrl },
+        });
+        console.log('[ProfileStore] Auth store user avatarUrl updated to:', result.avatarUrl);
+      }
+      
+      // Also re-fetch the full profile from backend to ensure consistency
+      try {
+        await authState.hydrate();
+      } catch (hydrateError) {
+        console.warn('[ProfileStore] Hydrate after avatar upload failed (non-critical):', hydrateError);
+      }
+      
       set({ success: true });
     } catch (e: any) {
+      console.error('[ProfileStore] Avatar upload error:', e);
       set({ error: e?.message ?? "Erreur lors de l'envoi de l'avatar." });
+      throw e; // Re-throw so the UI can handle it
     } finally {
       set({ isLoading: false });
     }
