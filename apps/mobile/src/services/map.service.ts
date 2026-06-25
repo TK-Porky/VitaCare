@@ -14,16 +14,16 @@ import { ClinicProviderResponse, ClinicsListResponse } from "../types/api-respon
 const mapDoctorToClinic = (doctor: any): ClinicProviderResponse => {
   return {
     id: String(doctor.id),
-    avatarUri: doctor.avatarUrl || doctor.photoUrl,
-    doctorName: doctor.fullName || doctor.nomComplet || "Médecin",
-    specialty: doctor.specialization || doctor.specialite || "Généraliste",
+    avatarUri: doctor.avatarUrl,
+    doctorName: doctor.fullName || "Médecin",
+    specialty: doctor.specialization || "Généraliste",
     price: doctor.consultationFee ? `${doctor.consultationFee} XCFA` : undefined,
     priceXCFA: doctor.consultationFee,
     clinicName: doctor.cabinet || doctor.clinicName || "Cabinet Médical",
-    description: doctor.bio || doctor.description || "Spécialiste de santé qualifié.",
-    hours: doctor.hours || doctor.heuresOuverture,
-    days: doctor.days || doctor.joursOuverture,
-    location: doctor.address || doctor.ville || "Yaoundé",
+    description: doctor.bio || "Spécialiste de santé qualifié.",
+    hours: doctor.hours,
+    days: doctor.days,
+    location: doctor.address || "Yaoundé",
     coordinates: doctor.latitude && doctor.longitude ? {
       latitude: doctor.latitude,
       longitude: doctor.longitude,

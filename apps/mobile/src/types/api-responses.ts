@@ -180,7 +180,7 @@ export interface MedicationResponse {
   time: string;
   dosage: string;
   status: 'taken' | 'missed' | 'pending';
-  actif?: boolean;
+  active?: boolean;
 }
 
 export interface DashboardResponse extends ApiResponse<{

@@ -63,8 +63,12 @@ export const appointmentService = {
   },
 
   async reschedule(id: number | string, data: RescheduleAppointmentRequest): Promise<AppointmentResponse> {
+    const startTime = `${data.newDate}T${data.newTime}:00`;
+    const endDateTime = new Date(new Date(startTime).getTime() + 30 * 60 * 1000);
+    const newEndTime = endDateTime.toISOString().slice(0, 19);
     const payload = {
-      newStartTime: `${data.newDate}T${data.newTime}:00`,
+      newStartTime: startTime,
+      newEndTime,
       reason: data.reason ?? '',
     };
     const res = await apiClient.patch<any>(API_ENDPOINTS.APPOINTMENTS.RESCHEDULE(id), payload);
@@ -111,8 +115,12 @@ export const appointmentService = {
   },
 
   async rescheduleAppointment(id: number | string, data: RescheduleAppointmentRequest): Promise<AppointmentResponse> {
+    const startTime = `${data.newDate}T${data.newTime}:00`;
+    const endDateTime = new Date(new Date(startTime).getTime() + 30 * 60 * 1000);
+    const newEndTime = endDateTime.toISOString().slice(0, 19);
     const payload = {
-      newStartTime: `${data.newDate}T${data.newTime}:00`,
+      newStartTime: startTime,
+      newEndTime,
       reason: data.reason ?? '',
     };
     const res = await apiClient.patch<any>(API_ENDPOINTS.APPOINTMENTS.RESCHEDULE(id), payload);
