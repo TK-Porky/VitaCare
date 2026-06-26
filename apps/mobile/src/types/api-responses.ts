@@ -392,6 +392,8 @@ export interface UserProfileResponse {
   bloodGroup?: string;
   medicalHistory?: string;
   address?: string;
+  latitude?: number;
+  longitude?: number;
   profilComplete: boolean;
   preferences: {
     language: string;

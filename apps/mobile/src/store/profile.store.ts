@@ -55,6 +55,8 @@ export const useProfileStore = create<ProfileState>((set) => ({
         bloodGroup: data.bloodGroup,
         medicalHistory: data.medicalHistory,
         address: data.address,
+        latitude: data.latitude,
+        longitude: data.longitude,
       });
 
       // Update auth store user data

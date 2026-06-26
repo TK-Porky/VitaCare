@@ -275,6 +275,8 @@ export interface UpdateProfileRequest {
   bloodGroup?: string;
   medicalHistory?: string;
   address?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface UpdatePreferencesRequest {
